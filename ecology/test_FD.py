@@ -40,7 +40,7 @@ PL.show()
 # sum of dendrogram branches
 dist_species_v = FD.distance_v(traits)
 PP.figure()
-Z = CH.linkage(d,method='single',metric='euclidean')
+Z = CH.linkage(dist_species_v,method='single',metric='euclidean')
 dend = CH.dendrogram(Z)
 b = FD.branch_lengths(Z)
 h = FD.branch_presence(Z)
