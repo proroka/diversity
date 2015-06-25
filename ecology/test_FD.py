@@ -5,53 +5,53 @@ Created on Sun Jun 21 15:30:44 2015
 @author: amandaprorok
 """
 
-import numpy as NP
-import pylab as PL
-import matplotlib.pyplot as PP
-import matplotlib.image as IM
-import scipy.cluster.hierarchy as CH
+import numpy as np
+import pylab as pl
+import matplotlib.pyplot as pp
+import matplotlib.image as im
+import scipy.cluster.hierarchy as ch
 # my modules
-import funcdef_diversity as FD
+import funcdef_diversity as fd
 
 # species and traits
 num_species = 10
 num_traits = 2
-p_species = NP.random.rand(num_species,1) 
-p_species = p_species / NP.sum(p_species) # normalize abundance
-traits = NP.zeros((num_traits,num_species))
+p_species = np.random.rand(num_species,1) 
+p_species = p_species / np.sum(p_species) # normalize abundance
+traits = np.zeros((num_traits,num_species))
 # initialize trait values in interval [0,1]
 for i in range(num_traits):
-    traits[i,:] = NP.random.rand(1,num_species)
+    traits[i,:] = np.random.rand(1,num_species)
 
 
 # plot species with pint size proportional to abundance
-PP.figure()
-PL.xlabel('$t_1$')
-PL.ylabel('$t_2$')
-colors = NP.random.rand(num_species)
-f = 12. / NP.max(p_species)
-area = NP.pi * (p_species*f)**2 # 0 to 12 point radiuses
-PP.scatter(traits[0,:],traits[1,:],s=area,c=colors,alpha=0.6)
-PP.xlim(0,1)
-PP.ylim(0,1)
-PP.axis('equal')
-PL.show()
+pp.figure()
+pl.xlabel('$t_1$')
+pl.ylabel('$t_2$')
+colors = np.random.rand(num_species)
+f = 12. / np.max(p_species)
+area = np.pi * (p_species*f)**2 # 0 to 12 point radiuses
+pp.scatter(traits[0,:],traits[1,:],s=area,c=colors,alpha=0.6)
+pp.xlim(0,1)
+pp.ylim(0,1)
+pp.axis('equal')
+pl.show()
 
 # sum of dendrogram branches
-dist_species_v = FD.distance_v(traits)
-PP.figure()
-Z = CH.linkage(dist_species_v,method='single',metric='euclidean')
-dend = CH.dendrogram(Z)
-b = FD.branch_lengths(Z)
-h = FD.branch_presence(Z)
-div_fd = FD.fd(h,b)
+dist_species_v = fd.distance_v(traits)
+pp.figure()
+Z = ch.linkage(dist_species_v,method='single',metric='euclidean')
+dend = ch.dendrogram(Z)
+b = fd.branch_lengths(Z)
+h = fd.branch_presence(Z)
+div_fd = fd.fd(h,b)
 
 # calculate rao's Q
-dist_species_m = FD.distance_m(traits)
-div_q = FD.rao(dist_species_m,p_species)
+dist_species_m = fd.distance_m(traits)
+div_q = fd.rao(dist_species_m,p_species)
 
 # calculate FAD
-div_fad = FD.fad(dist_species_m)
+div_fad = fd.fad(dist_species_m)
 
 # print diversity values
 print "Functional Diversity: ", div_fd

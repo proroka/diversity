@@ -5,26 +5,25 @@ imp
 @author: amandaprorok
 """
 
-import numpy as NP
-import pylab as PL
-import matplotlib.pyplot as PP
-import matplotlib.image as IM
-import numpy.linalg as LA
-import scipy.cluster.hierarchy as CH
-import funcdef_diversity as FD
+import numpy as np
+import pylab as pl
+import matplotlib.pyplot as pp
+import numpy.linalg as la
+import scipy.cluster.hierarchy as ch
+import funcdef_diversity as fd
 
 x = 10 # number of species
 t = 2 # number of traits / dimensions
 
-a = NP.random.rand(t,x)
-d = FD.distance_v(a)
+a = np.random.rand(t,x)
+d = fd.distance_v(a)
 
-Z = CH.linkage(d,method='single',metric='euclidean')
-dend = CH.dendrogram(Z)
+Z = ch.linkage(d,method='single',metric='euclidean')
+dend = ch.dendrogram(Z)
 
-b = FD.branch_lengths(Z)
-h = FD.branch_presence(Z)
-fd = FD.fd(h,b)
+b = fd.branch_lengths(Z)
+h = fd.branch_presence(Z)
+fd = fd.fd(h,b)
 
 print fd
 
