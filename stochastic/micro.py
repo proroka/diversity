@@ -23,6 +23,8 @@ import funcdef_micro as fd
 # 5. plot evolution of robot population per node on graph
 
 
+# -----------------------------------------------------------------------------#
+# initialize
 # create 2d lattice graph
 size_lattice = 3
 num_nodes = size_lattice**2
@@ -49,16 +51,14 @@ plt.show()
 
 # create random transition matrix
 transition_m_init = np.random.rand(num_nodes, num_nodes) * adjacency_m
-#transition_m_init = np.array([[0.,0.8,0.,0],[0.,0.,0.8,0.],[0.,0.,0.,0.],[0.,0.,0.,0.]])
 transition_m = transition_m_init.copy()
 # k_ii is -sum(k_ij) s.t. sum(column)=0; ensures constant total number of robots
 np.fill_diagonal(transition_m, -np.sum(transition_m_init,0)) 
 
-# state machine, agents
+# -----------------------------------------------------------------------------#
+# run macroscopic evolution of dynamical system
 t_max = 100
 delta_t = 0.1
-
-
 deploy_robots = np.zeros((num_nodes,t_max))
 for i in range(num_nodes):
     deploy_robots[i,0] = deploy_robots_init[i]
@@ -69,6 +69,14 @@ for t in range(1,t_max):
 print 'Final configuration:'
 nx.draw_circular(graph, node_size=deploy_robots[:,t_max-1]*scale)
 plt.show()
+
+# analytic version
+A = transition_m.copy()
+x0 = deploy_robots_init.copy()
+x_tmax = np.dot(np.exp(A*t_max), x0)
+
+diff = x_tmax - deploy_robots[:,t_max-1]
+print diff
 
 # plot evolution of robot population over time
 for n in range(num_nodes):
