@@ -58,6 +58,7 @@ np.fill_diagonal(transition_m, -np.sum(transition_m_init,0))
 t_max = 100
 delta_t = 0.1
 
+
 deploy_robots = np.zeros((num_nodes,t_max))
 for i in range(num_nodes):
     deploy_robots[i,0] = deploy_robots_init[i]
