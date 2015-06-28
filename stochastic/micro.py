@@ -14,7 +14,7 @@ import networkx as nx
 
 # my modules
 import funcdef_micro as fd
-
+from optimize_transition_matrix import *
 
 # -----------------------------------------------------------------------------#
 # 1. create graph
@@ -26,8 +26,12 @@ import funcdef_micro as fd
 
 # -----------------------------------------------------------------------------#
 # initialize
+
+# use optimal transition matrix
+find_optimal = 1
+
 # create 2d lattice graph
-size_lattice = 2
+size_lattice = 3
 num_nodes = size_lattice**2
 graph = nx.grid_2d_graph(size_lattice, size_lattice) #, periodic = True)
 # get the adjencency matrix
@@ -45,22 +49,39 @@ for i in range(num_nodes):
     deploy_robots_init[i] = np.size(np.where(state_robots_init == i))
 deploy_robots_init /= np.sum(deploy_robots_init)
 
+# desired deployment
+deploy_robots_desired = np.random.rand(num_nodes,1)
+deploy_robots_desired /= np.sum(deploy_robots_desired)
 
-# create random transition matrix
-transition_m_init = np.random.rand(num_nodes, num_nodes) * adjacency_m
-transition_m = transition_m_init.copy()
-# k_ii is -sum(k_ij) s.t. sum(column)=0; ensures constant total number of robots
-np.fill_diagonal(transition_m, -np.sum(transition_m_init,0)) 
+# -----------------------------------------------------------------------------#
+# find optimal transition matrix
 
 # for testing
-#deploy_robots_init = np.array([1., 0., 0., 0.])
-#deploy_robots_desired = np.array([0., 0., 0., 1.])
+if 0:
+    deploy_robots_init = np.array([1., 0., 0., 0.])
+    deploy_robots_desired = np.array([0., 0., 0., 1.])
 
+if find_optimal:
+    # Specify the maximum time after which the initial state should reach the
+    # desired state.
+    max_time = 30
+    # The basinhoping technique can optimize under bound constraints.
+    # Fix the maximum transition rate.
+    max_rate = 5    
+    transition_m = Optimize(adjacency_m, deploy_robots_init, deploy_robots_desired, max_time, max_rate, verbose=True)
+    print ''
+
+else:
+    # create random transition matrix
+    transition_m_init = np.random.rand(num_nodes, num_nodes) * adjacency_m
+    transition_m = transition_m_init.copy()
+    # k_ii is -sum(k_ij) s.t. sum(column)=0; ensures constant total number of robots
+    np.fill_diagonal(transition_m, -np.sum(transition_m_init,0)) 
 
 # -----------------------------------------------------------------------------#
 # run euler integration 
 
-t_max = 100
+t_max = 50
 delta_t = 0.1
 deploy_robots = np.zeros((num_nodes,t_max))
 for i in range(num_nodes):
