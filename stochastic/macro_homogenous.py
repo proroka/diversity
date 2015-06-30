@@ -27,11 +27,12 @@ from optimize_transition_matrix import *
 # -----------------------------------------------------------------------------#
 # initialize
 
+
 # use optimal transition matrix
 find_optimal = 1
 
 # create 2d lattice graph
-size_lattice = 3
+size_lattice = 2
 num_nodes = size_lattice**2
 graph = nx.grid_2d_graph(size_lattice, size_lattice) #, periodic = True)
 # get the adjencency matrix
@@ -57,7 +58,7 @@ deploy_robots_desired /= np.sum(deploy_robots_desired)
 # find optimal transition matrix
 
 # for testing
-if 0:
+if 1:
     deploy_robots_init = np.array([1., 0., 0., 0.])
     deploy_robots_desired = np.array([0., 0., 0., 1.])
 
