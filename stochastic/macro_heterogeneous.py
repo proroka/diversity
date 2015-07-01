@@ -47,6 +47,9 @@ for i in range(num_species):
     deploy_robots_init[:,i] = np.random.rand(num_nodes)
     deploy_robots_init[:,i] /= np.sum(deploy_robots_init[:,i])
 
+species_traits = np.random.rand(num_species, num_traits)
+deploy_traits = np.dot(deploy_robots_init,species_traits)
+
 # initialize robot population, random node allocation
 #num_robots = 10
 #state_robots_init = np.random.randint(0,num_nodes,(num_robots,1))

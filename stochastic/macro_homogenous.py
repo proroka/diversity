@@ -29,7 +29,7 @@ from optimize_transition_matrix import *
 
 
 # use optimal transition matrix
-find_optimal = 1
+find_optimal = 0
 
 # create 2d lattice graph
 size_lattice = 2
