@@ -19,7 +19,7 @@ from optimize_transition_matrix import *
 # -----------------------------------------------------------------------------#
 # 1. create graph
 # 2. initialize robotdeployment on nodes
-# 3. initialize transition matrix
+# 3. get transition matrix
 # 4. run macro-discrete model 
 # 5. plot evolution of robot population per node on graph
 
@@ -29,7 +29,7 @@ from optimize_transition_matrix import *
 
 
 # use optimal transition matrix
-find_optimal = 0
+find_optimal = 1
 
 # create 2d lattice graph
 size_lattice = 2

@@ -44,14 +44,12 @@ def MatrixReshape(elements, adjacency_matrix):
     np.fill_diagonal(K, -np.sum(K, axis=0))
     return K
     
-def ElementBounds(nelements, max_rate):
-    elements_min = np.ones(nelements) * 0.  # min_rate.
-    elements_max = np.ones(nelements) * max_rate
-    
-    def __call__(self, f_new, x_new, f_old, x_old):
-        return (bool(np.all(x_new <= self.elements_max)) and bool(np.all(x_new >= self.elements_min)))
 
-
+def ElementsBounds(nelements, max_rate, f_new, x_new, f_old, x_old):
+   elements_min = np.ones(nelements) * 0.  # min_rate.
+   elements_max = np.ones(nelements) * max_rate
+   return (bool(np.all(x_new <= elements_max)) and
+           bool(np.all(x_new >= elements_min)))
               
 # -----------------------------------------------------------------------------#
 # optimization
@@ -71,8 +69,8 @@ def Optimize(adjacency_matrix, initial_state, desired_steadystate, max_time, max
                                       init_elements, 
                                       minimizer_kwargs=minimizer_kwargs, 
                                       niter=100,
-                                      accept_test=ElementBounds(num_offdiag_elements, max_rate),
-                                      callback=None if not verbose else lambda x, f, a: Print(x, f, a, current_iteration))
+                                      accept_test=lambda f_new, x_new, f_old, x_old: ElementsBounds(num_offdiag_elements, max_rate, f_new, x_new, f_old, x_old),                                      
+                                      callback=None if not verbose else lambda x, f, accept: Print(x, f, accept, current_iteration))
     
     if verbose:
         print '\n\nFinal matrix:\n', MatrixReshape(ret.x, adjacency_matrix)
