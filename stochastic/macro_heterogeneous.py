@@ -39,15 +39,56 @@ max_trait_values = 2 # [0,1]: trait availability
 
 # robot species
 num_species = 3
+max_robots = 10 # maximum number of robots per node
+#num_robots = np.random.randint(0, max_robots, num_species) # num robots per species
+deploy_robots_init = np.random.randint(0, max_robots, size=(num_nodes, num_species))
+
+"""
 # initial deployment is normalized number of robots per node
 deploy_robots_init = np.zeros((num_nodes,num_species))
 for s in range(num_species):
-    deploy_robots_init[:,s] = np.random.rand(num_nodes)
-    deploy_robots_init[:,s] /= np.sum(deploy_robots_init[:,s])
+    deploy_robots_init[:,s] = np.random.randint(num_nodes)
+    deploy_robots_init[:,s] *= num_robots[s] / np.sum(deploy_robots_init[:,s],0) 
+deploy_robots_init_r = np.round(deploy_robots_init)
+s_r = np.sum(np.sum(deploy_robots_init_r))
+"""    
 
 species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
 deploy_traits_init = np.dot(deploy_robots_init, species_traits)
-deploy_traits_desired = np.random.rand(num_nodes, num_traits)
+
+# random end state
+random_transition= np.random.rand(num_nodes, num_nodes) # * adjacency_m
+# k_ii is -sum(k_ij) s.t. sum(column)=0; ensures constant total number of robots
+np.fill_diagonal(random_transition, np.zeros(num_nodes))
+np.fill_diagonal(random_transition, -np.sum(random_transition,0))
+
+
+#------------
+# run euler itegration to sample random end state
+
+t_max = 50
+delta_t = 0.1
+deploy_robots_sample = np.zeros((num_nodes,t_max, num_species))
+for s in range(num_species):
+    for i in range(num_nodes):  
+        deploy_robots_sample[i,0,s] = deploy_robots_init[i,s]
+        for t in range(1,t_max):
+            deploy_robots_sample[:,t,s] = deploy_robots_sample[:,t-1,s] + delta_t*np.dot(random_transition, deploy_robots_sample[:,t-1,s])
+
+deploy_robots_final = deploy_robots[:,t_max-1,:]
+deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
+
+#--------------------
+
+#print "num_robots: \n", num_robots
+#print "total robots, from def: \n", np.sum(num_robots)
+#print "total robots, from rounded matrix: \n", s_r
+print "deploy_robots_init:\n", deploy_robots_init
+print "deploy_robots_final:\n", deploy_robots_final
+print "total robots from init: \n", np.sum(np.sum(deploy_robots_init))
+print "total robots, from final deployment: \n", np.sum(np.sum(deploy_robots_final))
+
+print "deploy_traits_desired:\n", deploy_traits_desired
 
 # -----------------------------------------------------------------------------#
 # initialize graph: all species move on same graph
@@ -62,7 +103,7 @@ adjacency_m = np.squeeze(np.asarray(adjacency_m))
 # -----------------------------------------------------------------------------#
 # find optimal transition matrix
 
-find_optimal = True # optmize transition matrix for a given desired end state of traits per node
+find_optimal = False # optmize transition matrix for a given desired end state of traits per node
 testing = True # use a simple testing scenario instread of random init
 
 if find_optimal:
@@ -100,6 +141,8 @@ else:
 # -----------------------------------------------------------------------------#
 # run euler integration to drive robots to end state
 
+plotting = False
+
 t_max = 50
 delta_t = 0.1
 deploy_robots = np.zeros((num_nodes,t_max, num_species))
@@ -112,28 +155,30 @@ for s in range(num_species):
 deploy_robots_final = deploy_robots[:,t_max-1,:]
 deploy_traits_final = np.dot(deploy_robots_final, species_traits)      
 
-# draw graph with node size proportional to robot population
-s_ind = 0;
-scale = 1000 # scale size of node
-print 'Initial configuration:'
-#nx.draw_circular(graph, node_size=deploy_robots_init[:,s_ind]*scale)
-nx.draw_circular(graph, node_size=np.sum(deploy_traits_init,1)*scale)
-
-plt.show()       
-# draw graph with node size proportional to robot population
-print 'Final configuration:'
-#nx.draw_circular(graph, node_size=deploy_robots[:,t_max-1,s_ind]*scale)
-nx.draw_circular(graph, node_size=np.sum(deploy_traits_final,1)*scale)
-plt.show()
-
-
-# plot evolution of robot population over time
-for n in range(num_nodes):
-    x = np.arange(0, t_max)
-    y = deploy_robots[n,:,s_ind]
-    plt.plot(x,y)
+if plotting:
+    # draw graph with node size proportional to robot population
+    s_ind = 0;
+    scale = 1000 # scale size of node
+    print 'Initial configuration:'
+    #nx.draw_circular(graph, node_size=deploy_robots_init[:,s_ind]*scale)
+    nx.draw_circular(graph, node_size=np.sum(deploy_traits_init,1)*scale)
     
-plt.show()
+    plt.show()       
+    # draw graph with node size proportional to robot population
+    print 'Final configuration:'
+    #nx.draw_circular(graph, node_size=deploy_robots[:,t_max-1,s_ind]*scale)
+    nx.draw_circular(graph, node_size=np.sum(deploy_traits_final,1)*scale)
+    plt.show()
+    
+    
+    # plot evolution of robot population over time
+    for n in range(num_nodes):
+        x = np.arange(0, t_max)
+        y = deploy_robots[n,:,s_ind]
+        plt.plot(x,y)
+        
+    plt.show()
+
 
 
 """
