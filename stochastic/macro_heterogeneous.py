@@ -16,6 +16,7 @@ import networkx as nx
 
 # my modules
 from optimize_transition_matrix_hetero import *
+from funcdef_macro_heterogeneous import *
 
 # -----------------------------------------------------------------------------#
 
@@ -40,52 +41,26 @@ max_trait_values = 2 # [0,1]: trait availability
 # robot species
 num_species = 3
 max_robots = 10 # maximum number of robots per node
-#num_robots = np.random.randint(0, max_robots, num_species) # num robots per species
 deploy_robots_init = np.random.randint(0, max_robots, size=(num_nodes, num_species))
-
-"""
-# initial deployment is normalized number of robots per node
-deploy_robots_init = np.zeros((num_nodes,num_species))
-for s in range(num_species):
-    deploy_robots_init[:,s] = np.random.randint(num_nodes)
-    deploy_robots_init[:,s] *= num_robots[s] / np.sum(deploy_robots_init[:,s],0) 
-deploy_robots_init_r = np.round(deploy_robots_init)
-"""    
 
 species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
 deploy_traits_init = np.dot(deploy_robots_init, species_traits)
 
 # random end state
-random_transition= np.random.rand(num_nodes, num_nodes) # * adjacency_m
-# k_ii is -sum(k_ij) s.t. sum(column)=0; ensures constant total number of robots
-np.fill_diagonal(random_transition, np.zeros(num_nodes))
-np.fill_diagonal(random_transition, -np.sum(random_transition,0))
+random_transition = random_transition_matrix(num_nodes)
 
-
-#------------
-# run euler integration to sample random end state
-
-t_max = 50
-delta_t = 0.1
-deploy_robots_sample = np.zeros((num_nodes,t_max, num_species))
-for s in range(num_species):
-    for i in range(num_nodes):  
-        deploy_robots_sample[i,0,s] = deploy_robots_init[i,s]
-        for t in range(1,t_max):
-            deploy_robots_sample[:,t,s] = deploy_robots_sample[:,t-1,s] + delta_t*np.dot(random_transition, deploy_robots_sample[:,t-1,s])
-
-deploy_robots_final = deploy_robots_sample[:,t_max-1,:]
+# sample final desired trait distribution
+deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition)
 deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
 
-#--------------------
+# -----------------------------------------------------------------------------#
 
-#print "deploy_robots_init:\n", deploy_robots_init
-#print "deploy_robots_final:\n", deploy_robots_final
-print "total robots from init: \n", np.sum(np.sum(deploy_robots_init))
-print "total robots, from final deployment: \n", np.sum(np.sum(deploy_robots_final))
-#print "deploy_traits_desired:\n", deploy_traits_desired
-print "total traits init:\n", np.sum(np.sum(deploy_traits_init))
-print "total traits desired:\n", np.sum(np.sum(deploy_traits_desired))
+
+print "total robots, init: \t", np.sum(np.sum(deploy_robots_init))
+print "total robots, final: \t", np.sum(np.sum(deploy_robots_final))
+print "total traits, init: \t", np.sum(np.sum(deploy_traits_init))
+print "total traits, desired:\t", np.sum(np.sum(deploy_traits_desired))
+
 
 # -----------------------------------------------------------------------------#
 # initialize graph: all species move on same graph
@@ -96,129 +71,21 @@ adjacency_m = nx.to_numpy_matrix(graph)
 adjacency_m = np.squeeze(np.asarray(adjacency_m))
 
 
-
 # -----------------------------------------------------------------------------#
 # find optimal transition matrix
 
-find_optimal = False # optmize transition matrix for a given desired end state of traits per node
-testing = True # use a simple testing scenario instread of random init
+transition_m = optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_desired, species_traits)
 
-if find_optimal:
-    # for testing
-    if (testing and num_nodes==4 and num_species==3 and num_traits==3):
-        print "\n *** Testing *** \n"
-        deploy_robots_init = np.array([[1., 1., 1.], [0., 0., 0.], [0., 0., 0.], [0., 0., 0.]]) # all species in node 1
-        species_traits = np.array([[1, 0, 0],[0, 1, 0],[0, 0, 1]]) # each species has 1 complementary trait
-        deploy_traits_init = np.array([[1., 1., 1,], [0., 0., 0.], [0., 0., 0.], [0., 0., 0.]]) # all traits in node 1
-        deploy_traits_desired = np.array([[0., 0., 0.], [0., 0., 0.], [0., 0., 0.], [1., 1., 1.]]) # all traits in node 4
-    else:
-        # desired deployment
-        deploy_traits_desired = np.random.rand(num_nodes,num_traits)
-        
-    # Specify the maximum time after which the initial state should reach the
-    # desired state.
-    max_time = 30
-    # The basinhoping technique can optimize under bound constraints.
-    # Fix the maximum transition rate.
-    max_rate = 5    
-                  # Optimize_Hetero(adjacency_matrix, initial_state, desired_steadystate, transform, max_time, max_rate, verbose):
-    transition_m = Optimize_Hetero(adjacency_m, deploy_robots_init, deploy_traits_desired, species_traits, max_time, max_rate, verbose=True)
-    print ''
-
-else:
-    # create random transition matrix
-    transition_m = np.zeros((num_nodes,num_nodes,num_species))
-    for i in range(num_species):    
-        transition_m[:,:,i] = np.random.rand(num_nodes, num_nodes) * adjacency_m
-        # k_ii is -sum(k_ij) s.t. sum(column)=0; ensures constant total number of robots
-        np.fill_diagonal(transition_m[:,:,i], -np.sum(transition_m[:,:,i],0)) 
-       
-       
       
 # -----------------------------------------------------------------------------#
 # run euler integration to drive robots to end state
 
-plotting = False
+deploy_robots_final, deploy_traits_final = run_euler_integration(deploy_robots_init, transition_m, species_traits)
 
-t_max = 50
-delta_t = 0.1
-deploy_robots = np.zeros((num_nodes,t_max, num_species))
-for s in range(num_species):
-    for i in range(num_nodes):  
-        deploy_robots[i,0,s] = deploy_robots_init[i,s]
-        for t in range(1,t_max):
-            deploy_robots[:,t,s] = deploy_robots[:,t-1,s] + delta_t*np.dot(transition_m[:,:,s], deploy_robots[:,t-1,s])
+# plot_network(graph, deploy_traits_init, deploy_traits_final)
 
-deploy_robots_final = deploy_robots[:,t_max-1,:]
-deploy_traits_final = np.dot(deploy_robots_final, species_traits)      
-
-print "#####################"
-#print "deploy_robots_init:\n", deploy_robots_init
-#print "deploy_robots_final:\n", deploy_robots_final
-print "total robots from init: \n", np.sum(np.sum(deploy_robots_init))
-print "total robots, from final deployment: \n", np.sum(np.sum(deploy_robots_final))
-print "total traits init:\n", np.sum(np.sum(deploy_traits_init))
-print "total traits final:\n", np.sum(np.sum(deploy_traits_final))
-
-
-if plotting:
-    # draw graph with node size proportional to robot population
-    s_ind = 0;
-    scale = 1000 # scale size of node
-    print 'Initial configuration:'
-    #nx.draw_circular(graph, node_size=deploy_robots_init[:,s_ind]*scale)
-    nx.draw_circular(graph, node_size=np.sum(deploy_traits_init,1)*scale)
     
-    plt.show()       
-    # draw graph with node size proportional to robot population
-    print 'Final configuration:'
-    #nx.draw_circular(graph, node_size=deploy_robots[:,t_max-1,s_ind]*scale)
-    nx.draw_circular(graph, node_size=np.sum(deploy_traits_final,1)*scale)
-    plt.show()
-    
-    
-    # plot evolution of robot population over time
-    for n in range(num_nodes):
-        x = np.arange(0, t_max)
-        y = deploy_robots[n,:,s_ind]
-        plt.plot(x,y)
-        
-    plt.show()
-
-
-
-"""
-# -----------------------------------------------------------------------------#
-# solve system analytically for steady-state
-
-eig_values, eig_vectors = np.linalg.eig(transition_m)
-i = np.argmax(eig_values) 
-steady_state = eig_vectors[:,i].astype(float) 
-
-steady_state /= sum(steady_state)  # Makes sure that the sum of all robots is 1.
-diff = steady_state.T - deploy_robots[:,t_max-1]
-
-print 'Final divergence (analytical vs euler): \n', diff
-
-
-# -----------------------------------------------------------------------------#
-# solve system analytically for end time t_max
-
-
-# analytic version
-deploy_robots_final = np.zeros((num_nodes, num_species))
-for s in range(num_species): # species index    
-    A = transition_m[:,:,s].copy()
-    x0 = deploy_robots_init[:,s].copy()
-    deploy_robots_final[:,s] = np.dot(sp.linalg.expm(A*t_max), x0)
-    #diff2 = x_tmax.T - deploy_robots[:,t_max-1,s_ind]
-    #print 'Final divergence (exponential vs euler): \n', diff2
-
-
-# final distribution of traits
-deploy_traits_final = np.dot(deploy_robots_final,species_traits)
-
-"""
+   
 
 
 
