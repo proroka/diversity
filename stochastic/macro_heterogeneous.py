@@ -5,9 +5,6 @@ Created on Mon Jun 29 10:53:24 2015
 
 """
 
-
-
-
 import numpy as np
 import scipy as sp
 import pylab as pl
