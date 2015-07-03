@@ -21,7 +21,7 @@ from funcdef_macro_heterogeneous import *
 # -----------------------------------------------------------------------------#
 
 # 1. create graph
-# 2. initialize robotdeployment on nodes
+# 2. initialize robot deployment on nodes
 # 3. initialize transition matrix
 # 4. run macro-discrete model 
 # 5. plot evolution of robot population per node on graph
@@ -39,7 +39,7 @@ num_traits = 3
 max_trait_values = 2 # [0,1]: trait availability
 
 # robot species
-num_species = 3
+num_species = 4
 max_robots = 10 # maximum number of robots per node
 deploy_robots_init = np.random.randint(0, max_robots, size=(num_nodes, num_species))
 
@@ -82,8 +82,12 @@ transition_m = optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy
 
 deploy_robots_final, deploy_traits_final = run_euler_integration(deploy_robots_init, transition_m, species_traits)
 
-# plot_network(graph, deploy_traits_init, deploy_traits_final)
 
+# -----------------------------------------------------------------------------#
+# plots
+
+# plot_network(graph, deploy_traits_init, deploy_traits_final)
+# plot_histogram(deploy_traits_final)
     
    
 

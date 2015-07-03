@@ -143,8 +143,11 @@ def plot_network(graph, deploy_traits_init, deploy_traits_final):
 
 
 
+
+
+
 # -----------------------------------------------------------------------------#
-# this doesnt work: 
+# this doesnt work 
 
  
 def clear():
