@@ -50,7 +50,6 @@ for s in range(num_species):
     deploy_robots_init[:,s] = np.random.randint(num_nodes)
     deploy_robots_init[:,s] *= num_robots[s] / np.sum(deploy_robots_init[:,s],0) 
 deploy_robots_init_r = np.round(deploy_robots_init)
-s_r = np.sum(np.sum(deploy_robots_init_r))
 """    
 
 species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
@@ -64,7 +63,7 @@ np.fill_diagonal(random_transition, -np.sum(random_transition,0))
 
 
 #------------
-# run euler itegration to sample random end state
+# run euler integration to sample random end state
 
 t_max = 50
 delta_t = 0.1
@@ -75,20 +74,18 @@ for s in range(num_species):
         for t in range(1,t_max):
             deploy_robots_sample[:,t,s] = deploy_robots_sample[:,t-1,s] + delta_t*np.dot(random_transition, deploy_robots_sample[:,t-1,s])
 
-deploy_robots_final = deploy_robots[:,t_max-1,:]
+deploy_robots_final = deploy_robots_sample[:,t_max-1,:]
 deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
 
 #--------------------
 
-#print "num_robots: \n", num_robots
-#print "total robots, from def: \n", np.sum(num_robots)
-#print "total robots, from rounded matrix: \n", s_r
-print "deploy_robots_init:\n", deploy_robots_init
-print "deploy_robots_final:\n", deploy_robots_final
+#print "deploy_robots_init:\n", deploy_robots_init
+#print "deploy_robots_final:\n", deploy_robots_final
 print "total robots from init: \n", np.sum(np.sum(deploy_robots_init))
 print "total robots, from final deployment: \n", np.sum(np.sum(deploy_robots_final))
-
-print "deploy_traits_desired:\n", deploy_traits_desired
+#print "deploy_traits_desired:\n", deploy_traits_desired
+print "total traits init:\n", np.sum(np.sum(deploy_traits_init))
+print "total traits desired:\n", np.sum(np.sum(deploy_traits_desired))
 
 # -----------------------------------------------------------------------------#
 # initialize graph: all species move on same graph
@@ -155,6 +152,15 @@ for s in range(num_species):
 deploy_robots_final = deploy_robots[:,t_max-1,:]
 deploy_traits_final = np.dot(deploy_robots_final, species_traits)      
 
+print "#####################"
+#print "deploy_robots_init:\n", deploy_robots_init
+#print "deploy_robots_final:\n", deploy_robots_final
+print "total robots from init: \n", np.sum(np.sum(deploy_robots_init))
+print "total robots, from final deployment: \n", np.sum(np.sum(deploy_robots_final))
+print "total traits init:\n", np.sum(np.sum(deploy_traits_init))
+print "total traits final:\n", np.sum(np.sum(deploy_traits_final))
+
+
 if plotting:
     # draw graph with node size proportional to robot population
     s_ind = 0;
@@ -194,7 +200,6 @@ diff = steady_state.T - deploy_robots[:,t_max-1]
 
 print 'Final divergence (analytical vs euler): \n', diff
 
-"""
 
 # -----------------------------------------------------------------------------#
 # solve system analytically for end time t_max
@@ -212,6 +217,8 @@ for s in range(num_species): # species index
 
 # final distribution of traits
 deploy_traits_final = np.dot(deploy_robots_final,species_traits)
+
+"""
 
 
 
