@@ -51,9 +51,7 @@ def sample_final_robot_distribution(deploy_robots_init, random_transition):
 # -----------------------------------------------------------------------------#
 # run euler integration to sample random end state
 
-def run_euler_integration(deploy_robots_init, transition_m, species_traits):
-    
-    plotting = False
+def run_euler_integration(deploy_robots_init, transition_m):
     
     num_nodes = deploy_robots_init.shape[0]
     num_species = deploy_robots_init.shape[1]
@@ -65,41 +63,17 @@ def run_euler_integration(deploy_robots_init, transition_m, species_traits):
         for i in range(num_nodes):  
             deploy_robots[i,0,s] = deploy_robots_init[i,s]
             for t in range(1,t_max):
-                deploy_robots[:,t,s] = deploy_robots[:,t-1,s] + delta_t*np.dot(transition_m[:,:,s], deploy_robots[:,t-1,s])
+                deploy_robots[:,t,s] = deploy_robots[:,t-1,s] + delta_t*np.dot(transition_m[:,:,s], deploy_robots[:,t-1,s]) 
     
-    deploy_robots_final = deploy_robots[:,t_max-1,:]
-    deploy_traits_final = np.dot(deploy_robots_final, species_traits)   
-    
-    if plotting:
-        # plot evolution of robot population over time
-        for n in range(num_nodes):
-            x = np.arange(0, t_max)
-            y = deploy_robots[n,:,s_ind]
-            plt.plot(x,y)
-        plt.show()    
-    
-    
-    return (deploy_robots_final, deploy_traits_final)       
-    
+    return deploy_robots
     
 # -----------------------------------------------------------------------------#
 # find optimal transition matrix
 
 def optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_desired, species_traits):
-    find_optimal = True
-    """
-    if find_optimal:
-    # for testing
-    if (testing and num_nodes==4 and num_species==3 and num_traits==3):
-        print "\n *** Testing *** \n"
-        deploy_robots_init = np.array([[1., 1., 1.], [0., 0., 0.], [0., 0., 0.], [0., 0., 0.]]) # all species in node 1
-        species_traits = np.array([[1, 0, 0],[0, 1, 0],[0, 0, 1]]) # each species has 1 complementary trait
-        deploy_traits_init = np.array([[1., 1., 1,], [0., 0., 0.], [0., 0., 0.], [0., 0., 0.]]) # all traits in node 1
-        deploy_traits_desired = np.array([[0., 0., 0.], [0., 0., 0.], [0., 0., 0.], [1., 1., 1.]]) # all traits in node 4
-    else:
-        # desired deployment
-        deploy_traits_desired = np.random.rand(num_nodes,num_traits)
-    """
+    
+    find_optimal = False
+   
     # Specify the maximum time after which the initial state should reach the
     # desired state.
     max_time = 30
@@ -113,6 +87,8 @@ def optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_des
 
     else:
         # create random transition matrix
+        num_nodes = adjacency_m.shape[0]
+        num_species = species_traits.shape[0]
         transition_m = np.zeros((num_nodes,num_nodes,num_species))
         for i in range(num_species):    
             transition_m[:,:,i] = np.random.rand(num_nodes, num_nodes) * adjacency_m
@@ -132,18 +108,59 @@ def plot_network(graph, deploy_traits_init, deploy_traits_final):
     
     print 'Initial configuration:'
     #nx.draw_circular(graph, node_size=deploy_robots_init[:,s_ind]*scale)
-    nx.draw_circular(graph, node_size=np.sum(deploy_traits_init,1)*scale)
+    nx.draw(graph)    
+    plt.show()
+    
+    dg = nx.DiGraph(graph)
+    nx.draw(dg)    
+    
+    #nx.draw_circular(graph, node_size=np.sum(deploy_traits_init,1)*scale)
+    #nx. draw_networkx_labels(G, pos[, labels, ...])
     
     plt.show()       
+    
     # draw graph with node size proportional to robot population
-    print 'Final configuration:'
+#    print 'Final configuration:'
     #nx.draw_circular(graph, node_size=deploy_robots[:,t_max-1,s_ind]*scale)
-    nx.draw_circular(graph, node_size=np.sum(deploy_traits_final,1)*scale)
-    plt.show()
+ #   nx.draw_circular(graph, node_size=np.sum(deploy_traits_final,1)*scale)
+  #  plt.show()
 
 
 
+# -----------------------------------------------------------------------------#
+# plot 
 
+def plot_robots_time(deploy_robots, species_ind):
+
+    num_nodes = deploy_robots.shape[0]
+    t_max = deploy_robots.shape[1]
+    
+    # plot evolution of robot population over time
+    for n in range(num_nodes):
+        x = np.arange(0, t_max)
+        y = deploy_robots[n,:,species_ind]
+        plt.plot(x,y)
+    plt.show()    
+
+# -----------------------------------------------------------------------------#
+# plot 
+
+def plot_traits_time(deploy_robots, species_traits, trait_ind):
+
+    num_nodes = deploy_robots.shape[0]
+    t_max = deploy_robots.shape[1]
+    num_traits = species_traits.shape[1]
+    
+    deploy_traits = np.zeros((num_nodes, t_max, num_traits))
+    for t in range(t_max):    
+        deploy_traits[:,t,:] = np.dot(deploy_robots[:,t,:], species_traits)
+    
+    # plot evolution of trait distribution over time
+    for n in range(num_nodes):
+        x = np.arange(0, t_max)
+        y = deploy_traits[n,:, trait_ind]
+        plt.plot(x,y)
+    plt.show()    
 
 
 # -----------------------------------------------------------------------------#

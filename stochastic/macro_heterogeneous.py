@@ -28,7 +28,7 @@ from funcdef_macro_heterogeneous import *
 # initialize world and robot community
 
 # create network of sites
-size_lattice = 2
+size_lattice = 3
 num_nodes = size_lattice**2
 
 # set of traits
@@ -36,7 +36,7 @@ num_traits = 3
 max_trait_values = 2 # [0,1]: trait availability
 
 # robot species
-num_species = 4
+num_species = 3
 max_robots = 10 # maximum number of robots per node
 deploy_robots_init = np.random.randint(0, max_robots, size=(num_nodes, num_species))
 
@@ -46,7 +46,7 @@ deploy_traits_init = np.dot(deploy_robots_init, species_traits)
 # random end state
 random_transition = random_transition_matrix(num_nodes)
 
-# sample final desired trait distribution
+# sample final desired trait distribution based on random transition matrix
 deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition)
 deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
 
@@ -77,14 +77,23 @@ transition_m = optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy
 # -----------------------------------------------------------------------------#
 # run euler integration to drive robots to end state
 
-deploy_robots_final, deploy_traits_final = run_euler_integration(deploy_robots_init, transition_m, species_traits)
+deploy_robots = run_euler_integration(deploy_robots_init, transition_m)
+
+deploy_robots_final = deploy_robots[:,-1,:]
+deploy_traits_final = np.dot(deploy_robots_final, species_traits) 
 
 
 # -----------------------------------------------------------------------------#
 # plots
 
-# plot_network(graph, deploy_traits_init, deploy_traits_final)
+plot_network(graph, deploy_traits_init, deploy_traits_final)
 # plot_histogram(deploy_traits_final)
+
+# plot evolution over time
+species_index = 0
+trait_index = 0
+plot_robots_time(deploy_robots, species_index)
+plot_traits_time(deploy_robots, species_traits, trait_index)
     
    
 
