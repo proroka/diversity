@@ -50,23 +50,6 @@ def sample_final_robot_distribution(deploy_robots_init, random_transition):
     
 # -----------------------------------------------------------------------------#
 # run euler integration and return time evolution
-"""
-def run_euler_integration(deploy_robots_init, transition_m):
-    
-    num_nodes = deploy_robots_init.shape[0]
-    num_species = deploy_robots_init.shape[1]
-    
-    t_max = 50
-    delta_t = 0.1
-    deploy_robots = np.zeros((num_nodes,t_max, num_species))
-    for s in range(num_species):
-        for i in range(num_nodes):  
-            deploy_robots[i,0,s] = deploy_robots_init[i,s]
-            for t in range(1,t_max):
-                deploy_robots[:,t,s] = deploy_robots[:,t-1,s] + delta_t*np.dot(transition_m[:,:,s], deploy_robots[:,t-1,s]) 
-    
-    return deploy_robots
-"""
     
 def run_euler_integration(deploy_robots_init, transition_m):
 
