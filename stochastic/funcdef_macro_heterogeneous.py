@@ -49,7 +49,7 @@ def sample_final_robot_distribution(deploy_robots_init, random_transition):
     
     
 # -----------------------------------------------------------------------------#
-# run euler integration to sample random end state
+# run euler integration and return time evolution
 
 def run_euler_integration(deploy_robots_init, transition_m):
     
