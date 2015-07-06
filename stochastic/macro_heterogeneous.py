@@ -28,7 +28,7 @@ from funcdef_macro_heterogeneous import *
 # initialize world and robot community
 
 # create network of sites
-size_lattice = 3
+size_lattice = 2
 num_nodes = size_lattice**2
 
 # set of traits

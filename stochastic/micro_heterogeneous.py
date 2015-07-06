@@ -79,9 +79,9 @@ transition_m = optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy
 # -----------------------------------------------------------------------------#
 # run microscopic stochastic simulation
 
-t_max = 300
-dt = 0.01
-num_iter = 10
+t_max = 100
+dt = 0.1
+num_iter = 50
 
 deploy_robots_micro = np.zeros((num_nodes, t_max, num_species, num_iter)) 
 for it in range(num_iter): 

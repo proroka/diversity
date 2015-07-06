@@ -57,7 +57,7 @@ def pick_transition(p):
 # -----------------------------------------------------------------------------#
 # microscopic model
 
-def microscopic_sim(t_max, dt, robots, deploy_robots_init, transition_m):
+def microscopic_sim(t_max, dt, robots_init, deploy_robots_init, transition_m):
 
     num_nodes = deploy_robots_init.shape[0]
     num_species = deploy_robots_init.shape[1]
@@ -65,7 +65,7 @@ def microscopic_sim(t_max, dt, robots, deploy_robots_init, transition_m):
     deploy_robots = np.zeros((num_nodes, t_max, num_species))
     deploy_robots[:,0,:] = deploy_robots_init
 
-
+    robots = robots_init.copy()
 
     # Pre-compute transition probabilities.
     ps = []
