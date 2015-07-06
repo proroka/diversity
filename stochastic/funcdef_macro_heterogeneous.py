@@ -72,7 +72,7 @@ def run_euler_integration(deploy_robots_init, transition_m):
 
 def optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_desired, species_traits):
     
-    find_optimal = False
+    find_optimal = True
    
     # Specify the maximum time after which the initial state should reach the
     # desired state.
