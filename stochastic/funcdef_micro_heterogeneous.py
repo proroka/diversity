@@ -41,6 +41,20 @@ def initialize_robots(deploy_robots_init):
 
 
 # -----------------------------------------------------------------------------#
+# helper function that pick a random index given probabilities (summing to 1)
+
+def pick_transition(p):
+    rand = np.random.rand(1)
+    v = 0
+    for i in range(np.size(p)):
+        v += p[i]
+        if rand <= v:
+            return i
+    # Should not happen (unless probabilities do not sum to 1 exactly).
+    return np.size(p) - 1
+
+
+# -----------------------------------------------------------------------------#
 # microscopic model
 
 def microscopic_sim(t_max, dt, robots, deploy_robots_init, transition_m):
@@ -51,30 +65,29 @@ def microscopic_sim(t_max, dt, robots, deploy_robots_init, transition_m):
     deploy_robots = np.zeros((num_nodes, t_max, num_species))
     deploy_robots[:,0,:] = deploy_robots_init
 
+
+
+    # Pre-compute transition probabilities.
+    ps = []
+    for s in range(num_species):
+        ks = transition_m[:,:,s] # transition rates
+        ps.append(sp.linalg.expm(dt*ks)) # transition probabilities
+
     for t in range(1, t_max):
+        # Propagate previous state.
+        deploy_robots[:, t, :] = deploy_robots[:, t-1, :]
+
         for r in range(robots.shape[0]):
             r_s = robots[r,0] # robot species
             r_n = robots[r,1] # current node
-            # outgoing rates
-            ks = transition_m[:,:,r_s] # transition rates
-            ps = sp.linalg.expm(dt*ks) # transition probabilities
-            rands = np.random.rand(num_nodes)
-            activated_edges = rands < ps[:,r_n] # column indicates current node
-            a = np.nonzero(activated_edges) # returns a tuple of indices
-            if np.sum(a[0]) == 1: # choose this transition
-                node = a[0][0]
-                robots[r,1] = node
-            if np.sum(a[0]) > 1:  # choose random transition
-                node = a[0][np.random.randint(np.size(a[0]))]
-                robots[r,1] = node
-            if np.sum(a[0]) > 0: # update summary representation if robot transitions
-                deploy_robots[r_n, t, r_s] = deploy_robots[r_n, t-1, r_s] - 1         
-                deploy_robots[node, t, r_s]  = deploy_robots[node, t-1, r_s] + 1
-            else: # propagate previous state
-                deploy_robots[r_n, t, r_s] = deploy_robots[r_n, t-1, r_s]
+            node = pick_transition(ps[int(r_s)][:,r_n])
+            # update
+            deploy_robots[r_n, t, r_s] -= 1
+            deploy_robots[node, t, r_s]  += 1
+            robots[r,1] = node
 
     return (robots, deploy_robots)
-    
+
     
 # -----------------------------------------------------------------------------#
 # run euler integration and return time evolution

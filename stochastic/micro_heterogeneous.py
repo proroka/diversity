@@ -86,7 +86,7 @@ num_iter = 10
 deploy_robots_micro = np.zeros((num_nodes, t_max, num_species, num_iter)) 
 for it in range(num_iter): 
     print "Iteration: ", it
-    robots, deploy_robots_micro[:,:,:,it] = microscopic_sim(t_max, dt, robots, deploy_robots_init, transition_m)
+    robots_new, deploy_robots_micro[:,:,:,it] = microscopic_sim(t_max, dt, robots, deploy_robots_init, transition_m)
 avg_deploy_robots_micro = np.mean(deploy_robots_micro,3)
        
 # -----------------------------------------------------------------------------#
