@@ -11,7 +11,7 @@ import pylab as pl
 import matplotlib.pyplot as plt
 import networkx as nx
 
-from optimize_transition_matrix_hetero import *
+from optimize_transition_matrix_hetero_fast_gradient import *
 
 
 # -----------------------------------------------------------------------------#
@@ -82,7 +82,7 @@ def optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_des
 
     verbose = True
     if find_optimal:                  
-        transition_m = Optimize_Hetero(adjacency_m, deploy_robots_init, deploy_traits_desired, species_traits, max_time, max_rate, verbose)
+        transition_m = Optimize_Hetero_Fast(adjacency_m, deploy_robots_init, deploy_traits_desired, species_traits, max_time, max_rate, verbose)
 
     else:
         # create random transition matrix

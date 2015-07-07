@@ -29,11 +29,11 @@ from funcdef_micro_heterogeneous import *
 # initialize world and robot community
 
 # create network of sites
-size_lattice = 2
+size_lattice = 3
 num_nodes = size_lattice**2
 
 # set of traits
-num_traits = 2
+num_traits = 3
 max_trait_values = 2 # [0,1]: trait availability
 
 # robot species
@@ -81,7 +81,7 @@ transition_m_init = optimal_transition_matrix(adjacency_m, deploy_robots_init, d
 
 t_max = 90
 dt = 0.1
-num_iter = 2
+num_iter = 50
 
 deploy_robots_micro = np.zeros((num_nodes, t_max, num_species, num_iter)) 
 for it in range(num_iter): 
@@ -93,7 +93,7 @@ avg_deploy_robots_micro = np.mean(deploy_robots_micro,3)
 # run adaptive microscopic stochastic simulation
 
 
-slices = 3
+slices = 5
 t_window = int(t_max / slices)
 
 deploy_robots_micro_adapt = np.zeros((num_nodes, t_max, num_species, num_iter)) 

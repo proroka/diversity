@@ -10,7 +10,7 @@ import scipy.optimize
 import scipy.linalg
 import numpy as np
 import sys
-
+import warnings
 
 # -----------------------------------------------------------------------------#
 # auxiliary functions
@@ -38,6 +38,7 @@ def FinalState(elements, adjacency_matrix, max_time, initial_state, transform):
     deploy_traits_final = np.dot(deploy_robots_final, transform)
     return deploy_traits_final
 
+# -----------------------------------------------------------------------------#
 
 # defines the cost to minimize.
 # parameter elements is array - concatenation of nonzero elements for each species
@@ -46,11 +47,66 @@ def Cost_OLD(elements, desired_state, adjacency_matrix, max_time, initial_state,
     diffsq = np.square(desired_state - FinalState(elements, adjacency_matrix, max_time, initial_state, transform))  
     return np.sum(np.sum(diffsq))
 
-def Cost(elements, desired_state, adjacency_matrix, max_time, initial_state, transform):
-    #return np.mean(np.square(desired_state - FinalState(elements, adjacency_matrix, max_time, initial_state, transform))
-    diffsq = np.square(desired_state - FinalState(elements, adjacency_matrix, max_time, initial_state, transform))  
-    return np.sum(np.sum(diffsq))
+# -----------------------------------------------------------------------------#
+
+# In:
+# desired_state: matrix with node-trait distribution
+# elements: vector with transition matrix values for all K_i, speices i
+# transform: species-trait matrix
+# initial_state: node-species matrix
+def Cost_Fast(elements, desired_state, adjacency_matrix, max_time, initial_state, transform):
+
+    nstates = adjacency_matrix.shape[0]  
+    num_species = initial_state.shape[1]
+    num_traits = transform.shape[1]
+    # Renaming.      
+    Adj = adjacency_matrix.astype(float).reshape((nstates, nstates))
+    t = max_time
+    num_elements_i = np.size(elements) / num_species
+    grad_all = np.zeros(np.size(elements))
     
+    # Value (evaluate cost)
+    # evaluate the value of the cost        
+    ExpAx0 = desired_state - FinalState(elements, adjacency_matrix, max_time, initial_state, transform) # difference
+    value = np.sum(np.square(ExpAx0)) # cost is sum of difference matrix squared    
+        
+    # Calculate gradient w.r.t. transition matrix for each species
+    for s in range(num_species):
+        x0 = initial_state[:,s].reshape((nstates,1))
+        m = transform[s,:].reshape((1,num_traits))
+        el = elements[s*num_elements_i:(s+1)*num_elements_i]
+
+        # Create A from elements.
+        # We assume w are off-diagonal values corresponding to the adjacency matrix adj.
+        A = np.zeros_like(Adj.flatten())
+        A[Adj.flatten().astype(bool)] = el
+        A = A.reshape(Adj.shape)
+        np.fill_diagonal(A, -np.sum(A, axis=0))
+    
+        # Gradient preparation.
+        w, V = scipy.linalg.eig(A * t, right=True)
+        U = scipy.linalg.inv(V).T
+        exp_w = np.exp(w)
+        with warnings.catch_warnings():
+          warnings.simplefilter("ignore", RuntimeWarning)  # We don't care about 0/0 on the diagonal.
+          X = np.subtract.outer(exp_w, exp_w) / np.subtract.outer(w, w)
+        np.fill_diagonal(X, exp_w)
+        # Gradient w.r.t. A.
+        #top_grad = 2 * ExpAx0.dot(x0.T)  # Gradients from || e^At * x - xd ||^2 w.r.t to e^At = 2 * (e^At * x - xd) * xT
+        x0m = np.dot(x0, m)
+        top_grad = 2 * np.dot(ExpAx0, x0m.T)       
+        gradA = U.dot(V.T.dot(top_grad).dot(U) * X).dot(V.T)
+        gradA = gradA * t
+        grad = gradA - np.diag(gradA)
+        grad = grad.flatten()[Adj.flatten().astype(bool)]  # Reshape.
+        
+        grad_all[s*num_elements_i:(s+1)*num_elements_i] = np.array(np.real(grad))
+        
+    return [value, grad_all]
+
+
+    
+# -----------------------------------------------------------------------------#
     
 # reshapes the array of nonzero elements of the matrix into a valid transition matrix.
 # returns 3D matrix, 3rd dim indexes the species
@@ -83,7 +139,7 @@ def ElementsBounds(nelements, max_rate, f_new, x_new, f_old, x_old):
 # -----------------------------------------------------------------------------#
 # optimization: basin hopping
 
-def Optimize_Hetero(adjacency_matrix, initial_state, desired_steadystate, transform, max_time, max_rate, verbose):
+def Optimize_Hetero_Fast(adjacency_matrix, initial_state, desired_steadystate, transform, max_time, max_rate, verbose):
     current_iteration = 0
     
     
@@ -99,7 +155,7 @@ def Optimize_Hetero(adjacency_matrix, initial_state, desired_steadystate, transf
     
     
     # basinhopping function
-    ret = scipy.optimize.basinhopping(lambda x: Cost(x, desired_steadystate, adjacency_matrix, max_time, initial_state, transform), 
+    ret = scipy.optimize.basinhopping(lambda x: Cost_Fast(x, desired_steadystate, adjacency_matrix, max_time, initial_state, transform), 
                                       init_elements, 
                                       minimizer_kwargs=minimizer_kwargs, 
                                       niter=10,

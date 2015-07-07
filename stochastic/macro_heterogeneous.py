@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 # my modules
-from optimize_transition_matrix_hetero import *
+from optimize_transition_matrix_hetero_fast_gradient import *
 from funcdef_macro_heterogeneous import *
 
 # -----------------------------------------------------------------------------#
@@ -28,15 +28,15 @@ from funcdef_macro_heterogeneous import *
 # initialize world and robot community
 
 # create network of sites
-size_lattice = 3
+size_lattice = 2
 num_nodes = size_lattice**2
 
 # set of traits
-num_traits = 3
+num_traits = 2
 max_trait_values = 2 # [0,1]: trait availability
 
 # robot species
-num_species = 3
+num_species = 2
 max_robots = 10 # maximum number of robots per node
 deploy_robots_init = np.random.randint(0, max_robots, size=(num_nodes, num_species))
 
