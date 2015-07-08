@@ -32,11 +32,11 @@ size_lattice = 2
 num_nodes = size_lattice**2
 
 # set of traits
-num_traits = 2
+num_traits = 3
 max_trait_values = 2 # [0,1]: trait availability
 
 # robot species
-num_species = 2
+num_species = 3
 max_robots = 10 # maximum number of robots per node
 deploy_robots_init = np.random.randint(0, max_robots, size=(num_nodes, num_species))
 
@@ -47,7 +47,9 @@ deploy_traits_init = np.dot(deploy_robots_init, species_traits)
 random_transition = random_transition_matrix(num_nodes)
 
 # sample final desired trait distribution based on random transition matrix
-deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition)
+euler_tmax = 50
+euler_dt = 0.01
+deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition, euler_tmax, euler_dt)
 deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
 
 # -----------------------------------------------------------------------------#
@@ -71,13 +73,15 @@ adjacency_m = np.squeeze(np.asarray(adjacency_m))
 # -----------------------------------------------------------------------------#
 # find optimal transition matrix
 
-transition_m = optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_desired, species_traits)
+max_time = 100
+max_rate = 5
+transition_m = optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_desired, species_traits, max_time, max_rate)
 
       
 # -----------------------------------------------------------------------------#
 # run euler integration to drive robots to end state
 
-deploy_robots = run_euler_integration(deploy_robots_init, transition_m)
+deploy_robots = run_euler_integration(deploy_robots_init, transition_m, euler_tmax, euler_dt)
 
 deploy_robots_final = deploy_robots[:,-1,:]
 deploy_traits_final = np.dot(deploy_robots_final, species_traits) 

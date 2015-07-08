@@ -30,13 +30,13 @@ def random_transition_matrix(num_nodes):
 # -----------------------------------------------------------------------------#
 # run euler integration to sample random end state
 
-def sample_final_robot_distribution(deploy_robots_init, random_transition):
+def sample_final_robot_distribution(deploy_robots_init, random_transition, t_max, delta_t):
     
     num_nodes = deploy_robots_init.shape[0]
     num_species = deploy_robots_init.shape[1]
 
     t_max = 50
-    delta_t = 0.1
+    delta_t = 0.01
     deploy_robots_sample = np.zeros((num_nodes,t_max, num_species))
     for s in range(num_species):
         for i in range(num_nodes):  
@@ -51,13 +51,13 @@ def sample_final_robot_distribution(deploy_robots_init, random_transition):
 # -----------------------------------------------------------------------------#
 # run euler integration and return time evolution
     
-def run_euler_integration(deploy_robots_init, transition_m):
+def run_euler_integration(deploy_robots_init, transition_m, t_max, delta_t):
 
     num_nodes = deploy_robots_init.shape[0]
     num_species = deploy_robots_init.shape[1]
 
     t_max = 50
-    delta_t = 0.1
+    delta_t = 0.01
     deploy_robots = np.zeros((num_nodes,t_max, num_species))
     for s in range(num_species):
         deploy_robots[:,0,s] = deploy_robots_init[:,s]
@@ -69,16 +69,16 @@ def run_euler_integration(deploy_robots_init, transition_m):
 # -----------------------------------------------------------------------------#
 # find optimal transition matrix
 
-def optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_desired, species_traits):
+def optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_desired, species_traits, max_time, max_rate):
     
     find_optimal = True
    
     # Specify the maximum time after which the initial state should reach the
     # desired state.
-    max_time = 30
+    #max_time = 100
     # The basinhoping technique can optimize under bound constraints.
     # Fix the maximum transition rate.
-    max_rate = 5    
+    #max_rate = 5    
 
     verbose = True
     if find_optimal:                  
