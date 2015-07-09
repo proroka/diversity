@@ -14,6 +14,7 @@ import networkx as nx
 # my modules
 from optimize_transition_matrix_hetero_fast_gradient import *
 from funcdef_macro_heterogeneous import *
+from funcdef_util_heterogeneous import *
 
 # -----------------------------------------------------------------------------#
 
@@ -91,17 +92,18 @@ deploy_traits_final = np.dot(deploy_robots_final, species_traits)
 # -----------------------------------------------------------------------------#
 # plots
 
-plot_network(graph, deploy_traits_init, deploy_traits_final)
+#plot_network(graph, deploy_traits_init, deploy_traits_final)
 # plot_histogram(deploy_traits_final)
 
 # plot evolution over time
 species_index = 0
 trait_index = 0
 plot_robots_time(deploy_robots, species_index)
-plot_traits_time(deploy_robots, species_traits, trait_index)
-    
+#plot_traits_time(deploy_robots, species_traits, trait_index)
+ 
    
-
+plot_robots_ratio_time(deploy_robots, deploy_robots_final)  
+plot_traits_ratio_time(deploy_robots, deploy_traits_desired, species_traits)
 
 
 

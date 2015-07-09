@@ -17,6 +17,8 @@ import sys
 from optimize_transition_matrix_hetero import *
 from funcdef_macro_heterogeneous import *
 from funcdef_micro_heterogeneous import *
+from funcdef_util_heterogeneous import *
+
 
 # -----------------------------------------------------------------------------#
 
@@ -123,10 +125,8 @@ plot_robots_time(deploy_robots_euler, species_index)
 #plot_traits_time(deploy_robots, species_traits, trait_index)
 
 
-
-
-
-
+plot_robots_ratio_time(avg_deploy_robots_micro, deploy_robots_final) 
+plot_traits_ratio_time(avg_deploy_robots_micro, deploy_traits_desired, species_traits)
 
 
 
