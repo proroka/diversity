@@ -67,7 +67,7 @@ def Cost_Fast(elements, desired_state, adjacency_matrix, max_time, initial_state
     
     # Value (evaluate cost)
     # evaluate the value of the cost        
-    ExpAx0 = FinalState(elements, adjacency_matrix, max_time, initial_state, transform) - desired_state# difference
+    ExpAx0 = FinalState(elements, adjacency_matrix, max_time, initial_state, transform) - desired_state # difference
     value = np.sum(np.square(ExpAx0)) # cost is sum of difference matrix squared    
         
     # Calculate gradient w.r.t. transition matrix for each species
