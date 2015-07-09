@@ -89,7 +89,7 @@ def Cost_Fast(elements, desired_state, adjacency_matrix, max_time, initial_state
         exp_w = np.exp(w)
         with warnings.catch_warnings():
           warnings.simplefilter("ignore", RuntimeWarning)  # We don't care about 0/0 on the diagonal.
-          X = np.subtract.outer(exp_w, exp_w) / np.subtract.outer(w, w)
+          X = np.subtract.outer(exp_w, exp_w) / (np.subtract.outer(w, w) + 1e10)
         np.fill_diagonal(X, exp_w)
         # Gradient w.r.t. A.
         #top_grad = 2 * ExpAx0.dot(x0.T)  # Gradients from || e^At * x - xd ||^2 w.r.t to e^At = 2 * (e^At * x - xd) * xT
@@ -158,7 +158,7 @@ def Optimize_Hetero_Fast(adjacency_matrix, initial_state, desired_steadystate, t
     ret = scipy.optimize.basinhopping(lambda x: Cost_Fast(x, desired_steadystate, adjacency_matrix, max_time, initial_state, transform), 
                                       init_elements, 
                                       minimizer_kwargs=minimizer_kwargs, 
-                                      niter=10,
+                                      niter=100, niter_success=3,
                                       accept_test=lambda f_new, x_new, f_old, x_old: ElementsBounds(num_nonzero_elements*num_species, max_rate, f_new, x_new, f_old, x_old),                                      
                                       callback=None if not verbose else lambda x, f, accept: Print(x, f, accept, current_iteration))
                                       
