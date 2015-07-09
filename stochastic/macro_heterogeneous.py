@@ -27,12 +27,16 @@ from funcdef_macro_heterogeneous import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
+# general
+t_max = 10.0 # time in seconds
+rate_max = 5.0 # maximum transition rate
+
 # create network of sites
 size_lattice = 3
 num_nodes = size_lattice**2
 
 # set of traits
-num_traits = 3
+num_traits = 8
 max_trait_values = 2 # [0,1]: trait availability
 
 # robot species
@@ -44,10 +48,9 @@ species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits
 deploy_traits_init = np.dot(deploy_robots_init, species_traits)
 
 # random end state
-random_transition = random_transition_matrix(num_nodes)
+random_transition = random_transition_matrix(num_nodes, rate_max/2)
 
 # sample final desired trait distribution based on random transition matrix
-t_max = 100
 deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition, t_max)
 deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
 
@@ -63,8 +66,8 @@ print "total traits, desired:\t", np.sum(np.sum(deploy_traits_desired))
 # -----------------------------------------------------------------------------#
 # initialize graph: all species move on same graph
 
-#graph = nx.grid_2d_graph(size_lattice, size_lattice) #, periodic = True)
-graph = nx.connected_watts_strogatz_graph(num_nodes, 2, 0.5, tries=100, seed=None)
+graph = nx.grid_2d_graph(size_lattice, size_lattice)
+#graph = nx.connected_watts_strogatz_graph(num_nodes, 3, 0.5) #, tries=100, seed=None)
 # get the adjencency matrix
 adjacency_m = nx.to_numpy_matrix(graph)
 adjacency_m = np.squeeze(np.asarray(adjacency_m))
@@ -73,7 +76,6 @@ adjacency_m = np.squeeze(np.asarray(adjacency_m))
 # -----------------------------------------------------------------------------#
 # find optimal transition matrix
 
-rate_max = 5
 transition_m = optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_desired, species_traits, t_max, rate_max)
 
       

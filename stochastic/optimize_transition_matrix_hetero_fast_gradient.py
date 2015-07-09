@@ -170,6 +170,9 @@ def Optimize_Hetero_Fast(adjacency_matrix, initial_state, desired_steadystate, t
         print '\nReaches:\n', FinalState(ret.x, adjacency_matrix, max_time, initial_state, transform)
         print '\nError:\n', FinalState(ret.x, adjacency_matrix, max_time, initial_state, transform) - desired_steadystate
 
+    # print this always
+    print '\nFinal cost:\n', ret.fun
+    
     # return transition matrices (3D matrix for all species)
     return MatrixReshape(ret.x, adjacency_matrix, num_species)
 

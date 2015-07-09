@@ -55,7 +55,7 @@ def run_euler_integration(deploy_robots_init, transition_m, t_max):
     num_nodes = deploy_robots_init.shape[0]
     num_species = deploy_robots_init.shape[1]
 
-    delta_t = 0.1
+    delta_t = 0.01
     num_iter = int(t_max / delta_t)
     deploy_robots = np.zeros((num_nodes, num_iter, num_species))
     for s in range(num_species):
@@ -72,7 +72,7 @@ def optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_des
 
     find_optimal = True
 
-    verbose = True
+    verbose = False
     if find_optimal:
         transition_m = Optimize_Hetero_Fast(adjacency_m, deploy_robots_init, deploy_traits_desired, species_traits, max_time, max_rate, verbose)
     else:

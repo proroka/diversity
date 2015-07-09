@@ -62,7 +62,7 @@ deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
 robots = initialize_robots(deploy_robots_init)
 
 # Set to True, to just run the optimization.
-just_optimize = True
+just_optimize = False
 
 
 # -----------------------------------------------------------------------------#
