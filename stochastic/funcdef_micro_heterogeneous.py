@@ -21,7 +21,7 @@ from optimize_transition_matrix_hetero import *
 def initialize_robots(deploy_robots_init):
     num_nodes = deploy_robots_init.shape[0]
     num_species = deploy_robots_init.shape[1]
-    
+
     total_num_robots = np.sum(np.sum(deploy_robots_init))
     robots = np.zeros((total_num_robots,2))
     robots_per_species = np.sum(deploy_robots_init,0)
@@ -35,8 +35,8 @@ def initialize_robots(deploy_robots_init):
             robots[ind_2:ind_2+v,1] = n
             ind_2 += v
         ind += robots_per_species[s]
-        
-    return robots   
+
+    return robots
 
 
 
@@ -57,12 +57,12 @@ def pick_transition(p):
 # -----------------------------------------------------------------------------#
 # microscopic model
 
-def microscopic_sim(t_max, dt, robots_init, deploy_robots_init, transition_m):
+def microscopic_sim(num_timesteps, delta_t, robots_init, deploy_robots_init, transition_m):
 
     num_nodes = deploy_robots_init.shape[0]
     num_species = deploy_robots_init.shape[1]
-    
-    deploy_robots = np.zeros((num_nodes, t_max, num_species))
+
+    deploy_robots = np.zeros((num_nodes, num_timesteps, num_species))
     deploy_robots[:,0,:] = deploy_robots_init
 
     robots = robots_init.copy()
@@ -71,9 +71,9 @@ def microscopic_sim(t_max, dt, robots_init, deploy_robots_init, transition_m):
     ps = []
     for s in range(num_species):
         ks = transition_m[:,:,s] # transition rates
-        ps.append(sp.linalg.expm(dt*ks)) # transition probabilities
+        ps.append(sp.linalg.expm(delta_t*ks)) # transition probabilities
 
-    for t in range(1, t_max):
+    for t in range(1, num_timesteps):
         # Propagate previous state.
         deploy_robots[:, t, :] = deploy_robots[:, t-1, :]
 
@@ -88,23 +88,25 @@ def microscopic_sim(t_max, dt, robots_init, deploy_robots_init, transition_m):
 
     return (robots, deploy_robots)
 
-    
+
 # -----------------------------------------------------------------------------#
 # run euler integration and return time evolution
 
-def run_euler_integration_micro(t_max, delta_t, deploy_robots_init, transition_m):
+def run_euler_integration_micro(deploy_robots_init, transition_m, t_max):
 
     num_nodes = deploy_robots_init.shape[0]
     num_species = deploy_robots_init.shape[1]
 
+    delta_t = 0.1
+    num_iter = int(t_max / delta_t)
 
-    deploy_robots = np.zeros((num_nodes,t_max, num_species))
+    deploy_robots = np.zeros((num_nodes,num_iter, num_species))
     for s in range(num_species):
         deploy_robots[:,0,s] = deploy_robots_init[:,s]
-        for t in range(1,t_max):
+        for t in range(1,num_iter):
             deploy_robots[:,t,s] = deploy_robots[:,t-1,s] + delta_t*np.dot(transition_m[:,:,s], deploy_robots[:,t-1,s])
 
-    return deploy_robots   
-    
-    
-    
+    return deploy_robots
+
+
+
