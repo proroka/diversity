@@ -30,19 +30,18 @@ def random_transition_matrix(num_nodes):
 # -----------------------------------------------------------------------------#
 # run euler integration to sample random end state
 
-def sample_final_robot_distribution(deploy_robots_init, random_transition, t_max, delta_t):
+def sample_final_robot_distribution(deploy_robots_init, random_transition, t_max):
     
     num_nodes = deploy_robots_init.shape[0]
     num_species = deploy_robots_init.shape[1]
 
-    t_max = 50
-    delta_t = 0.01
-    deploy_robots_sample = np.zeros((num_nodes,t_max, num_species))
+    delta_t = 0.1
+    num_iter = int(t_max / delta_t)
+    deploy_robots_sample = np.zeros((num_nodes, num_iter, num_species))    
     for s in range(num_species):
-        for i in range(num_nodes):  
-            deploy_robots_sample[i,0,s] = deploy_robots_init[i,s]
-            for t in range(1,t_max):
-                deploy_robots_sample[:,t,s] = deploy_robots_sample[:,t-1,s] + delta_t*np.dot(random_transition, deploy_robots_sample[:,t-1,s])
+        deploy_robots_sample[:,0,s] = deploy_robots_init[:,s]
+        for t in range(1,num_iter):
+            deploy_robots_sample[:,t,s] = deploy_robots_sample[:,t-1,s] + delta_t*np.dot(random_transition, deploy_robots_sample[:,t-1,s])
     
     return deploy_robots_sample[:,t_max-1,:]
     
@@ -51,17 +50,17 @@ def sample_final_robot_distribution(deploy_robots_init, random_transition, t_max
 # -----------------------------------------------------------------------------#
 # run euler integration and return time evolution
     
-def run_euler_integration(deploy_robots_init, transition_m, t_max, delta_t):
+def run_euler_integration(deploy_robots_init, transition_m, t_max):
 
     num_nodes = deploy_robots_init.shape[0]
     num_species = deploy_robots_init.shape[1]
 
-    t_max = 50
-    delta_t = 0.01
-    deploy_robots = np.zeros((num_nodes,t_max, num_species))
+    delta_t = 0.1
+    num_iter = int(t_max / delta_t)
+    deploy_robots = np.zeros((num_nodes, num_iter, num_species))
     for s in range(num_species):
         deploy_robots[:,0,s] = deploy_robots_init[:,s]
-        for t in range(1,t_max):
+        for t in range(1,num_iter):
             deploy_robots[:,t,s] = deploy_robots[:,t-1,s] + delta_t*np.dot(transition_m[:,:,s], deploy_robots[:,t-1,s])
 
     return deploy_robots
@@ -132,11 +131,11 @@ def plot_network(graph, deploy_traits_init, deploy_traits_final):
 def plot_robots_time(deploy_robots, species_ind):
 
     num_nodes = deploy_robots.shape[0]
-    t_max = deploy_robots.shape[1]
+    num_iter = deploy_robots.shape[1]
     
     # plot evolution of robot population over time
     for n in range(num_nodes):
-        x = np.arange(0, t_max)
+        x = np.arange(0, num_iter)
         y = deploy_robots[n,:,species_ind]
         plt.plot(x,y)
     plt.show()    
@@ -147,16 +146,16 @@ def plot_robots_time(deploy_robots, species_ind):
 def plot_traits_time(deploy_robots, species_traits, trait_ind):
 
     num_nodes = deploy_robots.shape[0]
-    t_max = deploy_robots.shape[1]
+    num_iter = deploy_robots.shape[1]
     num_traits = species_traits.shape[1]
     
-    deploy_traits = np.zeros((num_nodes, t_max, num_traits))
-    for t in range(t_max):    
+    deploy_traits = np.zeros((num_nodes, num_iter, num_traits))
+    for t in range(num_iter):    
         deploy_traits[:,t,:] = np.dot(deploy_robots[:,t,:], species_traits)
     
     # plot evolution of trait distribution over time
     for n in range(num_nodes):
-        x = np.arange(0, t_max)
+        x = np.arange(0, num_iter)
         y = deploy_traits[n,:, trait_ind]
         plt.plot(x,y)
     plt.show()    

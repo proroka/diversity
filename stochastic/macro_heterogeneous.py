@@ -28,7 +28,7 @@ from funcdef_macro_heterogeneous import *
 # initialize world and robot community
 
 # create network of sites
-size_lattice = 2
+size_lattice = 3
 num_nodes = size_lattice**2
 
 # set of traits
@@ -47,9 +47,8 @@ deploy_traits_init = np.dot(deploy_robots_init, species_traits)
 random_transition = random_transition_matrix(num_nodes)
 
 # sample final desired trait distribution based on random transition matrix
-euler_tmax = 50
-euler_dt = 0.01
-deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition, euler_tmax, euler_dt)
+t_max = 100
+deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition, t_max)
 deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
 
 # -----------------------------------------------------------------------------#
@@ -64,7 +63,8 @@ print "total traits, desired:\t", np.sum(np.sum(deploy_traits_desired))
 # -----------------------------------------------------------------------------#
 # initialize graph: all species move on same graph
 
-graph = nx.grid_2d_graph(size_lattice, size_lattice) #, periodic = True)
+#graph = nx.grid_2d_graph(size_lattice, size_lattice) #, periodic = True)
+graph = nx.connected_watts_strogatz_graph(num_nodes, 2, 0.5, tries=100, seed=None)
 # get the adjencency matrix
 adjacency_m = nx.to_numpy_matrix(graph)
 adjacency_m = np.squeeze(np.asarray(adjacency_m))
@@ -73,15 +73,14 @@ adjacency_m = np.squeeze(np.asarray(adjacency_m))
 # -----------------------------------------------------------------------------#
 # find optimal transition matrix
 
-max_time = 100
-max_rate = 5
-transition_m = optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_desired, species_traits, max_time, max_rate)
+rate_max = 5
+transition_m = optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_desired, species_traits, t_max, rate_max)
 
       
 # -----------------------------------------------------------------------------#
 # run euler integration to drive robots to end state
 
-deploy_robots = run_euler_integration(deploy_robots_init, transition_m, euler_tmax, euler_dt)
+deploy_robots = run_euler_integration(deploy_robots_init, transition_m, t_max)
 
 deploy_robots_final = deploy_robots[:,-1,:]
 deploy_traits_final = np.dot(deploy_robots_final, species_traits) 
