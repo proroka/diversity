@@ -30,6 +30,7 @@ from funcdef_util_heterogeneous import *
 
 # general
 t_max = 10.0 # time in seconds
+delta_t = 0.1
 rate_max = 5.0 # maximum transition rate
 
 # create network of sites
@@ -52,7 +53,7 @@ deploy_traits_init = np.dot(deploy_robots_init, species_traits)
 random_transition = random_transition_matrix(num_nodes, rate_max/2)
 
 # sample final desired trait distribution based on random transition matrix
-deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition, t_max)
+deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition, t_max, delta_t)
 deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
 
 # -----------------------------------------------------------------------------#
@@ -83,7 +84,8 @@ transition_m = optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy
 # -----------------------------------------------------------------------------#
 # run euler integration to drive robots to end state
 
-deploy_robots = run_euler_integration(deploy_robots_init, transition_m, t_max)
+dt = 0.01
+deploy_robots = run_euler_integration(deploy_robots_init, transition_m, t_max, dt)
 
 deploy_robots_final = deploy_robots[:,-1,:]
 deploy_traits_final = np.dot(deploy_robots_final, species_traits) 

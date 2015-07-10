@@ -89,24 +89,4 @@ def microscopic_sim(num_timesteps, delta_t, robots_init, deploy_robots_init, tra
     return (robots, deploy_robots)
 
 
-# -----------------------------------------------------------------------------#
-# run euler integration and return time evolution
-
-def run_euler_integration_micro(deploy_robots_init, transition_m, t_max):
-
-    num_nodes = deploy_robots_init.shape[0]
-    num_species = deploy_robots_init.shape[1]
-
-    delta_t = 0.1
-    num_iter = int(t_max / delta_t)
-
-    deploy_robots = np.zeros((num_nodes,num_iter, num_species))
-    for s in range(num_species):
-        deploy_robots[:,0,s] = deploy_robots_init[:,s]
-        for t in range(1,num_iter):
-            deploy_robots[:,t,s] = deploy_robots[:,t-1,s] + delta_t*np.dot(transition_m[:,:,s], deploy_robots[:,t-1,s])
-
-    return deploy_robots
-
-
 

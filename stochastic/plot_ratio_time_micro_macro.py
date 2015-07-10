@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Jul  5 16:40:07 2015
-@author: amandaprorok
-
+Created on Fri Jul 10 09:48:20 2015
+@author: amanda
 """
-
 
 import numpy as np
 import scipy as sp
@@ -19,20 +17,11 @@ from funcdef_macro_heterogeneous import *
 from funcdef_micro_heterogeneous import *
 from funcdef_util_heterogeneous import *
 
-
-# -----------------------------------------------------------------------------#
-
-# 1. create graph
-# 2. initialize robot deployment on nodes
-# 3. initialize transition matrix
-# 4. run macro-discrete model  / micro simulator
-# 5. plot evolution of robot population per node
-
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
 # Time on which the simulations will take place.
-t_max = 10.0
+t_max = 6.0
 delta_t = 0.02
 
 # Maximum rate possible for K.
@@ -61,19 +50,12 @@ random_transition = random_transition_matrix(num_nodes, max_rate / 2)  # Divide 
 deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition, t_max, delta_t)
 deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
 
-# initialize robots
-robots = initialize_robots(deploy_robots_init)
-
-# Set to True, to just run the optimization.
-just_optimize = False
 
 
 # -----------------------------------------------------------------------------#
 
 print "total robots, init: \t", np.sum(np.sum(deploy_robots_init))
-print "total robots, final: \t", np.sum(np.sum(deploy_robots_final))
 print "total traits, init: \t", np.sum(np.sum(deploy_traits_init))
-print "total traits, desired:\t", np.sum(np.sum(deploy_traits_desired))
 
 # -----------------------------------------------------------------------------#
 # initialize graph: all species move on same graph
@@ -91,15 +73,15 @@ adjacency_m = np.squeeze(np.asarray(adjacency_m))
 
 transition_m = optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_desired, species_traits, t_max, max_rate)
 
-if just_optimize:
-    sys.exit(0)
-
 # -----------------------------------------------------------------------------#
 # run microscopic stochastic simulation
 
 
 num_timesteps = int(t_max / delta_t)
-num_iter = 50
+num_iter = 40
+
+# initialize robots
+robots = initialize_robots(deploy_robots_init)
 
 deploy_robots_micro = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
 for it in range(num_iter):
@@ -107,28 +89,29 @@ for it in range(num_iter):
     robots_new, deploy_robots_micro[:,:,:,it] = microscopic_sim(num_timesteps, delta_t, robots, deploy_robots_init, transition_m)
 avg_deploy_robots_micro = np.mean(deploy_robots_micro,3)
 
-# -----------------------------------------------------------------------------#
-# euler integration
 
-deploy_robots_euler = run_euler_integration(deploy_robots_init, transition_m, t_max, dt)
+
+# -----------------------------------------------------------------------------#
+# run euler integration to drive robots to end state
+
+deploy_robots_euler = run_euler_integration(deploy_robots_init, transition_m, t_max, delta_t)
+
+deploy_robots_final = deploy_robots_euler[:,-1,:]
+deploy_traits_final = np.dot(deploy_robots_final, species_traits) 
+
 
 
 # -----------------------------------------------------------------------------#
 # plots
 
-
 # plot evolution over time
 species_index = 0
 trait_index = 0
 
-plot_robots_time(avg_deploy_robots_micro, species_index)
-plot_robots_time(deploy_robots_euler, species_index)
+plot_robots_time(avg_deploy_robots_micro, species_index) # plot micro average
+plot_robots_time(deploy_robots_euler, species_index) # plot macro
 
-#plot_traits_time(deploy_robots, species_traits, trait_index)
-
-
-plot_robots_ratio_time(avg_deploy_robots_micro, deploy_robots_final) 
-plot_traits_ratio_time(avg_deploy_robots_micro, deploy_traits_desired, species_traits)
-
+plot_robots_ratio_time_micmac(avg_deploy_robots_micro, deploy_robots_euler, deploy_robots_final)
+plot_traits_ratio_time_micmac(avg_deploy_robots_micro, deploy_robots_euler, deploy_traits_desired, species_traits)
 
 
