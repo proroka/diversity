@@ -21,7 +21,9 @@ from funcdef_util_heterogeneous import *
 # initialize world and robot community
 
 # Time on which the simulations will take place.
-t_max = 6.0
+t_max = 10.0 # influences desired state and optmization of transition matrix
+t_max_sim = 2.0 # influences simulations and plotting
+num_iter = 2 # iterations of micro sim
 delta_t = 0.02
 
 # Maximum rate possible for K.
@@ -37,7 +39,7 @@ max_trait_values = 2 # [0,1]: trait availability
 
 # robot species
 num_species = 2
-max_robots = 10 # maximum number of robots per node
+max_robots = 50 # maximum number of robots per node
 deploy_robots_init = np.random.randint(0, max_robots, size=(num_nodes, num_species))
 
 species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
@@ -76,10 +78,7 @@ transition_m = optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy
 # -----------------------------------------------------------------------------#
 # run microscopic stochastic simulation
 
-
-num_timesteps = int(t_max / delta_t)
-num_iter = 40
-
+num_timesteps = int(t_max_sim / delta_t)
 # initialize robots
 robots = initialize_robots(deploy_robots_init)
 
@@ -94,7 +93,7 @@ avg_deploy_robots_micro = np.mean(deploy_robots_micro,3)
 # -----------------------------------------------------------------------------#
 # run euler integration to drive robots to end state
 
-deploy_robots_euler = run_euler_integration(deploy_robots_init, transition_m, t_max, delta_t)
+deploy_robots_euler = run_euler_integration(deploy_robots_init, transition_m, t_max_sim, delta_t)
 
 deploy_robots_final = deploy_robots_euler[:,-1,:]
 deploy_traits_final = np.dot(deploy_robots_final, species_traits) 
@@ -111,7 +110,7 @@ trait_index = 0
 plot_robots_time(avg_deploy_robots_micro, species_index) # plot micro average
 plot_robots_time(deploy_robots_euler, species_index) # plot macro
 
-plot_robots_ratio_time_micmac(avg_deploy_robots_micro, deploy_robots_euler, deploy_robots_final)
-plot_traits_ratio_time_micmac(avg_deploy_robots_micro, deploy_robots_euler, deploy_traits_desired, species_traits)
+plot_robots_ratio_time_micmac(avg_deploy_robots_micro, deploy_robots_euler, deploy_robots_final, delta_t)
+plot_traits_ratio_time_micmac(avg_deploy_robots_micro, deploy_robots_euler, deploy_traits_desired, species_traits, delta_t)
 
 

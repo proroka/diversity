@@ -15,46 +15,71 @@ import networkx as nx
 # -----------------------------------------------------------------------------#
 # plot ratio of desired vs actual robot distribution
 
-def plot_robots_ratio_time_micmac(deploy_robots_mic, deploy_robots_mac, deploy_robots_desired):
-    
+def plot_robots_ratio_time_micmac(deploy_robots_mic, deploy_robots_mac, deploy_robots_desired, delta_t):
+    plot_option = 0 # 0: ratio, 1: cost
     num_iter = deploy_robots_mic.shape[1]
-
+    total_num_robots = np.sum(deploy_robots_mic[:,0,:])
+    
     diffmic_sqs = np.zeros(num_iter)
     diffmac_sqs = np.zeros(num_iter)
+    diffmic_rat = np.zeros(num_iter)
+    diffmac_rat = np.zeros(num_iter)
     for t in range(num_iter):
-        diffmic = deploy_robots_mic[:,t,:] - deploy_robots_desired
+        diffmic = np.abs(deploy_robots_mic[:,t,:] - deploy_robots_desired)
+        diffmic_rat[t] = np.sum(diffmic) / total_num_robots       
         diffmic_sqs[t] = np.sum(np.square(diffmic))
-        diffmac = deploy_robots_mac[:,t,:] - deploy_robots_desired
+        diffmac = np.abs(deploy_robots_mac[:,t,:] - deploy_robots_desired)
+        diffmac_rat[t] = np.sum(diffmac) / total_num_robots 
         diffmac_sqs[t] = np.sum(np.square(diffmac))
         
-    x = np.arange(0, num_iter)
-    plt.plot(x,diffmic_sqs)
-    plt.plot(x,diffmac_sqs)
-        
+    x = np.arange(0, num_iter) * delta_t
+    if(plot_option==0):
+        plt.plot(x,diffmic_rat)
+        plt.plot(x,diffmac_rat)
+    if(plot_option==1):
+        plt.plot(x,diffmic_sqs)
+        plt.plot(x,diffmac_sqs)
+    
+    plt.xlabel('time [s]')    
+    plt.ylabel('ratio of misplaced robots')
     plt.show()
     
 # -----------------------------------------------------------------------------#
 # plot ratio of desired vs actual robot distribution
 
-def plot_traits_ratio_time_micmac(deploy_robots_mic, deploy_robots_mac, deploy_traits_desired, transform):
-    
+def plot_traits_ratio_time_micmac(deploy_robots_mic, deploy_robots_mac, deploy_traits_desired, transform, delta_t):
+    plot_option = 0 # 0: ratio, 1: cost
     num_iter = deploy_robots_mic.shape[1]
+    total_num_traits = np.sum(deploy_traits_desired)
 
     diffmic_sqs = np.zeros(num_iter)
     diffmac_sqs = np.zeros(num_iter)
+    diffmic_rat = np.zeros(num_iter)
+    diffmac_rat = np.zeros(num_iter)
     for t in range(num_iter):
         traits = np.dot(deploy_robots_mic[:,t,:], transform)
-        diffmic = traits - deploy_traits_desired
+        diffmic = np.abs(traits - deploy_traits_desired)
+        diffmic_rat[t] = np.sum(diffmic) / total_num_traits      
         diffmic_sqs[t] = np.sum(np.square(diffmic))
+
         
         traits = np.dot(deploy_robots_mac[:,t,:], transform)
-        diffmac =  traits - deploy_traits_desired
+        diffmac = np.abs(traits - deploy_traits_desired)
+        diffmac_rat[t] = np.sum(diffmac) / total_num_traits       
         diffmac_sqs[t] = np.sum(np.square(diffmac))
         
-    x = np.arange(0, num_iter)
-    plt.plot(x,diffmic_sqs)
-    plt.plot(x,diffmac_sqs)
         
+    x = np.arange(0, num_iter) * delta_t
+    if(plot_option==0):
+        plt.plot(x,diffmic_rat)
+        plt.plot(x,diffmac_rat)
+    if(plot_option==1):
+        plt.plot(x,diffmic_sqs)
+        plt.plot(x,diffmac_sqs)
+    
+    plt.xlabel('time [s]')    
+    plt.ylabel('ratio of misplaced traits')
+       
     plt.show()  
     
     
