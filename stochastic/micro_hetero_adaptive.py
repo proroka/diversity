@@ -33,7 +33,9 @@ from funcdef_util_heterogeneous import *
 # initialize world and robot community
 
 # Time on which the simulations will take place.
-t_max = 5.0
+t_max = 10.0 # influences desired state and optmization of transition matrix
+t_max_sim = 2.0 # influences simulations and plotting
+num_iter = 2 # iterations of micro sim
 delta_t = 0.02
 
 # Maximum rate possible for K.
@@ -97,7 +99,6 @@ transition_m_init = optimal_transition_matrix(adjacency_m, deploy_robots_init, d
 # run microscopic stochastic simulation
 
 num_timesteps = int(t_max / delta_t)
-num_iter = 20
 
 deploy_robots_micro = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
 for it in range(num_iter):
