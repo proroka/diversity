@@ -301,14 +301,25 @@ def ElementsBounds(nelements, max_rate, max_time, f_new, x_new, f_old, x_old):
 # -----------------------------------------------------------------------------#
 # optimization: basin hopping
 
-def Optimize_Hetero_Fast(adjacency_matrix, initial_state, desired_steadystate, transform, max_time, max_rate, verbose):
+def Optimize_Hetero_Fast(adjacency_matrix, initial_state, desired_steadystate,
+                         transform, max_time, max_rate, verbose, l_norm, match,
+                         optimizing_t, force_steady_state):
     global current_iteration
     current_iteration = 0
+    
+    if l_norm==1 and match==0:
+        cost_mode = ABSOLUTE_AT_LEAST
+    if l_norm==1 and match==1:
+        cost_mode = ABSOLUTE_EXACT
+    if l_norm==2 and match==0:
+        cost_mode = QUADRATIC_AT_LEAST
+    if l_norm==2 and match==1:
+        cost_mode = QUADRATIC_EXACT
 
+    # settings
     verify_gradient = False
-    cost_mode = QUADRATIC_EXACT
-    optimizing_t = False
-    force_steady_state = 0.0 # 10.0  # Only used when optimizing_t is True. Set to zero if you don't care about steady-state.
+    #optimizing_t = False
+    #force_steady_state = 0.0 # 10.0  # Only used when optimizing_t is True. Set to zero if you don't care about steady-state.
     alpha = 0.1  # + alpha * t^2.
     mu = 0.0  # margin
 

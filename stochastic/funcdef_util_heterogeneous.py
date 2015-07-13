@@ -25,10 +25,10 @@ def plot_robots_ratio_time_micmac(deploy_robots_mic, deploy_robots_mac, deploy_r
     diffmic_rat = np.zeros(num_iter)
     diffmac_rat = np.zeros(num_iter)
     for t in range(num_iter):
-        diffmic = np.abs(deploy_robots_mic[:,t,:] - deploy_robots_desired)
+        diffmic = np.abs(deploy_robots_mic[:,t,:] - deploy_robots_desired)    
+        diffmac = np.abs(deploy_robots_mac[:,t,:] - deploy_robots_desired) 
         diffmic_rat[t] = np.sum(diffmic) / total_num_robots       
         diffmic_sqs[t] = np.sum(np.square(diffmic))
-        diffmac = np.abs(deploy_robots_mac[:,t,:] - deploy_robots_desired)
         diffmac_rat[t] = np.sum(diffmac) / total_num_robots 
         diffmac_sqs[t] = np.sum(np.square(diffmac))
         
@@ -47,7 +47,7 @@ def plot_robots_ratio_time_micmac(deploy_robots_mic, deploy_robots_mac, deploy_r
 # -----------------------------------------------------------------------------#
 # plot ratio of desired vs actual robot distribution
 
-def plot_traits_ratio_time_micmac(deploy_robots_mic, deploy_robots_mac, deploy_traits_desired, transform, delta_t):
+def plot_traits_ratio_time_micmac(deploy_robots_mic, deploy_robots_mac, deploy_traits_desired, transform, delta_t, match):
     plot_option = 0 # 0: ratio, 1: cost
     num_iter = deploy_robots_mic.shape[1]
     total_num_traits = np.sum(deploy_traits_desired)
@@ -57,14 +57,20 @@ def plot_traits_ratio_time_micmac(deploy_robots_mic, deploy_robots_mac, deploy_t
     diffmic_rat = np.zeros(num_iter)
     diffmac_rat = np.zeros(num_iter)
     for t in range(num_iter):
-        traits = np.dot(deploy_robots_mic[:,t,:], transform)
-        diffmic = np.abs(traits - deploy_traits_desired)
+        
+        if match==0:
+            traits = np.dot(deploy_robots_mic[:,t,:], transform)
+            diffmic = np.abs(np.minimum(traits - deploy_traits_desired, 0))
+            traits = np.dot(deploy_robots_mac[:,t,:], transform)
+            diffmac = np.abs(np.minimum(traits - deploy_traits_desired, 0))
+        else:
+            traits = np.dot(deploy_robots_mic[:,t,:], transform)
+            diffmic = np.abs(traits - deploy_traits_desired)   
+            traits = np.dot(deploy_robots_mac[:,t,:], transform)
+            diffmac = np.abs(traits - deploy_traits_desired)  
+        
         diffmic_rat[t] = np.sum(diffmic) / total_num_traits      
         diffmic_sqs[t] = np.sum(np.square(diffmic))
-
-        
-        traits = np.dot(deploy_robots_mac[:,t,:], transform)
-        diffmac = np.abs(traits - deploy_traits_desired)
         diffmac_rat[t] = np.sum(diffmac) / total_num_traits       
         diffmac_sqs[t] = np.sum(np.square(diffmac))
         
@@ -124,27 +130,32 @@ def plot_traits_ratio_time(deploy_robots, deploy_traits_desired, transform):
 # adds all traits to scale size of nodes
 
 def plot_network(graph, deploy_traits_init, deploy_traits_final):
-    # draw graph with node size proportional to robot population
-    scale = 10 # scale size of node
-
-    print 'Initial configuration:'
-    #nx.draw_circular(graph, node_size=deploy_robots_init[:,s_ind]*scale)
-    nx.draw(graph)
+    # draw graph with node size proportional to trait distribution
+    
+    nx.draw_circular(graph)
+    
+    print "initial config:"
+    scale = 1000 / np.mean(np.sum(deploy_traits_init,1)) # scale size of node
+    nx.draw_circular(graph, node_size=np.sum(deploy_traits_init,1)*scale)
     plt.show()
-
-    dg = nx.DiGraph(graph)
-    nx.draw(dg)
+    
+    print "final config:"
+    scale = 1000 / np.mean(np.sum(deploy_traits_final,1)) # scale size of node
+    nx.draw_circular(graph, node_size=np.sum(deploy_traits_final,1)*scale)
+    plt.show()
+    
+    #nx.draw(graph)
+    #dg = nx.DiGraph(graph)
+    #nx.draw(dg)
 
     #nx.draw_circular(graph, node_size=np.sum(deploy_traits_init,1)*scale)
     #nx. draw_networkx_labels(G, pos[, labels, ...])
 
-    plt.show()
-
     # draw graph with node size proportional to robot population
-#    print 'Final configuration:'
-    #nx.draw_circular(graph, node_size=deploy_robots[:,t_max-1,s_ind]*scale)
- #   nx.draw_circular(graph, node_size=np.sum(deploy_traits_final,1)*scale)
-  #  plt.show()
+    # print 'Final configuration:'
+    # nx.draw_circular(graph, node_size=deploy_robots[:,t_max-1,s_ind]*scale)
+    # nx.draw_circular(graph, node_size=np.sum(deploy_traits_final,1)*scale)
+    # plt.show()
 
 
 

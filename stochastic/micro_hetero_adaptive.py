@@ -32,14 +32,16 @@ from funcdef_util_heterogeneous import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-# Time on which the simulations will take place.
+# simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
 t_max_sim = 2.0 # influences simulations and plotting
 num_iter = 2 # iterations of micro sim
-delta_t = 0.02
+delta_t = 0.02 # time step
+max_rate = 5.0 # maximum transition rate possible for K.
 
-# Maximum rate possible for K.
-max_rate = 5.0
+# cost function
+l_norm = 2 # 2: quadratic 1: absolute
+match = 0 # 1: exact 0: at-least
 
 # create network of sites
 size_lattice = 2
@@ -71,18 +73,20 @@ robots = initialize_robots(deploy_robots_init)
 just_optimize = False
 
 
-# -----------------------------------------------------------------------------#
-
 print "total robots, init: \t", np.sum(np.sum(deploy_robots_init))
-print "total robots, final: \t", np.sum(np.sum(deploy_robots_final))
 print "total traits, init: \t", np.sum(np.sum(deploy_traits_init))
-print "total traits, desired:\t", np.sum(np.sum(deploy_traits_desired))
+
+# if 'at-least' cost function, reduce number of traits desired
+if match==0:
+    deploy_traits_desired *= (np.random.rand()*0.1 + 0.85)
+    print "total traits, at least: \t", np.sum(np.sum(deploy_traits_desired))
 
 # -----------------------------------------------------------------------------#
 # initialize graph: all species move on same graph
 
-graph = nx.grid_2d_graph(size_lattice, size_lattice) #, periodic = True)
+# graph = nx.grid_2d_graph(size_lattice, size_lattice) #, periodic = True)
 # Another option for the graph: nx.connected_watts_strogatz_graph(num_nodes, num_nodes - 1, 0.5)
+graph = nx.connected_watts_strogatz_graph(num_nodes, 3, 0.5)
 
 # get the adjencency matrix
 adjacency_m = nx.to_numpy_matrix(graph)
@@ -90,15 +94,15 @@ adjacency_m = np.squeeze(np.asarray(adjacency_m))
 
 
 # -----------------------------------------------------------------------------#
-# find optimal transition matrix
+# find optimal transition matrix for plain micro
 
-transition_m_init = optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_desired, species_traits, t_max, max_rate)
-
+transition_m_init = optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_desired,
+                                              species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=10.0)
 
 # -----------------------------------------------------------------------------#
 # run microscopic stochastic simulation
 
-num_timesteps = int(t_max / delta_t)
+num_timesteps = int(t_max_sim / delta_t)
 
 deploy_robots_micro = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
 for it in range(num_iter):
@@ -108,10 +112,10 @@ avg_deploy_robots_micro = np.mean(deploy_robots_micro,3)
 
   
 # -----------------------------------------------------------------------------#
-# run adaptive microscopic stochastic simulation
+# run adaptive microscopic stochastic simulation, RHC
 
 slices = 5
-t_window = t_max / slices
+t_window = t_max_sim / slices
 numts_window = int(t_window / delta_t)
 
 deploy_robots_micro_adapt = np.zeros((num_nodes, num_timesteps, num_species, num_iter)) 
@@ -128,7 +132,8 @@ for it in range(num_iter):
         # put together slices
         deploy_robots_micro_adapt[:,sl*numts_window:(sl+1)*numts_window,:,it] = deploy_robots_micro_slice
         # calculate adapted transition matrix    
-        transition_m = optimal_transition_matrix(adjacency_m, deploy_robots_init_slice, deploy_traits_desired, species_traits, t_max, max_rate)
+        transition_m = optimal_transition_matrix(adjacency_m, deploy_robots_init_slice, deploy_traits_desired, 
+                                                 species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=t_window)
 
 avg_deploy_robots_micro_adapt = np.mean(deploy_robots_micro_adapt,3)
 
@@ -136,25 +141,24 @@ avg_deploy_robots_micro_adapt = np.mean(deploy_robots_micro_adapt,3)
 # -----------------------------------------------------------------------------#
 # euler integration
 
-deploy_robots_euler = run_euler_integration(deploy_robots_init, transition_m_init, t_max, delta_t)
+deploy_robots_euler = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
 
 
 # -----------------------------------------------------------------------------#
 # plots
 
-# plot evolution over time
-species_index = 0
-trait_index = 0
+# plot graph
+nxmod.draw_circular(deploy_traits_init,graph)
+plt.show()
+nxmod.draw_circular(deploy_traits_final,graph)
+plt.show()
 
-plot_robots_time(deploy_robots_euler, species_index)
-plot_robots_time(avg_deploy_robots_micro, species_index)
-plot_robots_time(avg_deploy_robots_micro_adapt, species_index)
-
-
-plot_robots_ratio_time_micmac(avg_deploy_robots_micro, avg_deploy_robots_micro_adapt, deploy_robots_final)
-
-
-
+# plot traits ratio
+plot_traits_ratio_time_micmac(avg_deploy_robots_micro,deploy_robots_euler, deploy_traits_desired, 
+                              species_traits, delta_t, match)
+                              
+plot_traits_ratio_time_micmac(avg_deploy_robots_micro, avg_deploy_robots_micro_adapt, deploy_traits_desired, 
+                              species_traits, delta_t, match)
 
 
 
