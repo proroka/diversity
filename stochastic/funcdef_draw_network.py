@@ -272,7 +272,7 @@ def draw_networkx_modified(Gtraits, G, pos=None, with_labels=False, **kwds):
 
     min_val = np.min(Gtraits)
     range_vals = (np.max(Gtraits) - np.min(Gtraits))
-    if range_vals==0: 
+    if range_vals==0: # all trait values the same
         range_vals = 5
     # fill scale from 10:1000
     offmin = 10

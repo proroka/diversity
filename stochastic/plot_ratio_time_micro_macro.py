@@ -27,20 +27,20 @@ tstart = time.strftime("%Y%m%d-%H%M%S")
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
 t_max_sim = 2.0 # influences simulations and plotting
-num_iter = 30 # iterations of micro sim
+num_iter = 20 # iterations of micro sim
 delta_t = 0.02 # time step
 max_rate = 5.0 # Maximum rate possible for K.
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
-match = 0 # 1: exact 0: at-least
+match = 1 # 1: exact 0: at-least
 
 # create network of sites
-size_lattice = 3
-num_nodes = size_lattice**2
+# size_lattice = 3
+num_nodes = 10 #size_lattice**2
 
 # set of traits
-num_traits = 3
+num_traits = 4
 max_trait_values = 2 # [0,1]: trait availability
 
 # robot species
@@ -56,7 +56,7 @@ while (min(np.sum(species_traits,0))==0 or min(np.sum(species_traits,1))==0):
 deploy_traits_init = np.dot(deploy_robots_init, species_traits)
 
 # random end state
-random_transition = random_transition_matrix(num_nodes, max_rate / 2)  # Divide max_rate by 2 for the random matrix to give some slack.
+random_transition = random_transition_matrix(num_nodes, max_rate/2)  # Divide max_rate by 2 for the random matrix to give some slack.
 
 # sample final desired trait distribution based on random transition matrix
 deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition, t_max*4., delta_t)
@@ -75,7 +75,7 @@ if match==0:
 
 # graph = nx.grid_2d_graph(size_lattice, size_lattice) #, periodic = True)
 # Another option for the graph: nx.connected_watts_strogatz_graph(num_nodes, num_nodes - 1, 0.5)
-graph = nx.connected_watts_strogatz_graph(num_nodes, 3, 0.5)
+graph = nx.connected_watts_strogatz_graph(num_nodes, 3, 0.6)
 
 # get the adjencency matrix
 adjacency_m = nx.to_numpy_matrix(graph)
@@ -85,11 +85,14 @@ adjacency_m = np.squeeze(np.asarray(adjacency_m))
 # -----------------------------------------------------------------------------#
 # find optimal transition matrix
 
-transition_m = optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_desired,
-                                         species_traits, t_max, max_rate, l_norm, match, optimizing_t=True, force_steady_state=3.0)
+init_transition_values = np.array([])
+transition_m = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init, deploy_traits_desired,
+                                         species_traits, t_max, max_rate, l_norm, match, optimizing_t=False, force_steady_state=1.0)
 
-transition_m_mac = optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_desired,
-                                         species_traits, t_max, max_rate, l_norm, match, optimizing_t=False, force_steady_state=0.)
+transition_m_mac = transition_m.copy()
+
+#transition_m_mac = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init, deploy_traits_desired,
+#                                         species_traits, t_max, max_rate, l_norm, match, optimizing_t=True, force_steady_state=1.0)
 # -----------------------------------------------------------------------------#
 # run microscopic stochastic simulation
 
@@ -135,9 +138,9 @@ pickle.dump(deploy_robots_euler, open(prefix+"dre.p", "wb"))
 # plots
 
 #nx.draw_circular(graph)
-fig1 = nxmod.draw_circular(deploy_traits_init,graph)
+fig1 = nxmod.draw_circular(deploy_traits_init, graph, linewidths=3)
 plt.show()
-fig2 = nxmod.draw_circular(deploy_traits_final,graph)
+fig2 = nxmod.draw_circular(deploy_traits_final,graph, linewidths=3)
 plt.show()
 #nxmod.draw_circular(deploy_traits_desired,graph)
 #plt.show()

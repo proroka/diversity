@@ -87,7 +87,7 @@ def plot_traits_ratio_time_micmac(deploy_robots_micro, deploy_robots_mac, deploy
     s_mic = np.std(diffmic_rat,1)
     plt.plot(x,m_mic)
     err_ax = np.arange(0,num_tsteps,int(num_tsteps/20))
-    plt.errorbar(x[err_ax],m_mic[err_ax],s_mic[err_ax],fmt='o')
+    plt.errorbar(x[err_ax],m_mic[err_ax],s_mic[err_ax],fmt='o',markersize=3,color='black')
     
     plt.plot(x,diffmac_rat)
     

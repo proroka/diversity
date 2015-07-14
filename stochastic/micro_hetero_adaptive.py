@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import sys
 import time
+import pickle
 
 # my modules
 from optimize_transition_matrix_hetero import *
@@ -35,13 +36,13 @@ import funcdef_draw_network as nxmod
 # initialize world and robot community
 tstart = time.strftime("%Y%m%d-%H%M%S")
 
-save_data = 0
-save_plots = 0
+save_data = 1
+save_plots = 1
 
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
 t_max_sim = 2.0 # influences simulations and plotting
-num_iter = 2 # iterations of micro sim
+num_iter = 40 # iterations of micro sim
 delta_t = 0.02 # time step
 max_rate = 5.0 # maximum transition rate possible for K.
 
@@ -59,7 +60,7 @@ max_trait_values = 2 # [0,1]: trait availability
 
 # robot species
 num_species = 2
-max_robots = 10 # maximum number of robots per node
+max_robots = 50 # maximum number of robots per node
 deploy_robots_init = np.random.randint(0, max_robots, size=(num_nodes, num_species))
 
 # ensure each species has at least 1 trait, and that all traits are present
@@ -100,12 +101,11 @@ adjacency_m = np.squeeze(np.asarray(adjacency_m))
 
 
 # -----------------------------------------------------------------------------#
-# find optimal transition matrix for plain micr
-print 'before init'                       
+# find optimal transition matrix for plain micro
+
 init_transition_values = np.array([])
 transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init, deploy_traits_desired,
                                               species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=1.)
-print 'after init'
 
 # -----------------------------------------------------------------------------#
 # run microscopic stochastic simulation
@@ -122,7 +122,7 @@ avg_deploy_robots_micro = np.mean(deploy_robots_micro,3)
 # -----------------------------------------------------------------------------#
 # run adaptive microscopic stochastic simulation, RHC
 
-slices = 5
+slices = 10
 t_window = t_max_sim / slices
 numts_window = int(t_window / delta_t)
 
@@ -130,12 +130,12 @@ deploy_robots_micro_adapt = np.zeros((num_nodes, num_timesteps, num_species, num
 
 init_transition_values = np.array([])
 for it in range(num_iter): 
-    print "RHC Iteration: ", it
+    
     transition_m = transition_m_init.copy()
     deploy_robots_init_slice = deploy_robots_init.copy()
     robots_slice = robots.copy()
     for sl in range(slices):
-        print "Slice: ", sl
+        print "RHC Iteration: ", it , "/", num_iter, "Slice: ", sl,"/", slices
         robots_slice, deploy_robots_micro_slice = microscopic_sim(numts_window, delta_t, robots_slice, deploy_robots_init_slice, transition_m)
         deploy_robots_init_slice = deploy_robots_micro_slice[:,-1,:]
         # put together slices
