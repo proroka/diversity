@@ -47,52 +47,60 @@ def plot_robots_ratio_time_micmac(deploy_robots_mic, deploy_robots_mac, deploy_r
 # -----------------------------------------------------------------------------#
 # plot ratio of desired vs actual robot distribution
 
-def plot_traits_ratio_time_micmac(deploy_robots_mic, deploy_robots_mac, deploy_traits_desired, transform, delta_t, match):
+def plot_traits_ratio_time_micmac(deploy_robots_micro, deploy_robots_mac, deploy_traits_desired, transform, delta_t, match):
+    
+    fig = plt.figure()
+    
+    deploy_robots_mic = np.mean(deploy_robots_micro,3)
+
     plot_option = 0 # 0: ratio, 1: cost
-    num_iter = deploy_robots_mic.shape[1]
+    num_tsteps = deploy_robots_mic.shape[1]
     total_num_traits = np.sum(deploy_traits_desired)
 
-    diffmic_sqs = np.zeros(num_iter)
-    diffmac_sqs = np.zeros(num_iter)
-    diffmic_rat = np.zeros(num_iter)
-    diffmac_rat = np.zeros(num_iter)
-    for t in range(num_iter):
+    #deploy_robots_micro[:,:,:,it]
+    num_it = deploy_robots_micro.shape[3]
+    diffmic_rat = np.zeros((num_tsteps, num_it))
+    diffmac_rat = np.zeros(num_tsteps)
+
+    for it in range(num_it):
+        deploy_robots_mic = deploy_robots_micro[:,:,:,it]
+        for t in range(num_tsteps):
+            
+            if match==0:
+                traits = np.dot(deploy_robots_mic[:,t,:], transform)
+                diffmic = np.abs(np.minimum(traits - deploy_traits_desired, 0))
+                traits = np.dot(deploy_robots_mac[:,t,:], transform)
+                diffmac = np.abs(np.minimum(traits - deploy_traits_desired, 0))
+            else:
+                traits = np.dot(deploy_robots_mic[:,t,:], transform)
+                diffmic = np.abs(traits - deploy_traits_desired)   
+                traits = np.dot(deploy_robots_mac[:,t,:], transform)
+                diffmac = np.abs(traits - deploy_traits_desired)  
+            
+            diffmic_rat[t,it] = np.sum(diffmic) / total_num_traits      
+            diffmac_rat[t] = np.sum(diffmac) / total_num_traits       
         
-        if match==0:
-            traits = np.dot(deploy_robots_mic[:,t,:], transform)
-            diffmic = np.abs(np.minimum(traits - deploy_traits_desired, 0))
-            traits = np.dot(deploy_robots_mac[:,t,:], transform)
-            diffmac = np.abs(np.minimum(traits - deploy_traits_desired, 0))
-        else:
-            traits = np.dot(deploy_robots_mic[:,t,:], transform)
-            diffmic = np.abs(traits - deploy_traits_desired)   
-            traits = np.dot(deploy_robots_mac[:,t,:], transform)
-            diffmac = np.abs(traits - deploy_traits_desired)  
         
-        diffmic_rat[t] = np.sum(diffmic) / total_num_traits      
-        diffmic_sqs[t] = np.sum(np.square(diffmic))
-        diffmac_rat[t] = np.sum(diffmac) / total_num_traits       
-        diffmac_sqs[t] = np.sum(np.square(diffmac))
-        
-        
-    x = np.arange(0, num_iter) * delta_t
-    if(plot_option==0):
-        plt.plot(x,diffmic_rat)
-        plt.plot(x,diffmac_rat)
-    if(plot_option==1):
-        plt.plot(x,diffmic_sqs)
-        plt.plot(x,diffmac_sqs)
+    x = np.arange(0, num_tsteps) * delta_t
+
+    m_mic = np.mean(diffmic_rat,1)
+    s_mic = np.std(diffmic_rat,1)
+    plt.plot(x,m_mic)
+    err_ax = np.arange(0,num_tsteps,int(num_tsteps/20))
+    plt.errorbar(x[err_ax],m_mic[err_ax],s_mic[err_ax],fmt='o')
+    
+    plt.plot(x,diffmac_rat)
     
     plt.xlabel('time [s]')    
     plt.ylabel('ratio of misplaced traits')
        
-    plt.show()  
-    
+    #plt.show()  
+    return fig
     
 # -----------------------------------------------------------------------------#
 # plot ratio of desired vs actual robot distribution
 
-def plot_robots_ratio_time(deploy_robots, deploy_robots_desired):
+def plot_robots_cost_time(deploy_robots, deploy_robots_desired):
     
     num_iter = deploy_robots.shape[1]
 
@@ -108,7 +116,7 @@ def plot_robots_ratio_time(deploy_robots, deploy_robots_desired):
 # -----------------------------------------------------------------------------#
 # plot
     
-def plot_traits_ratio_time(deploy_robots, deploy_traits_desired, transform):
+def plot_traits_cost_time(deploy_robots, deploy_traits_desired, transform):
     
     num_iter = deploy_robots.shape[1]
 

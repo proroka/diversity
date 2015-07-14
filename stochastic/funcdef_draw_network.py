@@ -138,7 +138,7 @@ def draw(Gtraits, G, pos=None, ax=None, hold=None, **kwds):
         plt.hold(b)
         raise
     plt.hold(b)
-    return
+    return cf
     
     
 def draw_networkx_modified(Gtraits, G, pos=None, with_labels=False, **kwds):
@@ -963,7 +963,8 @@ def draw_circular(Gtraits, G, **kwargs):
        with the exception of the pos parameter which is not used by this 
        function.
     """
-    draw(Gtraits, G, circular_layout(G), **kwargs)    
+    fig = draw(Gtraits, G, circular_layout(G), **kwargs)  
+    return fig
     
     
 def draw_random(G, **kwargs):
