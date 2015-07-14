@@ -1,2 +1,5 @@
 # ignore generated .pyc files,
 *.pyc
+stochastic/data/*
+stochastic/plots/*
+testing/*

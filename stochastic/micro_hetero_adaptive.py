@@ -13,12 +13,14 @@ import pylab as pl
 import matplotlib.pyplot as plt
 import networkx as nx
 import sys
+import time
 
 # my modules
 from optimize_transition_matrix_hetero import *
 from funcdef_macro_heterogeneous import *
 from funcdef_micro_heterogeneous import *
 from funcdef_util_heterogeneous import *
+import funcdef_draw_network as nxmod
 
 
 # -----------------------------------------------------------------------------#
@@ -33,16 +35,19 @@ from funcdef_util_heterogeneous import *
 # initialize world and robot community
 tstart = time.strftime("%Y%m%d-%H%M%S")
 
+save_data = 0
+save_plots = 0
+
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
 t_max_sim = 2.0 # influences simulations and plotting
-num_iter = 100 # iterations of micro sim
+num_iter = 2 # iterations of micro sim
 delta_t = 0.02 # time step
 max_rate = 5.0 # maximum transition rate possible for K.
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
-match = 0 # 1: exact 0: at-least
+match = 1 # 1: exact 0: at-least
 
 # create network of sites
 size_lattice = 2
@@ -95,10 +100,12 @@ adjacency_m = np.squeeze(np.asarray(adjacency_m))
 
 
 # -----------------------------------------------------------------------------#
-# find optimal transition matrix for plain micro
-                                              
-transition_m_init = optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_desired,
-                                              species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=5.0)
+# find optimal transition matrix for plain micr
+print 'before init'                       
+init_transition_values = np.array([])
+transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init, deploy_traits_desired,
+                                              species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=1.)
+print 'after init'
 
 # -----------------------------------------------------------------------------#
 # run microscopic stochastic simulation
@@ -115,13 +122,13 @@ avg_deploy_robots_micro = np.mean(deploy_robots_micro,3)
 # -----------------------------------------------------------------------------#
 # run adaptive microscopic stochastic simulation, RHC
 
-slices = 10
+slices = 5
 t_window = t_max_sim / slices
 numts_window = int(t_window / delta_t)
 
 deploy_robots_micro_adapt = np.zeros((num_nodes, num_timesteps, num_species, num_iter)) 
 
-
+init_transition_values = np.array([])
 for it in range(num_iter): 
     print "RHC Iteration: ", it
     transition_m = transition_m_init.copy()
@@ -134,9 +141,10 @@ for it in range(num_iter):
         # put together slices
         deploy_robots_micro_adapt[:,sl*numts_window:(sl+1)*numts_window,:,it] = deploy_robots_micro_slice
         # calculate adapted transition matrix    
-        transition_m = optimal_transition_matrix(adjacency_m, deploy_robots_init_slice, deploy_traits_desired, 
-                                                 species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=t_window)
-
+        init_transition_values = transition_m.copy()
+        transition_m = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init_slice, deploy_traits_desired, 
+                                                 species_traits, t_max, max_rate,l_norm, match, optimizing_t=True,
+                                                 force_steady_state=t_window)
 avg_deploy_robots_micro_adapt = np.mean(deploy_robots_micro_adapt,3)
 
 
@@ -148,18 +156,20 @@ deploy_robots_euler = run_euler_integration(deploy_robots_init, transition_m_ini
 # -----------------------------------------------------------------------------#
 # save variables
 
-tend = time.strftime("%Y%m%d-%H%M%S")
-prefix = "./data/" + tend + "_"
-print "Time start: ", tstart
-print "Time end: ", tend
-
-pickle.dump(species_traits, open(prefix+"st.p", "wb"))
-pickle.dump(graph, open(prefix+"graph.p", "wb"))
-pickle.dump(deploy_traits_init, open(prefix+"dti.p", "wb"))
-pickle.dump(deploy_traits_desired, open(prefix+"dtd.p", "wb"))
-pickle.dump(deploy_robots_micro_adapt, open(prefix+"drma.p", "wb"))
-pickle.dump(deploy_robots_micro, open(prefix+"drm.p", "wb"))
-pickle.dump(deploy_robots_euler, open(prefix+"dre.p", "wb"))
+if save_data:
+    
+    tend = time.strftime("%Y%m%d-%H%M%S")
+    prefix = "./data/" + tend + "_"
+    print "Time start: ", tstart
+    print "Time end: ", tend
+    
+    pickle.dump(species_traits, open(prefix+"st.p", "wb"))
+    pickle.dump(graph, open(prefix+"graph.p", "wb"))
+    pickle.dump(deploy_traits_init, open(prefix+"dti.p", "wb"))
+    pickle.dump(deploy_traits_desired, open(prefix+"dtd.p", "wb"))
+    pickle.dump(deploy_robots_micro_adapt, open(prefix+"drma.p", "wb"))
+    pickle.dump(deploy_robots_micro, open(prefix+"drm.p", "wb"))
+    pickle.dump(deploy_robots_euler, open(prefix+"dre.p", "wb"))
 
 # to read
 # st = pickle.load(open(prefix+"st.p", "rb"))
@@ -183,9 +193,11 @@ fig4 = plot_traits_ratio_time_micmac(deploy_robots_micro_adapt, deploy_robots_eu
 # -----------------------------------------------------------------------------#
 # save plots
  
-fig1.savefig('./plots/rhc_gi.eps') 
-fig2.savefig('./plots/rhc_gd.eps')                           
-fig3.savefig('./plots/rhc_trt_normal.eps')  
-fig4.savefig('./plots/rhc_trt_adapt.eps') 
+if save_plots:
+        
+    fig1.savefig('./plots/rhc_gi.eps') 
+    fig2.savefig('./plots/rhc_gd.eps')                           
+    fig3.savefig('./plots/rhc_trt_normal.eps')  
+    fig4.savefig('./plots/rhc_trt_adapt.eps') 
 
 

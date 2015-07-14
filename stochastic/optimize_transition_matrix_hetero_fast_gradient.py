@@ -301,7 +301,7 @@ def ElementsBounds(nelements, max_rate, max_time, f_new, x_new, f_old, x_old):
 # -----------------------------------------------------------------------------#
 # optimization: basin hopping
 
-def Optimize_Hetero_Fast(adjacency_matrix, initial_state, desired_steadystate,
+def Optimize_Hetero_Fast(init_values, adjacency_matrix, initial_state, desired_steadystate,
                          transform, max_time, max_rate, verbose, l_norm, match,
                          optimizing_t, force_steady_state):
     global current_iteration
@@ -323,12 +323,28 @@ def Optimize_Hetero_Fast(adjacency_matrix, initial_state, desired_steadystate,
     alpha = 0.1  # + alpha * t^2.
     mu = 0.0  # margin
 
-    # initial random elements (only where the adjacency matrix has a 1).
+    # initial array of random elements (only where the adjacency matrix has a 1).
     num_species = initial_state.shape[1]
-    num_nonzero_elements = np.sum(adjacency_matrix)
-    # assume that all species have same adjacency matrix
-    init_elements = np.random.rand(num_nonzero_elements*num_species) * max_rate
+    num_nonzero_elements = np.sum(adjacency_matrix) # note: diagonal is 0
+    if init_values.shape[0]==0:    
+        # assume that all species have same adjacency matrix
+        init_elements = np.random.rand(num_nonzero_elements*num_species) * max_rate
+    else:
+
+        init_elements = np.zeros(num_nonzero_elements*num_species)    
+        adjacency_matrix = adjacency_matrix.astype(bool)
+        a = adjacency_matrix.flatten()    
+        for s in range(num_species):
+            temp = init_values[:,:,s]
+            init_elements[s*num_nonzero_elements:(s+1)*num_nonzero_elements] = temp[adjacency_matrix].flatten()         
+
+        print 'shape init_values', init_values.shape
+        # print 'size init_values_arr', init_values_arr.shape
+        #init_elements = init_values_arr[init_values_arr!=0]
+        print 'nominal num elements', num_nonzero_elements*num_species
+        print 'actual num elements', init_elements.shape
     bounds = [(0., max_rate)] * num_nonzero_elements*num_species
+
 
     # Check gradient if requested.
     if verify_gradient:

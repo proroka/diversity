@@ -9,7 +9,6 @@ import scipy as sp
 import pylab as pl
 import matplotlib.pyplot as plt
 import networkx as nx
-import funcdef_draw_network as nxmod
 import sys
 import pickle
 import time
@@ -19,6 +18,7 @@ from optimize_transition_matrix_hetero import *
 from funcdef_macro_heterogeneous import *
 from funcdef_micro_heterogeneous import *
 from funcdef_util_heterogeneous import *
+import funcdef_draw_network as nxmod
 
 # -----------------------------------------------------------------------------#
 # initialize world and robot community

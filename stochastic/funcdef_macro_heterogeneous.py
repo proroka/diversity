@@ -70,14 +70,15 @@ def run_euler_integration(deploy_robots_init, transition_m, t_max, delta_t):
 # -----------------------------------------------------------------------------#
 # find optimal transition matrix
 
-def optimal_transition_matrix(adjacency_m, deploy_robots_init, deploy_traits_desired, 
-                              species_traits, max_time, max_rate, l_norm, match, optimizing_t, force_steady_state):
+def optimal_transition_matrix(init_values, adjacency_m, deploy_robots_init, deploy_traits_desired, 
+                              species_traits, max_time, max_rate, l_norm, match, optimizing_t, 
+                              force_steady_state):
 
     find_optimal = True
 
     verbose = False
     if find_optimal:
-        transition_m = Optimize_Hetero_Fast(adjacency_m, deploy_robots_init, deploy_traits_desired, 
+        transition_m = Optimize_Hetero_Fast(init_values, adjacency_m, deploy_robots_init, deploy_traits_desired, 
                                             species_traits, max_time, max_rate, verbose, l_norm, match,
                                             optimizing_t, force_steady_state)
     else:
