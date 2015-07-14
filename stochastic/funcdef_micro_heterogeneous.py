@@ -41,7 +41,7 @@ def initialize_robots(deploy_robots_init):
 
 
 # -----------------------------------------------------------------------------#
-# helper function that pick a random index given probabilities (summing to 1)
+# helper function that picks a random index given probabilities (summing to 1)
 
 def pick_transition(p):
     rand = np.random.rand(1)

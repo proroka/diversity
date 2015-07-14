@@ -35,14 +35,15 @@ import funcdef_draw_network as nxmod
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 tstart = time.strftime("%Y%m%d-%H%M%S")
+fix_species = True
 
 save_data = 1
 save_plots = 1
 
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
-t_max_sim = 2.0 # influences simulations and plotting
-num_iter = 40 # iterations of micro sim
+t_max_sim = 5.0 # influences simulations and plotting
+num_iter = 100 # iterations of micro sim
 delta_t = 0.02 # time step
 max_rate = 5.0 # maximum transition rate possible for K.
 
@@ -51,22 +52,27 @@ l_norm = 2 # 2: quadratic 1: absolute
 match = 1 # 1: exact 0: at-least
 
 # create network of sites
-size_lattice = 2
-num_nodes = size_lattice**2
+#size_lattice = 2
+num_nodes = 10 #size_lattice**2
 
 # set of traits
-num_traits = 3
+num_traits = 4
 max_trait_values = 2 # [0,1]: trait availability
 
 # robot species
-num_species = 2
+num_species = 3
 max_robots = 50 # maximum number of robots per node
 deploy_robots_init = np.random.randint(0, max_robots, size=(num_nodes, num_species))
 
-# ensure each species has at least 1 trait, and that all traits are present
-species_traits = np.zeros((num_species, num_traits))
-while (min(np.sum(species_traits,0))==0 or min(np.sum(species_traits,1))==0):
-    species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
+if fix_species:
+    num_species = 3
+    num_traits = 4
+    species_traits = np.array([[1,0,1,0],[1,0,0,1],[0,1,0,1]])
+else:
+    # ensure each species has at least 1 trait, and that all traits are present
+    species_traits = np.zeros((num_species, num_traits))
+    while (min(np.sum(species_traits,0))==0 or min(np.sum(species_traits,1))==0):
+        species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
     
 deploy_traits_init = np.dot(deploy_robots_init, species_traits)
 
@@ -105,7 +111,7 @@ adjacency_m = np.squeeze(np.asarray(adjacency_m))
 
 init_transition_values = np.array([])
 transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init, deploy_traits_desired,
-                                              species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=1.)
+                                              species_traits, t_max, max_rate,l_norm, match, optimizing_t=False, force_steady_state=0.)
 
 # -----------------------------------------------------------------------------#
 # run microscopic stochastic simulation
@@ -135,7 +141,7 @@ for it in range(num_iter):
     deploy_robots_init_slice = deploy_robots_init.copy()
     robots_slice = robots.copy()
     for sl in range(slices):
-        print "RHC Iteration: ", it , "/", num_iter, "Slice: ", sl,"/", slices
+        print "RHC Iteration: ", it+1 , "/", num_iter, "Slice: ", sl+1,"/", slices
         robots_slice, deploy_robots_micro_slice = microscopic_sim(numts_window, delta_t, robots_slice, deploy_robots_init_slice, transition_m)
         deploy_robots_init_slice = deploy_robots_micro_slice[:,-1,:]
         # put together slices
@@ -143,8 +149,8 @@ for it in range(num_iter):
         # calculate adapted transition matrix    
         init_transition_values = transition_m.copy()
         transition_m = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init_slice, deploy_traits_desired, 
-                                                 species_traits, t_max, max_rate,l_norm, match, optimizing_t=True,
-                                                 force_steady_state=t_window)
+                                                 species_traits, t_max, max_rate,l_norm, match, optimizing_t=False,
+                                                 force_steady_state=0.) #force_steady_state=t_window)
 avg_deploy_robots_micro_adapt = np.mean(deploy_robots_micro_adapt,3)
 
 
@@ -178,9 +184,9 @@ if save_data:
 # plots
 
 # plot graph
-fig1 = nxmod.draw_circular(deploy_traits_init,graph)
+fig1 = nxmod.draw_circular(deploy_traits_init, graph,linewidths=3)
 plt.show()
-fig2  = nxmod.draw_circular(deploy_traits_desired,graph)
+fig2  = nxmod.draw_circular(deploy_traits_desired, graph, linewidths=3)
 plt.show()
 
 # plot traits ratio

@@ -23,11 +23,12 @@ import funcdef_draw_network as nxmod
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 tstart = time.strftime("%Y%m%d-%H%M%S")
+fix_species = True
 
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
-t_max_sim = 2.0 # influences simulations and plotting
-num_iter = 20 # iterations of micro sim
+t_max_sim = 5.0 # influences simulations and plotting
+num_iter = 3 # iterations of micro sim
 delta_t = 0.02 # time step
 max_rate = 5.0 # Maximum rate possible for K.
 
@@ -48,10 +49,15 @@ num_species = 3
 max_robots = 50 # maximum number of robots per node
 deploy_robots_init = np.random.randint(0, max_robots, size=(num_nodes, num_species))
 
-# ensure each species has at least 1 trait, and that all traits are present
-species_traits = np.zeros((num_species, num_traits))
-while (min(np.sum(species_traits,0))==0 or min(np.sum(species_traits,1))==0):
-    species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
+if fix_species:
+    num_species = 3
+    num_traits = 4
+    species_traits = np.array([[1,0,1,0],[1,0,0,1],[0,1,0,1]])
+else:
+    # ensure each species has at least 1 trait, and that all traits are present
+    species_traits = np.zeros((num_species, num_traits))
+    while (min(np.sum(species_traits,0))==0 or min(np.sum(species_traits,1))==0):
+        species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
 
 deploy_traits_init = np.dot(deploy_robots_init, species_traits)
 

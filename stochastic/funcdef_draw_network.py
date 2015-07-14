@@ -276,7 +276,7 @@ def draw_networkx_modified(Gtraits, G, pos=None, with_labels=False, **kwds):
         range_vals = 5
     # fill scale from 10:1000
     offmin = 10
-    offmax = 1000
+    offmax = 2000
     scale = offmax / range_vals
     Gtraits_mod = Gtraits - (np.min(Gtraits) - offmin)
     for ti in range(num_traits):

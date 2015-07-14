@@ -338,11 +338,7 @@ def Optimize_Hetero_Fast(init_values, adjacency_matrix, initial_state, desired_s
             temp = init_values[:,:,s]
             init_elements[s*num_nonzero_elements:(s+1)*num_nonzero_elements] = temp[adjacency_matrix].flatten()         
 
-        print 'shape init_values', init_values.shape
-        # print 'size init_values_arr', init_values_arr.shape
-        #init_elements = init_values_arr[init_values_arr!=0]
-        print 'nominal num elements', num_nonzero_elements*num_species
-        print 'actual num elements', init_elements.shape
+       
     bounds = [(0., max_rate)] * num_nonzero_elements*num_species
 
 
