@@ -2,16 +2,11 @@
 **********
 Matplotlib
 **********
-
 Draw networks with matplotlib.
-
 See Also
 --------
-
 matplotlib:     http://matplotlib.sourceforge.net/
-
 pygraphviz:     http://networkx.lanl.gov/pygraphviz/
-
 """
 #    Copyright (C) 2004-2012 by
 #    Aric Hagberg <hagberg@lanl.gov>
@@ -21,6 +16,9 @@ pygraphviz:     http://networkx.lanl.gov/pygraphviz/
 #    BSD license.
 import networkx as nx
 import numpy as np
+from matplotlib.path import Path
+import matplotlib.patches as patches
+import math
 
 from networkx.drawing.layout import shell_layout,\
     circular_layout,spectral_layout,spring_layout,random_layout
@@ -37,42 +35,33 @@ __all__ = ['draw',
            'draw_spring',
            'draw_shell',
            'draw_graphviz']
-           
+
 def draw(Gtraits, G, pos=None, ax=None, hold=None, **kwds):
     """Draw the graph G with Matplotlib.
-
     Draw the graph as a simple representation with no node
     labels or edge labels and using the full Matplotlib figure area
     and no axis labels by default.  See draw_networkx() for more
     full-featured drawing that allows title, axis labels etc.
-
     Parameters
     ----------
     G : graph
        A networkx graph
-
     pos : dictionary, optional
        A dictionary with nodes as keys and positions as values.
        If not specified a spring layout positioning will be computed.
        See networkx.layout for functions that compute node positions.
-
     ax : Matplotlib Axes object, optional
        Draw the graph in specified Matplotlib axes.
-
     hold : bool, optional
        Set the Matplotlib hold state.  If True subsequent draw
        commands will be added to the current axes.
-
     **kwds : optional keywords
        See networkx.draw_networkx() for a description of optional keywords.
-
-
     Examples
     --------
     >>> G=nx.dodecahedral_graph()
     >>> nx.draw(G)
     >>> nx.draw(G,pos=nx.spring_layout(G)) # use spring layout
-
     See Also
     --------
     draw_networkx()
@@ -80,24 +69,18 @@ def draw(Gtraits, G, pos=None, ax=None, hold=None, **kwds):
     draw_networkx_edges()
     draw_networkx_labels()
     draw_networkx_edge_labels()
-
     Notes
     -----
     This function has the same name as pylab.draw and pyplot.draw
     so beware when using
-
     >>> from networkx import *
-
     since you might overwrite the pylab.draw function.
-
     With pyplot use
-
     >>> import matplotlib.pyplot as plt
     >>> import networkx as nx
     >>> G=nx.dodecahedral_graph()
     >>> nx.draw(G)  # networkx draw()
     >>> plt.draw()  # pyplot draw()
-
     Also see the NetworkX drawing examples at
     http://networkx.lanl.gov/gallery.html
     """
@@ -130,7 +113,7 @@ def draw(Gtraits, G, pos=None, ax=None, hold=None, **kwds):
         plt.hold(h)
     try:
         # draw_networkx(G, pos=pos, ax=ax, **kwds)
-        plt.hold(h)        
+        plt.hold(h)
         draw_networkx_modified(Gtraits, G, pos=pos, ax=ax, **kwds)
         ax.set_axis_off()
         plt.draw_if_interactive()
@@ -139,112 +122,83 @@ def draw(Gtraits, G, pos=None, ax=None, hold=None, **kwds):
         raise
     plt.hold(b)
     return cf
-    
-    
+
+
 def draw_networkx_modified(Gtraits, G, pos=None, with_labels=False, **kwds):
     """Draw the graph G using Matplotlib.
-
     Draw the graph with Matplotlib with options for node positions,
     labeling, titles, and many other drawing features.
     See draw() for simple drawing without labels or axes.
-
     Parameters
     ----------
     G : graph
        A networkx graph
-
     pos : dictionary, optional
        A dictionary with nodes as keys and positions as values.
        If not specified a spring layout positioning will be computed.
        See networkx.layout for functions that compute node positions.
-
     with_labels :  bool, optional (default=True)
        Set to True to draw labels on the nodes.
-
     ax : Matplotlib Axes object, optional
        Draw the graph in the specified Matplotlib axes.
-
     nodelist : list, optional (default G.nodes())
        Draw only specified nodes
-
     edgelist : list, optional (default=G.edges())
        Draw only specified edges
-
     node_size : scalar or array, optional (default=300)
        Size of nodes.  If an array is specified it must be the
        same length as nodelist.
-
     node_color : color string, or array of floats, (default='r')
        Node color. Can be a single color format string,
        or a  sequence of colors with the same length as nodelist.
        If numeric values are specified they will be mapped to
        colors using the cmap and vmin,vmax parameters.  See
        matplotlib.scatter for more details.
-
     node_shape :  string, optional (default='o')
        The shape of the node.  Specification is as matplotlib.scatter
        marker, one of 'so^>v<dph8'.
-
     alpha : float, optional (default=1.0)
        The node transparency
-
     cmap : Matplotlib colormap, optional (default=None)
        Colormap for mapping intensities of nodes
-
     vmin,vmax : float, optional (default=None)
        Minimum and maximum for node colormap scaling
-
     linewidths : [None | scalar | sequence]
        Line width of symbol border (default =1.0)
-
     width : float, optional (default=1.0)
        Line width of edges
-
     edge_color : color string, or array of floats (default='r')
        Edge color. Can be a single color format string,
        or a sequence of colors with the same length as edgelist.
        If numeric values are specified they will be mapped to
        colors using the edge_cmap and edge_vmin,edge_vmax parameters.
-
     edge_cmap : Matplotlib colormap, optional (default=None)
        Colormap for mapping intensities of edges
-
     edge_vmin,edge_vmax : floats, optional (default=None)
        Minimum and maximum for edge colormap scaling
-
     style : string, optional (default='solid')
        Edge line style (solid|dashed|dotted,dashdot)
-
     labels : dictionary, optional (default=None)
        Node labels in a dictionary keyed by node of text labels
-
     font_size : int, optional (default=12)
        Font size for text labels
-
     font_color : string, optional (default='k' black)
        Font color string
-
     font_weight : string, optional (default='normal')
        Font weight
-
     font_family : string, optional (default='sans-serif')
        Font family
-
     label : string, optional
         Label for graph legend
-
     Examples
     --------
     >>> G=nx.dodecahedral_graph()
     >>> nx.draw(G)
     >>> nx.draw(G,pos=nx.spring_layout(G)) # use spring layout
-
     >>> import matplotlib.pyplot as plt
     >>> limits=plt.axis('off') # turn of axis
-
     Also see the NetworkX drawing examples at
     http://networkx.lanl.gov/gallery.html
-
     See Also
     --------
     draw()
@@ -263,37 +217,29 @@ def draw_networkx_modified(Gtraits, G, pos=None, with_labels=False, **kwds):
 
     if pos is None:
         pos = nx.drawing.spring_layout(G)  # default to spring layout
-    
+
     # plot for each trait
     trait_color = ['r','b','g','c','m','y']
     num_traits = Gtraits.shape[1]
-    num_nodes = Gtraits.shape[0]
     if num_traits > len(trait_color):
         trait_color = random.rand(num_traits)
 
-    #min_val = np.min(Gtraits)
-    #range_vals = (np.max(Gtraits) - np.min(Gtraits))
-    #if range_vals==0: # all trait values the same
-    #    range_vals = 5
-    # fill scale from 10:1000
-    total_traits = np.sum(Gtraits)
-    avg_node_size = total_traits / num_nodes 
-    scale = 2500 / avg_node_size
-    #offmin = 10
-    #offmax = 2000
-    #scale = offmax / range_vals
-    #Gtraits_mod = Gtraits - (np.min(Gtraits) - offmin)
+    max_trait = np.max(np.sum(Gtraits, axis=0))
+
+    #print Gtraits
+    #print max_trait
     for ti in range(num_traits):
-        #print "Trait: ", ti, scale*Gtraits[:,ti]
-        node_collection = draw_networkx_nodes_modified(G, pos, node_size=scale*Gtraits[:,ti], node_color=trait_color[ti], alpha=0.6, **kwds)
-    
+        # print Gtraits[:,ti] / float(max_trait)
+        # print "Trait: ", ti, scale*Gtraits[:,ti]
+        node_collection = draw_networkx_nodes_modified_v2(G, pos, node_size=Gtraits[:,ti] / float(max_trait), node_index=ti, node_color=trait_color[ti], **kwds)
+
     # node_collection = draw_networkx_nodes(G, pos, **kwds)
     edge_collection = draw_networkx_edges(G, pos, **kwds)
     if with_labels:
         draw_networkx_labels(G, pos, **kwds)
     plt.draw_if_interactive()
-    
-    
+
+
 def draw_networkx_nodes(G, pos,
                         nodelist=None,
                         node_size=300,
@@ -308,67 +254,50 @@ def draw_networkx_nodes(G, pos,
                         label=None,
                         **kwds):
     """Draw the nodes of the graph G.
-
     This draws only the nodes of the graph G.
-
     Parameters
     ----------
     G : graph
        A networkx graph
-
     pos : dictionary
        A dictionary with nodes as keys and positions as values.
        Positions should be sequences of length 2.
-
     ax : Matplotlib Axes object, optional
        Draw the graph in the specified Matplotlib axes.
-
     nodelist : list, optional
        Draw only specified nodes (default G.nodes())
-
     node_size : scalar or array
        Size of nodes (default=300).  If an array is specified it must be the
        same length as nodelist.
-
     node_color : color string, or array of floats
        Node color. Can be a single color format string (default='r'),
        or a  sequence of colors with the same length as nodelist.
        If numeric values are specified they will be mapped to
        colors using the cmap and vmin,vmax parameters.  See
        matplotlib.scatter for more details.
-
     node_shape :  string
        The shape of the node.  Specification is as matplotlib.scatter
        marker, one of 'so^>v<dph8' (default='o').
-
     alpha : float
        The node transparency (default=1.0)
-
     cmap : Matplotlib colormap
        Colormap for mapping intensities of nodes (default=None)
-
     vmin,vmax : floats
        Minimum and maximum for node colormap scaling (default=None)
-
     linewidths : [None | scalar | sequence]
        Line width of symbol border (default =1.0)
-
     label : [None| string]
        Label for legend
-
     Returns
     -------
     matplotlib.collections.PathCollection
         `PathCollection` of the nodes.
-
     Examples
     --------
     >>> G=nx.dodecahedral_graph()
     >>> nodes=nx.draw_networkx_nodes(G,pos=nx.spring_layout(G))
-
     Also see the NetworkX drawing examples at
     http://networkx.lanl.gov/gallery.html
-
     See Also
     --------
     draw()
@@ -415,11 +344,12 @@ def draw_networkx_nodes(G, pos,
 
     node_collection.set_zorder(2)
     return node_collection
-    
+
 
 def draw_networkx_nodes_modified(G, pos,
                         nodelist=None,
                         node_size=300,
+                        node_index=0,
                         node_color='r',
                         node_shape='o',
                         alpha=1.0,
@@ -430,8 +360,8 @@ def draw_networkx_nodes_modified(G, pos,
                         linewidths=None,
                         label=None,
                         **kwds):
-                            
-    
+
+
     try:
         import matplotlib.pyplot as plt
         import numpy
@@ -452,29 +382,141 @@ def draw_networkx_nodes_modified(G, pos,
 
     try:
         xy = numpy.asarray([pos[v] for v in nodelist])
-                    
+
     except KeyError as e:
         raise nx.NetworkXError('Node %s has no position.'%e)
     except ValueError:
         raise nx.NetworkXError('Bad value in node positions.')
 
     ax.hold(True)
-    node_collection = ax.scatter(xy[:, 0], xy[:, 1],
-                                 s=node_size,
-                                 facecolors='none',
-                                 edgecolors=node_color,
-                                 marker=node_shape,
-                                 cmap=cmap,
-                                 vmin=vmin,
-                                 vmax=vmax,
-                                 alpha=alpha,
-                                 linewidths=linewidths,
-                                 label=label)
 
-    node_collection.set_zorder(2)
+    for i in range(xy.shape[0]):
+      x_pos = xy[i, 0]
+      y_pos = xy[i, 1]
+      color = node_color
+      size = node_size[i]
+      offset = node_index + 2
+
+      degrees = (np.linspace(90.0, 90.0 - 360.0 * size, 20.0) / 180.0 * np.pi).tolist()
+      verts = []
+      codes = []
+      for j, d in enumerate(degrees):
+          verts.append((x_pos + math.cos(d) * float(offset) * 0.02,
+                        y_pos + math.sin(d) * float(offset) * 0.02))
+          codes.append(Path.MOVETO if j == 0 else Path.LINETO)
+      for d in reversed(degrees):
+          verts.append((x_pos + math.cos(d) * (float(offset) * 0.02 - 0.02),
+                        y_pos + math.sin(d) * (float(offset) * 0.02 - 0.02)))
+          codes.append(Path.LINETO)
+      verts.append((0, 0))
+      codes.append(Path.CLOSEPOLY)
+
+      path = Path(verts, codes)
+      node_collection = patches.PathPatch(path, facecolor=node_color, lw=1)
+      ax.add_patch(node_collection)
+
+      if node_index == 0:
+        degrees = (np.linspace(0.0, 360.0, 20.0) / 180.0 * np.pi).tolist()
+        verts = []
+        codes = []
+        for j, d in enumerate(degrees):
+            verts.append((x_pos + math.cos(d) * float(offset - 1) * 0.02,
+                          y_pos + math.sin(d) * float(offset - 1) * 0.02))
+            codes.append(Path.MOVETO if j == 0 else Path.LINETO)
+        verts.append((0, 0))
+        codes.append(Path.CLOSEPOLY)
+        path = Path(verts, codes)
+        node_collection = patches.PathPatch(path, facecolor='white', lw=1)
+        ax.add_patch(node_collection)
+
     return node_collection
-    
-    
+
+def draw_networkx_nodes_modified_v2(G, pos,
+                        nodelist=None,
+                        node_size=300,
+                        node_index=0,
+                        node_color='r',
+                        node_shape='o',
+                        alpha=1.0,
+                        cmap=None,
+                        vmin=None,
+                        vmax=None,
+                        ax=None,
+                        linewidths=None,
+                        label=None,
+                        **kwds):
+
+
+    try:
+        import matplotlib.pyplot as plt
+        import numpy
+    except ImportError:
+        raise ImportError("Matplotlib required for draw()")
+    except RuntimeError:
+        print("Matplotlib unable to open display")
+        raise
+
+    if ax is None:
+        ax = plt.gca()
+
+    if nodelist is None:
+        nodelist = G.nodes()
+
+    if not nodelist or len(nodelist) == 0:  # empty nodelist, no drawing
+        return None
+
+    try:
+        xy = numpy.asarray([pos[v] for v in nodelist])
+
+    except KeyError as e:
+        raise nx.NetworkXError('Node %s has no position.'%e)
+    except ValueError:
+        raise nx.NetworkXError('Bad value in node positions.')
+
+    ax.hold(True)
+
+    for i in range(xy.shape[0]):
+      x_pos = xy[i, 0]
+      y_pos = xy[i, 1]
+      color = node_color
+      size = node_size[i]
+      offset = node_index + 2
+
+      verts = []
+      codes = []      
+      bar = size
+      verts.append((x_pos, y_pos + float(offset) * 0.02))
+      codes.append(Path.MOVETO)
+      verts.append((x_pos+bar, y_pos + float(offset) * 0.02))  
+      codes.append(Path.LINETO)
+      verts.append((x_pos+bar, y_pos + float(offset) * 0.02 - 0.02))  
+      codes.append(Path.LINETO)   
+      verts.append((x_pos, y_pos + float(offset) * 0.02 - 0.02))
+      codes.append(Path.LINETO)
+      
+      verts.append((0, 0))
+      codes.append(Path.CLOSEPOLY)
+
+      path = Path(verts, codes)
+      node_collection = patches.PathPatch(path, facecolor=node_color, lw=1)
+      ax.add_patch(node_collection)
+
+      if node_index == 0:
+        degrees = (np.linspace(0.0, 360.0, 20.0) / 180.0 * np.pi).tolist()
+        verts = []
+        codes = []
+        for j, d in enumerate(degrees):
+            verts.append((x_pos + math.cos(d) * float(offset - 1) * 0.02,
+                          y_pos + math.sin(d) * float(offset - 1) * 0.02))
+            codes.append(Path.MOVETO if j == 0 else Path.LINETO)
+        verts.append((0, 0))
+        codes.append(Path.CLOSEPOLY)
+        path = Path(verts, codes)
+        node_collection = patches.PathPatch(path, facecolor='white', lw=1)
+        ax.add_patch(node_collection)
+
+    return node_collection
+
 def draw_networkx_edges(G, pos,
                         edgelist=None,
                         width=1.0,
@@ -489,71 +531,53 @@ def draw_networkx_edges(G, pos,
                         label=None,
                         **kwds):
     """Draw the edges of the graph G.
-
     This draws only the edges of the graph G.
-
     Parameters
     ----------
     G : graph
        A networkx graph
-
     pos : dictionary
        A dictionary with nodes as keys and positions as values.
        Positions should be sequences of length 2.
-
     edgelist : collection of edge tuples
        Draw only specified edges(default=G.edges())
-
     width : float
        Line width of edges (default =1.0)
-
     edge_color : color string, or array of floats
        Edge color. Can be a single color format string (default='r'),
        or a sequence of colors with the same length as edgelist.
        If numeric values are specified they will be mapped to
        colors using the edge_cmap and edge_vmin,edge_vmax parameters.
-
     style : string
        Edge line style (default='solid') (solid|dashed|dotted,dashdot)
-
     alpha : float
        The edge transparency (default=1.0)
-
     edge_ cmap : Matplotlib colormap
        Colormap for mapping intensities of edges (default=None)
-
     edge_vmin,edge_vmax : floats
        Minimum and maximum for edge colormap scaling (default=None)
-
     ax : Matplotlib Axes object, optional
        Draw the graph in the specified Matplotlib axes.
-
     arrows : bool, optional (default=True)
        For directed graphs, if True draw arrowheads.
-
     label : [None| string]
        Label for legend
-
     Returns
     -------
     matplotlib.collection.LineCollection
         `LineCollection` of the edges
-
     Notes
     -----
     For directed graphs, "arrows" (actually just thicker stubs) are drawn
     at the head end.  Arrows can be turned off with keyword arrows=False.
     Yes, it is ugly but drawing proper arrows with Matplotlib this
     way is tricky.
-
     Examples
     --------
     >>> G=nx.dodecahedral_graph()
     >>> edges=nx.draw_networkx_edges(G,pos=nx.spring_layout(G))
-
     Also see the NetworkX drawing examples at
     http://networkx.lanl.gov/gallery.html
-
     See Also
     --------
     draw()
@@ -705,9 +729,9 @@ def draw_networkx_edges(G, pos,
 
 #    if arrow_collection:
 
-    return edge_collection  
-    
-    
+    return edge_collection
+
+
 def draw_networkx_labels(G, pos,
                          labels=None,
                          font_size=12,
@@ -718,51 +742,37 @@ def draw_networkx_labels(G, pos,
                          ax=None,
                          **kwds):
     """Draw node labels on the graph G.
-
     Parameters
     ----------
     G : graph
        A networkx graph
-
     pos : dictionary
        A dictionary with nodes as keys and positions as values.
        Positions should be sequences of length 2.
-
     labels : dictionary, optional (default=None)
        Node labels in a dictionary keyed by node of text labels
-
     font_size : int
        Font size for text labels (default=12)
-
     font_color : string
        Font color string (default='k' black)
-
     font_family : string
        Font family (default='sans-serif')
-
     font_weight : string
        Font weight (default='normal')
-
     alpha : float
        The text transparency (default=1.0)
-
     ax : Matplotlib Axes object, optional
        Draw the graph in the specified Matplotlib axes.
-
     Returns
     -------
     dict
         `dict` of labels keyed on the nodes
-
     Examples
     --------
     >>> G=nx.dodecahedral_graph()
     >>> labels=nx.draw_networkx_labels(G,pos=nx.spring_layout(G))
-
     Also see the NetworkX drawing examples at
     http://networkx.lanl.gov/gallery.html
-
-
     See Also
     --------
     draw()
@@ -808,9 +818,9 @@ def draw_networkx_labels(G, pos,
                   )
         text_items[n] = t
 
-    return text_items    
-    
-    
+    return text_items
+
+
 def draw_networkx_edge_labels(G, pos,
                               edge_labels=None,
                               label_pos=0.5,
@@ -824,61 +834,45 @@ def draw_networkx_edge_labels(G, pos,
                               rotate=True,
                               **kwds):
     """Draw edge labels.
-
     Parameters
     ----------
     G : graph
        A networkx graph
-
     pos : dictionary
        A dictionary with nodes as keys and positions as values.
        Positions should be sequences of length 2.
-
     ax : Matplotlib Axes object, optional
        Draw the graph in the specified Matplotlib axes.
-
     alpha : float
        The text transparency (default=1.0)
-
     edge_labels : dictionary
        Edge labels in a dictionary keyed by edge two-tuple of text
        labels (default=None). Only labels for the keys in the dictionary
        are drawn.
-
     label_pos : float
        Position of edge label along edge (0=head, 0.5=center, 1=tail)
-
     font_size : int
        Font size for text labels (default=12)
-
     font_color : string
        Font color string (default='k' black)
-
     font_weight : string
        Font weight (default='normal')
-
     font_family : string
        Font family (default='sans-serif')
-
     bbox : Matplotlib bbox
        Specify text box shape and colors.
-
     clip_on : bool
        Turn on clipping at axis boundaries (default=True)
-
     Returns
     -------
     dict
         `dict` of labels keyed on the edges
-
     Examples
     --------
     >>> G=nx.dodecahedral_graph()
     >>> edge_labels=nx.draw_networkx_edge_labels(G,pos=nx.spring_layout(G))
-
     Also see the NetworkX drawing examples at
     http://networkx.lanl.gov/gallery.html
-
     See Also
     --------
     draw()
@@ -952,36 +946,36 @@ def draw_networkx_edge_labels(G, pos,
                     )
         text_items[(n1, n2)] = t
 
-    return text_items   
-    
+    return text_items
+
 def draw_circular(Gtraits, G, **kwargs):
     """Draw the graph G with a circular layout.
-    
+
     Parameters
     ----------
     G : graph
        A networkx graph
-       
+
     **kwargs : optional keywords
        See networkx.draw_networkx() for a description of optional keywords,
-       with the exception of the pos parameter which is not used by this 
+       with the exception of the pos parameter which is not used by this
        function.
     """
-    fig = draw(Gtraits, G, circular_layout(G), **kwargs)  
+    fig = draw(Gtraits, G, circular_layout(G), **kwargs)
     return fig
-    
-    
+
+
 def draw_random(G, **kwargs):
     """Draw the graph G with a random layout.
-    
+
     Parameters
     ----------
     G : graph
        A networkx graph
-       
+
     **kwargs : optional keywords
        See networkx.draw_networkx() for a description of optional keywords,
-       with the exception of the pos parameter which is not used by this 
+       with the exception of the pos parameter which is not used by this
        function.
     """
     draw(G, random_layout(G), **kwargs)
@@ -989,15 +983,15 @@ def draw_random(G, **kwargs):
 
 def draw_spectral(G, **kwargs):
     """Draw the graph G with a spectral layout.
-    
+
     Parameters
     ----------
     G : graph
        A networkx graph
-       
+
     **kwargs : optional keywords
        See networkx.draw_networkx() for a description of optional keywords,
-       with the exception of the pos parameter which is not used by this 
+       with the exception of the pos parameter which is not used by this
        function.
     """
     draw(G, spectral_layout(G), **kwargs)
@@ -1006,30 +1000,29 @@ def draw_spectral(G, **kwargs):
 
 def draw_spring(G, **kwargs):
     """Draw the graph G with a spring layout.
-    
+
     Parameters
     ----------
     G : graph
        A networkx graph
-
     **kwargs : optional keywords
        See networkx.draw_networkx() for a description of optional keywords,
-       with the exception of the pos parameter which is not used by this 
+       with the exception of the pos parameter which is not used by this
        function.
     """
     draw(G, spring_layout(G), **kwargs)
 
 def draw_shell(G, **kwargs):
     """Draw networkx graph with shell layout.
-    
+
     Parameters
     ----------
     G : graph
        A networkx graph
-       
+
     **kwargs : optional keywords
        See networkx.draw_networkx() for a description of optional keywords,
-       with the exception of the pos parameter which is not used by this 
+       with the exception of the pos parameter which is not used by this
        function.
     """
     nlist = kwargs.get('nlist', None)
@@ -1041,15 +1034,12 @@ def draw_shell(G, **kwargs):
 
 def draw_graphviz(G, prog="neato", **kwargs):
     """Draw networkx graph with graphviz layout.
-
     Parameters
     ----------
     G : graph
        A networkx graph
-
     prog : string, optional
       Name of Graphviz layout program
-
     **kwargs : optional keywords
        See networkx.draw_networkx() for a description of optional keywords.
     """
@@ -1071,4 +1061,4 @@ def setup_module(module):
         mpl.use('PS', warn=False)
         import matplotlib.pyplot as plt
     except:
-        raise SkipTest("matplotlib not available")    
+        raise SkipTest("matplotlib not available")
