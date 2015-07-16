@@ -22,15 +22,17 @@ import funcdef_draw_network as nxmod
 
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
+save_data = False
+save_plots = True
 tstart = time.strftime("%Y%m%d-%H%M%S")
 fix_species = True
 
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
-t_max_sim = 5.0 # influences simulations and plotting
-num_iter = 3 # iterations of micro sim
-delta_t = 0.02 # time step
-max_rate = 5.0 # Maximum rate possible for K.
+t_max_sim = 8.0 # influences simulations and plotting
+num_iter = 20 # iterations of micro sim
+delta_t = 0.04 # time step
+max_rate = 2.0 # Maximum rate possible for K.
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
@@ -46,7 +48,7 @@ max_trait_values = 2 # [0,1]: trait availability
 
 # robot species
 num_species = 3
-max_robots = 50 # maximum number of robots per node
+max_robots = 500 # maximum number of robots per node
 deploy_robots_init = np.random.randint(0, max_robots, size=(num_nodes, num_species))
 
 if fix_species:
@@ -93,7 +95,7 @@ adjacency_m = np.squeeze(np.asarray(adjacency_m))
 
 init_transition_values = np.array([])
 transition_m = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init, deploy_traits_desired,
-                                         species_traits, t_max, max_rate, l_norm, match, optimizing_t=False, force_steady_state=1.0)
+                                         species_traits, t_max, max_rate, l_norm, match, optimizing_t=False, force_steady_state=0.0)
 
 transition_m_mac = transition_m.copy()
 
@@ -125,17 +127,19 @@ deploy_traits_final = np.dot(deploy_robots_final, species_traits)
 # -----------------------------------------------------------------------------#
 # save variables
 
-tend = time.strftime("%Y%m%d-%H%M%S")
-prefix = "./data/" + tend + "_"
-print "Time start: ", tstart
-print "Time end: ", tend
-
-pickle.dump(species_traits, open(prefix+"st.p", "wb"))
-pickle.dump(graph, open(prefix+"graph.p", "wb"))
-pickle.dump(deploy_traits_init, open(prefix+"dti.p", "wb"))
-pickle.dump(deploy_traits_desired, open(prefix+"dtd.p", "wb"))
-pickle.dump(deploy_robots_micro, open(prefix+"drm.p", "wb"))
-pickle.dump(deploy_robots_euler, open(prefix+"dre.p", "wb"))
+if save_data:
+        
+    tend = time.strftime("%Y%m%d-%H%M%S")
+    prefix = "./data/micmac_V05_" # + tend + "_"
+    print "Time start: ", tstart
+    print "Time end: ", tend
+    
+    pickle.dump(species_traits, open(prefix+"st.p", "wb"))
+    pickle.dump(graph, open(prefix+"graph.p", "wb"))
+    pickle.dump(deploy_traits_init, open(prefix+"dti.p", "wb"))
+    pickle.dump(deploy_traits_desired, open(prefix+"dtd.p", "wb"))
+    pickle.dump(deploy_robots_micro, open(prefix+"drm.p", "wb"))
+    pickle.dump(deploy_robots_euler, open(prefix+"dre.p", "wb"))
 
 # to read
 # st = pickle.load(open(prefix+"st.p", "rb"))
@@ -166,9 +170,10 @@ plt.show()
 # -----------------------------------------------------------------------------#
 # save plots
  
-fig1.savefig('./plots/gi.eps') 
-fig2.savefig('./plots/gd.eps')                           
-fig3.savefig('./plots/trt.eps')                             
+if save_plots:  
+    fig1.savefig('./plots/gi.eps') 
+    fig2.savefig('./plots/gd.eps')                           
+    fig3.savefig('./plots/trt.eps')                             
 
 
 

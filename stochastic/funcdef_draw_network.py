@@ -267,21 +267,25 @@ def draw_networkx_modified(Gtraits, G, pos=None, with_labels=False, **kwds):
     # plot for each trait
     trait_color = ['r','b','g','c','m','y']
     num_traits = Gtraits.shape[1]
+    num_nodes = Gtraits.shape[0]
     if num_traits > len(trait_color):
         trait_color = random.rand(num_traits)
 
-    min_val = np.min(Gtraits)
-    range_vals = (np.max(Gtraits) - np.min(Gtraits))
-    if range_vals==0: # all trait values the same
-        range_vals = 5
+    #min_val = np.min(Gtraits)
+    #range_vals = (np.max(Gtraits) - np.min(Gtraits))
+    #if range_vals==0: # all trait values the same
+    #    range_vals = 5
     # fill scale from 10:1000
-    offmin = 10
-    offmax = 2000
-    scale = offmax / range_vals
-    Gtraits_mod = Gtraits - (np.min(Gtraits) - offmin)
+    total_traits = np.sum(Gtraits)
+    avg_node_size = total_traits / num_nodes 
+    scale = 2500 / avg_node_size
+    #offmin = 10
+    #offmax = 2000
+    #scale = offmax / range_vals
+    #Gtraits_mod = Gtraits - (np.min(Gtraits) - offmin)
     for ti in range(num_traits):
         #print "Trait: ", ti, scale*Gtraits[:,ti]
-        node_collection = draw_networkx_nodes_modified(G, pos, node_size=scale*Gtraits_mod[:,ti], node_color=trait_color[ti], **kwds)
+        node_collection = draw_networkx_nodes_modified(G, pos, node_size=scale*Gtraits[:,ti], node_color=trait_color[ti], alpha=0.6, **kwds)
     
     # node_collection = draw_networkx_nodes(G, pos, **kwds)
     edge_collection = draw_networkx_edges(G, pos, **kwds)
