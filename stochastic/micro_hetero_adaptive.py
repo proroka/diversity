@@ -43,7 +43,7 @@ tstart = time.strftime("%Y%m%d-%H%M%S")
 
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
-t_max_sim = 2 # influences simulations and plotting
+t_max_sim = 1.0 # influences simulations and plotting
 num_iter = 3 # iterations of micro sim
 delta_t = 0.04 # time step
 max_rate = 2.0 # Maximum rate possible for K.
@@ -136,29 +136,62 @@ avg_deploy_robots_micro = np.mean(deploy_robots_micro,3)
 # -----------------------------------------------------------------------------#
 # run adaptive microscopic stochastic simulation, RHC
 
-slices = 20
-t_window = t_max_sim / slices
-numts_window = int(t_window / delta_t)
+#slices = 20
+#t_window = t_max_sim / slices
+#numts_window = int(t_window / delta_t)
+#
+#deploy_robots_micro_adapt = np.zeros((num_nodes, num_timesteps, num_species, num_iter)) 
+#
+#init_transition_values = np.array([])
+#for it in range(num_iter): 
+#    
+#    transition_m = transition_m_init.copy()
+#    deploy_robots_init_slice = deploy_robots_init.copy()
+#    robots_slice = robots.copy()
+#    for sl in range(slices):
+#        print "RHC Iteration: ", it+1 , "/", num_iter, "Slice: ", sl+1,"/", slices
+#        robots_slice, deploy_robots_micro_slice = microscopic_sim(numts_window, delta_t, robots_slice, deploy_robots_init_slice, transition_m)
+#        deploy_robots_init_slice = deploy_robots_micro_slice[:,-1,:]
+#        # put together slices
+#        deploy_robots_micro_adapt[:,sl*numts_window:(sl+1)*numts_window,:,it] = deploy_robots_micro_slice
+#        # calculate adapted transition matrix    
+#        init_transition_values = transition_m.copy()
+#        transition_m = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init_slice, deploy_traits_desired, 
+#                                                 species_traits, t_max, max_rate,l_norm, match, optimizing_t=True,
+#                                                 force_steady_state=t_window)
+#avg_deploy_robots_micro_adapt = np.mean(deploy_robots_micro_adapt,3)
 
-deploy_robots_micro_adapt = np.zeros((num_nodes, num_timesteps, num_species, num_iter)) 
+
+numts_window = 4 # number of time steps per window
+t_window = float(numts_window) * delta_t
+slices = int(t_max_sim / t_window)
+
+deploy_robots_micro_adapt = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
 
 init_transition_values = np.array([])
-for it in range(num_iter): 
-    
+for it in range(num_iter):
+
     transition_m = transition_m_init.copy()
     deploy_robots_init_slice = deploy_robots_init.copy()
     robots_slice = robots.copy()
     for sl in range(slices):
         print "RHC Iteration: ", it+1 , "/", num_iter, "Slice: ", sl+1,"/", slices
-        robots_slice, deploy_robots_micro_slice = microscopic_sim(numts_window, delta_t, robots_slice, deploy_robots_init_slice, transition_m)
+        robots_slice, deploy_robots_micro_slice = microscopic_sim(numts_window + 1, delta_t, robots_slice, deploy_robots_init_slice, transition_m)
         deploy_robots_init_slice = deploy_robots_micro_slice[:,-1,:]
         # put together slices
-        deploy_robots_micro_adapt[:,sl*numts_window:(sl+1)*numts_window,:,it] = deploy_robots_micro_slice
-        # calculate adapted transition matrix    
+        deploy_robots_micro_adapt[:,sl*numts_window:(sl+1)*numts_window,:,it] = deploy_robots_micro_slice[:,:-1,:]
+        # calculate adapted transition matrix
         init_transition_values = transition_m.copy()
-        transition_m = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init_slice, deploy_traits_desired, 
+        transition_m = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init_slice, deploy_traits_desired,
                                                  species_traits, t_max, max_rate,l_norm, match, optimizing_t=True,
-                                                 force_steady_state=t_window)
+                                                 force_steady_state=0.0)
+        #print transition_m.reshape((num_nodes, num_nodes))
+    # Simulate the last extra bit.
+    timesteps_left = num_timesteps - slices * numts_window
+    assert timesteps_left >= 0
+    if timesteps_left > 0:
+        robots_slice, deploy_robots_micro_slice = microscopic_sim(timesteps_left + 1, delta_t, robots_slice, deploy_robots_init_slice, transition_m)
+        deploy_robots_micro_adapt[:,-timesteps_left:,:,it] = deploy_robots_micro_slice[:,:-1,:]
 avg_deploy_robots_micro_adapt = np.mean(deploy_robots_micro_adapt,3)
 
 
