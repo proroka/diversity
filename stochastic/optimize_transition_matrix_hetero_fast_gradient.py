@@ -383,14 +383,29 @@ def Optimize_Hetero_Fast(init_values, adjacency_matrix, initial_state, desired_s
         CostFunction = lambda x: Cost_Fast(x, desired_steadystate, adjacency_matrix, max_time, initial_state, transform, cost_mode=cost_mode, margin=mu)
         BoundFunction = lambda f_new, x_new, f_old, x_old: ElementsBounds(num_nonzero_elements*num_species, max_rate, None, f_new, x_new, f_old, x_old)
 
+
+    #---
     # basinhopping function
     minimizer_kwargs = {'method': 'L-BFGS-B', 'bounds': bounds, 'jac': True, 'options': {'disp': False}}
-    ret = scipy.optimize.basinhopping(CostFunction,
-                                      init_elements,
-                                      minimizer_kwargs=minimizer_kwargs,
-                                      niter=100, niter_success=3,
-                                      accept_test=BoundFunction,
-                                      callback=None if not verbose else Print)
+    success = False
+    while not success:
+        # It happens very rarely that the eigenvector matrix becomes close to singular and
+        # cannot be inverted. In that case, we simply restart the optimization.
+        try:
+            ret = scipy.optimize.basinhopping(CostFunction,
+                                              init_elements,
+                                              minimizer_kwargs=minimizer_kwargs,
+                                              niter=100, niter_success=3,
+                                              accept_test=BoundFunction,
+                                              callback=None if not verbose else Print)
+            success = True
+        except (ValueError, np.linalg.linalg.LinAlgError) as e:
+            print 'Problem during optimization:', e, '- Retrying...'
+            # Make completely new random elements.
+            init_elements = np.random.rand(num_nonzero_elements*num_species) * max_rate
+            if optimizing_t:
+                init_elements = np.concatenate([init_elements, np.array([max_time])], axis=0)
+            success = False
 
     # Remove the optimized t.
     if optimizing_t:
@@ -415,7 +430,7 @@ def Optimize_Hetero_Fast(init_values, adjacency_matrix, initial_state, desired_s
     # return transition matrices (3D matrix for all species)
     return MatrixReshape(ret.x, adjacency_matrix, num_species)
 
-####
+
 
 
 
