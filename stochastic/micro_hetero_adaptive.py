@@ -37,14 +37,14 @@ import funcdef_draw_network as nxmod
 
 save_data = True
 save_plots = True
-load_globals = False
+load_globals = True
 save_globals = False
 fix_species = True
 tstart = time.strftime("%Y%m%d-%H%M%S")
 
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
-t_max_sim = 3.0 # influences simulations and plotting
+t_max_sim = 8.0 # influences simulations and plotting
 num_iter = 10 # iterations of micro sim
 delta_t = 0.04 # time step
 max_rate = 2.0 # Maximum rate possible for K.
@@ -64,7 +64,7 @@ if load_globals:
     num_species = species_traits.shape[0]
 else:
     # create network of sites
-    num_nodes = 10 
+    num_nodes = 8 
     # set of traits
     num_traits = 4
     max_trait_values = 2 # [0,1]: trait availability
@@ -138,7 +138,7 @@ avg_deploy_robots_micro = np.mean(deploy_robots_micro,3)
 # -----------------------------------------------------------------------------#
 # run adaptive microscopic stochastic simulation, RHC
 
-numts_window = 4 # number of time steps per window
+numts_window = 2 # number of time steps per window
 t_window = float(numts_window) * delta_t
 slices = int(t_max_sim / t_window)
 
@@ -194,8 +194,14 @@ if save_data:
     pickle.dump(deploy_robots_micro, open(prefix+"drm.p", "wb"))
     pickle.dump(deploy_robots_euler, open(prefix+"dre.p", "wb"))
 
-# to read
-# st = pickle.load(open(prefix+"st.p", "rb"))
+
+if save_globals:
+    pickle.dump(graph, open("const_graph.p", "wb"))
+    pickle.dump(species_traits, open("const_species_traits.p", "wb"))
+    pickle.dump(deploy_robots_init, open("const_deploy_robots_init.p", "wb"))
+    pickle.dump(deploy_traits_init, open("const_deploy_traits_init.p", "wb"))
+    pickle.dump(deploy_traits_desired, open("const_deploy_traits_desired.p", "wb"))
+
 
 # -----------------------------------------------------------------------------#
 # plots
