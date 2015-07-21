@@ -215,11 +215,27 @@ fig2  = nxmod.draw_circular(deploy_traits_desired, graph, linewidths=3)
 plt.show()
 
 # plot traits ratio
-fig3 = plot_traits_ratio_time_micmac(deploy_robots_micro,deploy_robots_euler, deploy_traits_desired, 
+#fig3 = plot_traits_ratio_time_micmac(deploy_robots_micro,deploy_robots_euler, deploy_traits_desired, 
                               species_traits, delta_t, match)
                               
-fig4 = plot_traits_ratio_time_micmac(deploy_robots_micro_adapt, deploy_robots_euler, deploy_traits_desired, 
+#fig4 = plot_traits_ratio_time_micmac(deploy_robots_micro_adapt, deploy_robots_euler, deploy_traits_desired, 
                               species_traits, delta_t, match)
+
+fig5 = plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_adapt, deploy_robots_euler, 
+                                        deploy_traits_desired,species_traits, delta_t, match)
+
+
+species_ind = 0
+node_ind = [4, 5]
+fig6 = plot_robots_time_micmac(avg_deploy_robots_micro, deploy_robots_euler, species_ind, node_ind)
+plt.show()
+
+trait_ind = 3
+fig7 = plot_traits_time_micmac(avg_deploy_robots_micro, deploy_robots_euler, species_traits, node_ind, trait_ind)
+plt.show()
+
+
+
 
 # -----------------------------------------------------------------------------#
 # save plots
@@ -228,7 +244,10 @@ if save_plots:
         
     fig1.savefig('./plots/rhc_gi.eps') 
     fig2.savefig('./plots/rhc_gd.eps')                           
-    fig3.savefig('./plots/rhc_trt_normal.eps')  
-    fig4.savefig('./plots/rhc_trt_adapt.eps') 
+    #fig3.savefig('./plots/rhc_trt_normal.eps')  
+    #fig4.savefig('./plots/rhc_trt_adapt.eps') 
+    fig5.savefig('./plots/rhc_micmicmac.eps') 
+    fig6.savefig('./plots/micmac_robots_time.eps') 
+    fig7.savefig('./plots/micmac_traits_time.eps') 
 
 
