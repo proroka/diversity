@@ -398,7 +398,8 @@ def Optimize_Hetero_Fast(init_values, adjacency_matrix, initial_state, desired_s
                                               niter=100, niter_success=3,
                                               accept_test=BoundFunction,
                                               callback=None if not verbose else Print)
-            success = True
+            # success = True
+            success = (ret.fun < 1e3)
         except (ValueError, np.linalg.linalg.LinAlgError) as e:
             print 'Problem during optimization:', e, '- Retrying...'
             # Make completely new random elements.
