@@ -182,17 +182,19 @@ deploy_robots_euler = run_euler_integration(deploy_robots_init, transition_m_ini
 if save_data:
     
     tend = time.strftime("%Y%m%d-%H%M%S")
-    prefix = "./data/" + tend + "_"
+    run = 'V05'
+    prefix = "./data/" + run + "_"
     print "Time start: ", tstart
     print "Time end: ", tend
     
-    pickle.dump(species_traits, open(prefix+"st.p", "wb"))
+    pickle.dump(species_traits, open(prefix+"species_traits.p", "wb"))
     pickle.dump(graph, open(prefix+"graph.p", "wb"))
-    pickle.dump(deploy_traits_init, open(prefix+"dti.p", "wb"))
-    pickle.dump(deploy_traits_desired, open(prefix+"dtd.p", "wb"))
-    pickle.dump(deploy_robots_micro_adapt, open(prefix+"drma.p", "wb"))
-    pickle.dump(deploy_robots_micro, open(prefix+"drm.p", "wb"))
-    pickle.dump(deploy_robots_euler, open(prefix+"dre.p", "wb"))
+    pickle.dump(deploy_robots_init, open(prefix+"deploy_robots_init.p", "wb"))
+    pickle.dump(deploy_traits_init, open(prefix+"deploy_traits_init.p", "wb"))
+    pickle.dump(deploy_traits_desired, open(prefix+"deploy_traits_desired.p", "wb"))
+    pickle.dump(deploy_robots_micro_adapt, open(prefix+"deploy_robots_micro_adapt.p", "wb"))
+    pickle.dump(deploy_robots_micro, open(prefix+"deploy_robots_micro.p", "wb"))
+    pickle.dump(deploy_robots_euler, open(prefix+"deploy_robots_euler.p", "wb"))
 
 
 if save_globals:
@@ -215,16 +217,10 @@ fig2  = nxmod.draw_circular(deploy_traits_desired, graph, linewidths=3)
 plt.show()
 
 # plot traits ratio
-#fig3 = plot_traits_ratio_time_micmac(deploy_robots_micro,deploy_robots_euler, deploy_traits_desired, 
-                              species_traits, delta_t, match)
-                              
-#fig4 = plot_traits_ratio_time_micmac(deploy_robots_micro_adapt, deploy_robots_euler, deploy_traits_desired, 
-                              species_traits, delta_t, match)
-
 fig5 = plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_adapt, deploy_robots_euler, 
                                         deploy_traits_desired,species_traits, delta_t, match)
 
-
+# plot evolution over time
 species_ind = 0
 node_ind = [4, 5]
 fig6 = plot_robots_time_micmac(avg_deploy_robots_micro, deploy_robots_euler, species_ind, node_ind)
