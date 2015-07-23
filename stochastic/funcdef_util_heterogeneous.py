@@ -61,14 +61,14 @@ def smooth(x,window_len=11,window='hanning'):
         raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
 
 
-    s=numpy.r_[x[window_len-1:0:-1],x,x[-1:-window_len:-1]]
+    s=np.r_[x[window_len-1:0:-1],x,x[-1:-window_len:-1]]
     #print(len(s))
     if window == 'flat': #moving average
-        w=numpy.ones(window_len,'d')
+        w=np.ones(window_len,'d')
     else:
-        w=eval('numpy.'+window+'(window_len)')
+        w=eval('np.'+window+'(window_len)')
 
-    y=numpy.convolve(w/w.sum(),s,mode='valid')
+    y=np.convolve(w/w.sum(),s,mode='valid')
     #return y
     return y[(window_len/2-1):-(window_len/2)-1]
 
@@ -107,6 +107,7 @@ def plot_robots_ratio_time_micmac(deploy_robots_mic, deploy_robots_mac, deploy_r
     plt.legend((l1, l2),('Micro','Macro'))
     plt.show()
     
+ 
 # -----------------------------------------------------------------------------#
 # plot ratio of desired vs actual robot distribution
 
@@ -218,7 +219,8 @@ def plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_ad
     # plot micro with errorbars
     m_mic = np.mean(diffmic_rat,1)
     s_mic = np.std(diffmic_rat,1)
-    y = smooth(m_mic)
+    #y = smooth(m_mic)
+    y = m_mic.copy()    
     l1 = plt.plot(x,y, label='Microscopic')
     err_ax = np.arange(0,num_tsteps,int(num_tsteps/20))
     plt.errorbar(x[err_ax],y[err_ax],s_mic[err_ax],fmt='o',markersize=3,color='black')
@@ -226,7 +228,8 @@ def plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_ad
     # plot adaptive micro with errorbars
     m_mic = np.mean(diffadp_rat,1)
     s_mic = np.std(diffadp_rat,1)
-    y = smooth(m_mic)
+    #y = smooth(m_mic)
+    y = m_mic.copy()    
     l2 = plt.plot(x,y, label='Adaptive micro.')
     err_ax = np.arange(0,num_tsteps,int(num_tsteps/20))
     plt.errorbar(x[err_ax],y[err_ax],s_mic[err_ax],fmt='o',markersize=3,color='black')
@@ -242,6 +245,50 @@ def plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_ad
     #plt.show()  
     return fig    
     
+# -----------------------------------------------------------------------------#
+# get ratio of desired vs actual trait distrib for 1 run
+
+def get_traits_ratio_time(deploy_robots, deploy_traits_desired, transform, match, min_val):
+    
+
+    num_tsteps = deploy_robots.shape[1]
+    total_num_traits = np.sum(deploy_traits_desired)
+    
+    for t in range(num_tsteps):
+        if match==0:
+            traits = np.dot(deploy_robots[:,t,:], transform)
+            diffmic = np.abs(np.minimum(traits - deploy_traits_desired, 0))
+        else:
+            traits = np.dot(deploy_robots[:,t,:], transform)
+            diff = np.abs(traits - deploy_traits_desired)  
+    
+        ratio = np.sum(diff) / total_num_traits  
+        if ratio <= min_val:
+            return t
+        
+    return num_tsteps  
+
+# -----------------------------------------------------------------------------#
+# get ratio of desired vs actual trait distrib for 1 run
+
+
+def plot_t_converge(t_min_mic, t_min_adp, t_min_mac):
+    
+    fig = plt.figure()
+    x = np.arange(0, 3)
+    bp = plt.boxplot([t_min_mic, t_min_adp],notch=0, sym='+', vert=1, whis=1.5)
+    plt.setp(bp['boxes'], color='black')
+    plt.setp(bp['whiskers'], color='black')
+    plt.setp(bp['fliers'], color='black', marker='+')
+    plt.plot(x,[t_min_mac, t_min_mac, t_min_mac], label='Macro 1') 
+    
+    off = 5
+    ymin = np.min([t_min_mic, t_min_adp])
+    ymax = np.max([t_min_mic, t_min_adp])
+    ax = plt.gca()
+    ax.set_ylim([ymin-off, ymax+off])    
+    ax.set_xlim([0, 3])
+    return fig
     
 # -----------------------------------------------------------------------------#
 # plot ratio of desired vs actual robot distribution
