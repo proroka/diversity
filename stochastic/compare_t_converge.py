@@ -68,6 +68,7 @@ t_min_adp = np.zeros((num_tot_iter))
 t_min_mac = np.zeros((num_graph_iter))
 t_min_ber = np.zeros((num_graph_iter))
 
+rank_Q = np.zeros((num_graph_iter))
 
 for g in range(num_graph_iter):
 
@@ -85,6 +86,7 @@ for g in range(num_graph_iter):
     species_traits = np.zeros((num_species, num_traits))
     while (min(np.sum(species_traits,0))==0 or min(np.sum(species_traits,1))==0):
         species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
+    rank_Q[g] = np.linalg.matrix_rank(species_traits)
     # generate a random end state
     random_transition = random_transition_matrix(num_nodes, max_rate/2)  # Divide max_rate by 2 for the random matrix to give some slack.        
     # sample final desired trait distribution based on random transition matrix   
@@ -221,13 +223,13 @@ fig2  = nxmod.draw_circular(deploy_traits_desired, graph, linewidths=3)
 plt.show()
 
 # plot traits ratio
-fig3 = plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_adapt, deploy_robots_euler, 
-                                        deploy_traits_desired,species_traits, delta_t, match)
-
+fig3 = plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_adapt, deploy_robots_euler, deploy_traits_desired,species_traits, delta_t, match)
 
 # plot time at which min ratio reached
 fig4 = plot_t_converge(t_min_mic, t_min_adp, t_min_mac, t_min_ber)
 plt.show()
+
+print rank_Q
 
 # -----------------------------------------------------------------------------#
 # save plots
