@@ -45,26 +45,32 @@ tstart = time.strftime("%Y%m%d-%H%M%S")
 
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
-t_max_sim = 3.0 # influences simulations and plotting
-num_iter = 5 # iterations of micro sim
+t_max_sim = 2.0 # influences simulations and plotting
+num_iter = 1 # iterations of micro sim
 delta_t = 0.04 # time step
 max_rate = 2.0 # Maximum rate possible for K.
-num_graph_iter = 10
+num_graph_iter = 1
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
 match = 1 # 1: exact 0: at-least
 
-if load_globals:
-    species_traits = pickle.load(open("const_species_traits.p", "rb"))
-    deploy_robots_init = pickle.load(open("const_deploy_robots_init.p", "rb"))
-    deploy_traits_init = pickle.load(open("const_deploy_traits_init.p", "rb"))
-    deploy_traits_desired = pickle.load(open("const_deploy_traits_desired.p", "rb"))
-    num_nodes = deploy_robots_init.shape[0]
-    num_traits = species_traits.shape[1]
-    num_species = species_traits.shape[0]
-else:
-    # create network of sites
+
+# -----------------------------------------------------------------------------#
+# find time at which min ratio is found
+
+num_tot_iter = num_iter * num_graph_iter
+
+min_ratio = 0.1
+t_min_mic = np.zeros((num_tot_iter))
+t_min_adp = np.zeros((num_tot_iter))
+t_min_mac = np.zeros((num_graph_iter))
+
+
+for g in range(num_graph_iter):
+
+    # -----------------------------------------------------------------------------#
+    # initialize robots
     num_nodes = 8 
     # set of traits
     num_traits = 4
@@ -73,18 +79,10 @@ else:
     num_species = 3
     max_robots = 300 # maximum number of robots per node
     deploy_robots_init = np.random.randint(0, max_robots, size=(num_nodes, num_species))
-    num_species = 3
-    num_traits = 4
-
-    if fix_species:
-        num_species = 3
-        num_traits = 4
-        species_traits = np.array([[1,0,1,0],[1,0,0,1],[0,1,0,1]])
-    else:
-        # ensure each species has at least 1 trait, and that all traits are present
-        species_traits = np.zeros((num_species, num_traits))
-        while (min(np.sum(species_traits,0))==0 or min(np.sum(species_traits,1))==0):
-            species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
+    # ensure each species has at least 1 trait, and that all traits are present
+    species_traits = np.zeros((num_species, num_traits))
+    while (min(np.sum(species_traits,0))==0 or min(np.sum(species_traits,1))==0):
+        species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
     # generate a random end state
     random_transition = random_transition_matrix(num_nodes, max_rate/2)  # Divide max_rate by 2 for the random matrix to give some slack.        
     # sample final desired trait distribution based on random transition matrix   
@@ -96,28 +94,8 @@ else:
         deploy_traits_desired *= (np.random.rand()*0.1 + 0.85)
         print "total traits, at least: \t", np.sum(np.sum(deploy_traits_desired))
 
-# initialize robots
-robots = initialize_robots(deploy_robots_init)
-
-print "total robots, init: \t", np.sum(np.sum(deploy_robots_init))
-print "total traits, init: \t", np.sum(np.sum(deploy_traits_init))
-
-if load_graph:
-    graph = pickle.load(open("const_graph.p", "rb"))
-
-# -----------------------------------------------------------------------------#
-# find time at which min ratio is found
-
-num_tot_iter = num_iter * num_graph_iter
-
-min_ratio = 0.1
-t_min_mic = np.zeros((num_tot_iter))
-t_min_adp = np.zeros((num_tot_iter))
-t_min_mac = 0
-
-
-for g in range(num_graph_iter):
-
+    # initialize robots
+    robots = initialize_robots(deploy_robots_init)
         
     # -----------------------------------------------------------------------------#
     # initialize graph: all species move on same graph
@@ -183,11 +161,11 @@ for g in range(num_graph_iter):
         tot_it = g*num_iter+it    
         t_min_adp[tot_it] = get_traits_ratio_time(deploy_robots_micro_adapt[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)    
 
-# -----------------------------------------------------------------------------#
-# euler integration
-
-deploy_robots_euler = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
-t_min_mac = get_traits_ratio_time(deploy_robots_euler, deploy_traits_desired, species_traits, match, min_ratio)
+    # -----------------------------------------------------------------------------#
+    # euler integration
+    
+    deploy_robots_euler = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
+    t_min_mac[g] = get_traits_ratio_time(deploy_robots_euler, deploy_traits_desired, species_traits, match, min_ratio)
 
 # -----------------------------------------------------------------------------#
 # save variables
