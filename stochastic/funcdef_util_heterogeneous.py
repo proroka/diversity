@@ -272,15 +272,13 @@ def get_traits_ratio_time(deploy_robots, deploy_traits_desired, transform, match
 # get ratio of desired vs actual trait distrib for 1 run
 
 
-def plot_t_converge(t_min_mic, t_min_adp, t_min_mac):
+def plot_t_converge(t_min_mic, t_min_adp, t_min_mac, t_min_ber):
     
     fig = plt.figure()
     ax = plt.gca()
-    N = 4    
+    N = 6   
     
-    x = np.arange(0, N)
-
-    bp = plt.boxplot([t_min_mic, t_min_adp],notch=0, sym='+', vert=1, whis=1.5) #,medianprops=medianprops)
+    bp = plt.boxplot([t_min_mic, t_min_adp, t_min_mac, t_min_ber],notch=0, sym='+', vert=1, whis=1.5) #,medianprops=medianprops)
     plt.setp(bp['boxes'], color='black')
     plt.setp(bp['whiskers'], color='black')
     plt.setp(bp['fliers'], color='black', marker='+')
@@ -292,8 +290,7 @@ def plot_t_converge(t_min_mic, t_min_adp, t_min_mac):
     ymax = np.max([t_min_mic, t_min_adp])
     ax.set_ylim([ymin-off, ymax+off])    
     ax.set_xlim([0.5, N-1.5])
-    mac_data = np.repeat(t_min_mac,N)
-    plt.plot(x, mac_data, color='cyan', label='Macro 1') 
+
     return fig
     
     

@@ -18,6 +18,7 @@ import pickle
 
 # my modules
 from optimize_transition_matrix_hetero import *
+from optimize_transition_matrix_berman import *
 from funcdef_macro_heterogeneous import *
 from funcdef_micro_heterogeneous import *
 from funcdef_util_heterogeneous import *
@@ -49,7 +50,7 @@ t_max_sim = 2.0 # influences simulations and plotting
 num_iter = 1 # iterations of micro sim
 delta_t = 0.04 # time step
 max_rate = 2.0 # Maximum rate possible for K.
-num_graph_iter = 1
+num_graph_iter = 2
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
@@ -65,6 +66,7 @@ min_ratio = 0.1
 t_min_mic = np.zeros((num_tot_iter))
 t_min_adp = np.zeros((num_tot_iter))
 t_min_mac = np.zeros((num_graph_iter))
+t_min_ber = np.zeros((num_graph_iter))
 
 
 for g in range(num_graph_iter):
@@ -127,7 +129,7 @@ for g in range(num_graph_iter):
     # -----------------------------------------------------------------------------#
     # run adaptive microscopic stochastic simulation, RHC
     
-    numts_window = 2 # number of time steps per window
+    numts_window = 4 # number of time steps per window
     t_window = float(numts_window) * delta_t
     slices = int(t_max_sim / t_window)
     
@@ -161,10 +163,19 @@ for g in range(num_graph_iter):
         tot_it = g*num_iter+it    
         t_min_adp[tot_it] = get_traits_ratio_time(deploy_robots_micro_adapt[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)    
 
+
+    # -----------------------------------------------------------------------------#
+    # Berman's method 
+    transition_m_berman = Optimize_Berman(adjacency_m, deploy_robots_init, deploy_robots_final, species_traits,max_rate, max_time=10.0, verbose=True)
+
+
     # -----------------------------------------------------------------------------#
     # euler integration
     
+    deploy_robots_berman = run_euler_integration(deploy_robots_init, transition_m_berman, t_max_sim, delta_t)
     deploy_robots_euler = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
+    
+    t_min_ber[g] = get_traits_ratio_time(deploy_robots_berman, deploy_traits_desired, species_traits, match, min_ratio)
     t_min_mac[g] = get_traits_ratio_time(deploy_robots_euler, deploy_traits_desired, species_traits, match, min_ratio)
 
 # -----------------------------------------------------------------------------#
@@ -210,35 +221,22 @@ fig2  = nxmod.draw_circular(deploy_traits_desired, graph, linewidths=3)
 plt.show()
 
 # plot traits ratio
-fig5 = plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_adapt, deploy_robots_euler, 
+fig3 = plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_adapt, deploy_robots_euler, 
                                         deploy_traits_desired,species_traits, delta_t, match)
 
-# plot evolution over time
-species_ind = 0
-node_ind = [4, 5]
-fig6 = plot_robots_time_micmac(avg_deploy_robots_micro, deploy_robots_euler, species_ind, node_ind)
-plt.show()
-trait_ind = 3
-fig7 = plot_traits_time_micmac(avg_deploy_robots_micro, deploy_robots_euler, species_traits, node_ind, trait_ind)
-plt.show()
 
 # plot time at which min ratio reached
-
-fig8 = plot_t_converge(t_min_mic, t_min_adp, t_min_mac)
+fig4 = plot_t_converge(t_min_mic, t_min_adp, t_min_mac, t_min_ber)
 plt.show()
 
 # -----------------------------------------------------------------------------#
 # save plots
  
 if save_plots:
-        
-    fig1.savefig('./plots/rhc_gi.eps') 
-    fig2.savefig('./plots/rhc_gd.eps')                           
-    #fig3.savefig('./plots/rhc_trt_normal.eps')  
-    #fig4.savefig('./plots/rhc_trt_adapt.eps') 
-    fig5.savefig('./plots/rhc_micmicmac.eps') 
-    fig6.savefig('./plots/micmac_robots_time.eps') 
-    fig7.savefig('./plots/micmac_traits_time.eps') 
-    fig8.savefig('./plots/time_converge.eps') 
+    prefix = "./plots/" + run + "_" 
+    fig1.savefig(prefix+'gi.eps') 
+    fig2.savefig(prefix+'gd.eps')                           
+    fig3.savefig(prefix+'micmicmac.eps') 
+    fig4.savefig(prefix+'time_converge.eps') 
 
 
