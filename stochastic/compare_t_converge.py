@@ -140,7 +140,7 @@ for g in range(num_graph_iter):
     # -----------------------------------------------------------------------------#
     # run adaptive microscopic stochastic simulation, RHC
     
-    numts_window = 4 # number of time steps per window
+    numts_window = 2 # number of time steps per window
     t_window = float(numts_window) * delta_t
     slices = int(t_max_sim / t_window)
     
