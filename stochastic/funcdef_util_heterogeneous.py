@@ -283,13 +283,19 @@ def plot_t_converge(t_min_mic, t_min_adp, t_min_mac, t_min_ber):
     plt.setp(bp['whiskers'], color='black')
     plt.setp(bp['fliers'], color='black', marker='+')
     
-    
-    
     off = 10
     ymin = np.min([t_min_mic, t_min_adp])
     ymax = np.max([t_min_mic, t_min_adp])
     ax.set_ylim([ymin-off, ymax+off])    
     ax.set_xlim([0.5, N-1.5])
+
+    #plt.legend(loc='upper right', shadow=False, fontsize='large')     
+    plt.ylabel('Time [s]')    
+    plt.xlabel('Optimization Methods')
+    #plt.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+    labels = ['Micro', 'Adapt', 'Macro', 'Berman']
+    x = [1,2,3,4]    
+    plt.xticks(x, labels, rotation='vertical')
 
     return fig
     

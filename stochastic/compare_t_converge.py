@@ -46,11 +46,11 @@ tstart = time.strftime("%Y%m%d-%H%M%S")
 
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
-t_max_sim = 2.0 # influences simulations and plotting
-num_iter = 1 # iterations of micro sim
+t_max_sim = 5.0 # influences simulations and plotting
+num_iter = 3 # iterations of micro sim
 delta_t = 0.04 # time step
 max_rate = 2.0 # Maximum rate possible for K.
-num_graph_iter = 2
+num_graph_iter = 3
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
@@ -64,6 +64,7 @@ num_tot_iter = num_iter * num_graph_iter
 
 min_ratio = 0.1
 t_min_mic = np.zeros((num_tot_iter))
+t_min_mic_ber = np.zeros((num_tot_iter))
 t_min_adp = np.zeros((num_tot_iter))
 t_min_mac = np.zeros((num_graph_iter))
 t_min_ber = np.zeros((num_graph_iter))
@@ -74,13 +75,13 @@ for g in range(num_graph_iter):
 
     # -----------------------------------------------------------------------------#
     # initialize robots
-    num_nodes = 8 
+    num_nodes = 6
     # set of traits
     num_traits = 4
     max_trait_values = 2 # [0,1]: trait availability
     # robot species
     num_species = 3
-    max_robots = 300 # maximum number of robots per node
+    max_robots = 200 # maximum number of robots per node
     deploy_robots_init = np.random.randint(0, max_robots, size=(num_nodes, num_species))
     # ensure each species has at least 1 trait, and that all traits are present
     species_traits = np.zeros((num_species, num_traits))
@@ -114,7 +115,12 @@ for g in range(num_graph_iter):
     
     init_transition_values = np.array([])
     transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init, deploy_traits_desired,
-                                                  species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=4.0)
+                                                  species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=2.0)
+    
+    # -----------------------------------------------------------------------------#
+    # Berman's method 
+    transition_m_berman = Optimize_Berman(adjacency_m, deploy_robots_init, deploy_robots_final, species_traits,max_rate, max_time=t_max, verbose=True)
+    
     
     # -----------------------------------------------------------------------------#
     # run microscopic stochastic simulation
@@ -122,12 +128,15 @@ for g in range(num_graph_iter):
     num_timesteps = int(t_max_sim / delta_t)
     
     deploy_robots_micro = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
+    deploy_robots_mic_ber = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
     for it in range(num_iter):
         print "Iteration: ", it
         robots_new, deploy_robots_micro[:,:,:,it] = microscopic_sim(num_timesteps, delta_t, robots, deploy_robots_init, transition_m_init)
+        robots_new_ber, deploy_robots_mic_ber[:,:,:,it] = microscopic_sim(num_timesteps, delta_t, robots, deploy_robots_init, transition_m_berman)
         tot_it = g*num_iter+it        
         t_min_mic[tot_it] = get_traits_ratio_time(deploy_robots_micro[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)
-    
+        t_min_mic_ber[tot_it] = get_traits_ratio_time(deploy_robots_mic_ber[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)
+
     # -----------------------------------------------------------------------------#
     # run adaptive microscopic stochastic simulation, RHC
     
@@ -165,19 +174,13 @@ for g in range(num_graph_iter):
         tot_it = g*num_iter+it    
         t_min_adp[tot_it] = get_traits_ratio_time(deploy_robots_micro_adapt[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)    
 
-
-    # -----------------------------------------------------------------------------#
-    # Berman's method 
-    transition_m_berman = Optimize_Berman(adjacency_m, deploy_robots_init, deploy_robots_final, species_traits,max_rate, max_time=10.0, verbose=True)
-
-
     # -----------------------------------------------------------------------------#
     # euler integration
     
-    deploy_robots_berman = run_euler_integration(deploy_robots_init, transition_m_berman, t_max_sim, delta_t)
+    deploy_robots_mac_ber = run_euler_integration(deploy_robots_init, transition_m_berman, t_max_sim, delta_t)
     deploy_robots_euler = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
     
-    t_min_ber[g] = get_traits_ratio_time(deploy_robots_berman, deploy_traits_desired, species_traits, match, min_ratio)
+    t_min_ber[g] = get_traits_ratio_time(deploy_robots_mac_ber, deploy_traits_desired, species_traits, match, min_ratio)
     t_min_mac[g] = get_traits_ratio_time(deploy_robots_euler, deploy_traits_desired, species_traits, match, min_ratio)
 
 # -----------------------------------------------------------------------------#
@@ -202,6 +205,8 @@ if save_data:
     pickle.dump(t_min_mic, open(prefix+"t_min_mic.p", "wb"))
     pickle.dump(t_min_mac, open(prefix+"t_min_mac.p", "wb"))
     pickle.dump(t_min_adp, open(prefix+"t_min_adp.p", "wb"))
+    pickle.dump(t_min_mic_ber, open(prefix+"t_min_mic_ber.p", "wb"))
+    pickle.dump(rank_Q, open(prefix+"rank_Q", "wb"))
 
 
 if save_globals:
@@ -226,7 +231,7 @@ plt.show()
 fig3 = plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_adapt, deploy_robots_euler, deploy_traits_desired,species_traits, delta_t, match)
 
 # plot time at which min ratio reached
-fig4 = plot_t_converge(t_min_mic, t_min_adp, t_min_mac, t_min_ber)
+fig4 = plot_t_converge(t_min_mic, t_min_adp, t_min_mac, t_min_mic_ber)
 plt.show()
 
 print rank_Q

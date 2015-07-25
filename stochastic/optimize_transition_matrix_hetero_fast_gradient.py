@@ -123,7 +123,7 @@ def Expm(V, exp_wt, U):
 #
 # If steady_state_dt > 0 and beta > 0, the optimization will check the final state at t and t + dt.
 def Cost_Fast(elements, desired_state, adjacency_matrix, max_time, initial_state, transform,
-              cost_mode=QUADRATIC_EXACT, alpha=0.0, margin=0.0, steady_state_dt=0.0, beta=10.0):
+              cost_mode=QUADRATIC_EXACT, alpha=0.0, margin=0.0, steady_state_dt=0.0, beta=5.0):
     # Prepare variable depending on whether t part of the parameters.
     num_nodes = adjacency_matrix.shape[0]
     num_species = initial_state.shape[1]
@@ -334,7 +334,7 @@ def Optimize_Hetero_Fast(init_values, adjacency_matrix, initial_state, desired_s
 
     # settings
     verify_gradient = False
-    alpha = 0.1  # + alpha * t^2.
+    alpha = 1.0 #0.1  # + alpha * t^2.
     mu = 0.0  # margin
 
     # initial array of random elements (only where the adjacency matrix has a 1).
