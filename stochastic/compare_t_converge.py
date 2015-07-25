@@ -46,7 +46,7 @@ tstart = time.strftime("%Y%m%d-%H%M%S")
 
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
-t_max_sim = 5.0 # influences simulations and plotting
+t_max_sim = 8.0 # influences simulations and plotting
 num_iter = 3 # iterations of micro sim
 delta_t = 0.04 # time step
 max_rate = 2.0 # Maximum rate possible for K.
@@ -67,7 +67,7 @@ t_min_mic = np.zeros((num_tot_iter))
 t_min_mic_ber = np.zeros((num_tot_iter))
 t_min_adp = np.zeros((num_tot_iter))
 t_min_mac = np.zeros((num_graph_iter))
-t_min_ber = np.zeros((num_graph_iter))
+t_min_mac_ber = np.zeros((num_graph_iter))
 
 rank_Q = np.zeros((num_graph_iter))
 
@@ -180,7 +180,7 @@ for g in range(num_graph_iter):
     deploy_robots_mac_ber = run_euler_integration(deploy_robots_init, transition_m_berman, t_max_sim, delta_t)
     deploy_robots_euler = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
     
-    t_min_ber[g] = get_traits_ratio_time(deploy_robots_mac_ber, deploy_traits_desired, species_traits, match, min_ratio)
+    t_min_mac_ber[g] = get_traits_ratio_time(deploy_robots_mac_ber, deploy_traits_desired, species_traits, match, min_ratio)
     t_min_mac[g] = get_traits_ratio_time(deploy_robots_euler, deploy_traits_desired, species_traits, match, min_ratio)
 
 # -----------------------------------------------------------------------------#
@@ -197,6 +197,7 @@ if save_data:
     pickle.dump(species_traits, open(prefix+"species_traits.p", "wb"))
     pickle.dump(graph, open(prefix+"graph.p", "wb"))
     pickle.dump(deploy_robots_init, open(prefix+"deploy_robots_init.p", "wb"))
+    pickle.dump(deploy_robots_final, open(prefix+"deploy_robots_final.p", "wb"))
     pickle.dump(deploy_traits_init, open(prefix+"deploy_traits_init.p", "wb"))
     pickle.dump(deploy_traits_desired, open(prefix+"deploy_traits_desired.p", "wb"))
     pickle.dump(deploy_robots_micro_adapt, open(prefix+"deploy_robots_micro_adapt.p", "wb"))
@@ -206,6 +207,7 @@ if save_data:
     pickle.dump(t_min_mac, open(prefix+"t_min_mac.p", "wb"))
     pickle.dump(t_min_adp, open(prefix+"t_min_adp.p", "wb"))
     pickle.dump(t_min_mic_ber, open(prefix+"t_min_mic_ber.p", "wb"))
+    pickle.dump(t_min_mac_ber, open(prefix+"t_min_mic_ber.p", "wb"))
     pickle.dump(rank_Q, open(prefix+"rank_Q", "wb"))
 
 
@@ -231,7 +233,7 @@ plt.show()
 fig3 = plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_adapt, deploy_robots_euler, deploy_traits_desired,species_traits, delta_t, match)
 
 # plot time at which min ratio reached
-fig4 = plot_t_converge(t_min_mic, t_min_adp, t_min_mac, t_min_mic_ber)
+fig4 = plot_t_converge(delta_t,t_min_mic, t_min_adp, t_min_mac, t_min_mic_ber)
 plt.show()
 
 print rank_Q

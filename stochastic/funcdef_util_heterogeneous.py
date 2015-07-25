@@ -272,21 +272,23 @@ def get_traits_ratio_time(deploy_robots, deploy_traits_desired, transform, match
 # get ratio of desired vs actual trait distrib for 1 run
 
 
-def plot_t_converge(t_min_mic, t_min_adp, t_min_mac, t_min_ber):
+def plot_t_converge(delta_t,t_min_mic, t_min_adp, t_min_mac, t_min_ber):
     
     fig = plt.figure()
     ax = plt.gca()
     N = 6   
     
-    bp = plt.boxplot([t_min_mic, t_min_adp, t_min_mac, t_min_ber],notch=0, sym='+', vert=1, whis=1.5) #,medianprops=medianprops)
+    
+    bp = plt.boxplot([delta_t*t_min_mic, delta_t*t_min_adp, delta_t*t_min_mac, delta_t*t_min_ber],
+                     notch=0, sym='+', vert=1, whis=1.5) #,medianprops=medianprops)
     plt.setp(bp['boxes'], color='black')
     plt.setp(bp['whiskers'], color='black')
     plt.setp(bp['fliers'], color='black', marker='+')
     
-    off = 10
-    ymin = np.min([t_min_mic, t_min_adp])
-    ymax = np.max([t_min_mic, t_min_adp])
-    ax.set_ylim([ymin-off, ymax+off])    
+    off = 1.0
+    ymin = delta_t * np.min([t_min_mic, t_min_adp])
+    ymax = delta_t * np.max([t_min_mic, t_min_adp])
+    ax.set_ylim([0, ymax+off])    
     ax.set_xlim([0.5, N-1.5])
 
     #plt.legend(loc='upper right', shadow=False, fontsize='large')     
