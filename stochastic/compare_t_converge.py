@@ -36,7 +36,7 @@ import funcdef_draw_network as nxmod
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'V10'
+run = 'V11'
 
 save_data = True
 save_plots = True
@@ -47,11 +47,11 @@ tstart = time.strftime("%Y%m%d-%H%M%S")
 
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
-t_max_sim = 6.0 # influences simulations and plotting
-num_iter = 4 # iterations of micro sim
+t_max_sim = 7.0 # influences simulations and plotting
+num_iter = 1 # iterations of micro sim
 delta_t = 0.04 # time step
 max_rate = 2.0 # Maximum rate possible for K.
-num_graph_iter = 10
+num_graph_iter = 4
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
@@ -74,6 +74,8 @@ rank_Q = np.zeros((num_graph_iter))
 
 for g in range(num_graph_iter):
 
+    ranks = np.array([3, 4])
+    
     # -----------------------------------------------------------------------------#
     # initialize robots
     num_nodes = 8
@@ -85,9 +87,12 @@ for g in range(num_graph_iter):
     max_robots = 200 # maximum number of robots per node
     deploy_robots_init = np.random.randint(0, max_robots, size=(num_nodes, num_species))
     # ensure each species has at least 1 trait, and that all traits are present
-    species_traits = np.zeros((num_species, num_traits))
-    while (min(np.sum(species_traits,0))==0 or min(np.sum(species_traits,1))==0):
-        species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
+    #species_traits = np.zeros((num_species, num_traits))
+    #while ((min(np.sum(species_traits,0))==0 or min(np.sum(species_traits,1))==0)):
+    #    species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
+    
+    rank = ranks[np.mod(g,2)]
+    species_traits = get_species_trait_matrix(rank, num_species, num_traits)    
     rank_Q[g] = np.linalg.matrix_rank(species_traits)
     # generate a random end state
     random_transition = random_transition_matrix(num_nodes, max_rate/2)  # Divide max_rate by 2 for the random matrix to give some slack.        
@@ -208,7 +213,7 @@ if save_data:
     pickle.dump(t_min_mac, open(prefix+"t_min_mac.p", "wb"))
     pickle.dump(t_min_adp, open(prefix+"t_min_adp.p", "wb"))
     pickle.dump(t_min_mic_ber, open(prefix+"t_min_mic_ber.p", "wb"))
-    pickle.dump(t_min_mac_ber, open(prefix+"t_min_mic_ber.p", "wb"))
+    pickle.dump(t_min_mac_ber, open(prefix+"t_min_mac_ber.p", "wb"))
     pickle.dump(rank_Q, open(prefix+"rank_Q.p", "wb"))
 
 
@@ -223,11 +228,11 @@ if save_globals:
 # plots
 
 # plot graph
-plt.axis('equal')
-fig1 = nxmod.draw_circular(deploy_traits_init, graph,linewidths=3)
+#plt.axis('equal')
+#fig1 = nxmod.draw_circular(deploy_traits_init, graph,linewidths=3)
 #plt.show()
-plt.axis('equal')
-fig2  = nxmod.draw_circular(deploy_traits_desired, graph, linewidths=3)
+#plt.axis('equal')
+#fig2  = nxmod.draw_circular(deploy_traits_desired, graph, linewidths=3)
 #plt.show()
 
 # plot traits ratio

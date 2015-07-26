@@ -269,8 +269,18 @@ def get_traits_ratio_time(deploy_robots, deploy_traits_desired, transform, match
     return num_tsteps  
 
 # -----------------------------------------------------------------------------#
-# get ratio of desired vs actual trait distrib for 1 run
+# get species traits matrix
 
+def get_species_trait_matrix(rank, num_species, num_traits):
+    max_trait_values = 2
+    species_traits = np.zeros((num_species, num_traits))
+    while ((min(np.sum(species_traits,0))==0 or min(np.sum(species_traits,1))==0) and r!=rank):
+        species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
+        r = np.linalg.matrix_rank(species_traits)
+    return species_traits
+
+# -----------------------------------------------------------------------------#
+# get ratio of desired vs actual trait distrib for 1 run
 
 def plot_t_converge(delta_t,t_min_mic, t_min_adp, t_min_mac, t_min_ber):
     
