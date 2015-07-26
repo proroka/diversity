@@ -269,17 +269,29 @@ def get_traits_ratio_time(deploy_robots, deploy_traits_desired, transform, match
     return num_tsteps  
 
 # -----------------------------------------------------------------------------#
-# get species traits matrix
+# get species traits matrix for 4 species and 4 traits
 
-def get_species_trait_matrix(rank, num_species, num_traits):
-    max_trait_values = 2
-    species_traits = np.zeros((num_species, num_traits))
-    r = 0
-    while ((min(np.sum(species_traits,0))==0 or min(np.sum(species_traits,1))==0) and r!=rank):
-        species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
-        r = np.linalg.matrix_rank(species_traits)
-    return species_traits
-
+def get_species_trait_matrix_44(rank):
+    
+    a = np.zeros((6,4,4))    
+    # rank 4
+    a[0,:,:] = np.array([[1,0,1,0],[1,0,0,1],[0,1,0,1],[0,0,1,0]])   
+    a[1,:,:] = np.array([[1,0,1,0],[1,0,0,1],[0,1,0,1],[0,0,0,1]])
+    a[2,:,:] = np.array([[1,0,1,0],[1,0,0,1],[0,1,0,0],[0,0,0,1]])
+    
+    # rank 3 or less
+    a[3,:,:] = np.array([[1,0,1,0],[1,0,0,1],[0,1,0,1],[1,1,1,1]])
+    a[4,:,:] = np.array([[0,0,1,1],[1,0,1,1],[0,1,0,0],[1,1,1,1]])
+    a[5,:,:] = np.array([[0,0,1,1],[0,1,1,1],[0,0,1,0],[0,1,0,1]])
+    
+    if rank==3:
+        r = np.random.randint(3,6)
+        return a[r,:,:]
+    else:
+        r = np.random.randint(0,3)
+        return a[r,:,:]
+    
+    
 # -----------------------------------------------------------------------------#
 # get ratio of desired vs actual trait distrib for 1 run
 

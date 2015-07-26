@@ -40,9 +40,7 @@ run = 'V11'
 
 save_data = True
 save_plots = True
-load_globals = True
-load_graph = False
-save_globals = False
+
 tstart = time.strftime("%Y%m%d-%H%M%S")
 
 # simulation parameters
@@ -87,12 +85,15 @@ for g in range(num_graph_iter):
     max_robots = 200 # maximum number of robots per node
     deploy_robots_init = np.random.randint(0, max_robots, size=(num_nodes, num_species))
     # ensure each species has at least 1 trait, and that all traits are present
-    #species_traits = np.zeros((num_species, num_traits))
-    #while ((min(np.sum(species_traits,0))==0 or min(np.sum(species_traits,1))==0)):
-    #    species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
     
-    rank = ranks[np.mod(g,2)]
-    species_traits = get_species_trait_matrix(rank, num_species, num_traits)    
+    if(num_species==4 and num_traits==4):
+        rank = ranks[np.mod(g,2)]
+        species_traits = get_species_trait_matrix_44(rank)    
+    else:
+        species_traits = np.zeros((num_species, num_traits))
+        while ((min(np.sum(species_traits,0))==0 or min(np.sum(species_traits,1))==0)):
+            species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
+       
     rank_Q[g] = np.linalg.matrix_rank(species_traits)
     # generate a random end state
     random_transition = random_transition_matrix(num_nodes, max_rate/2)  # Divide max_rate by 2 for the random matrix to give some slack.        
@@ -216,42 +217,22 @@ if save_data:
     pickle.dump(t_min_mac_ber, open(prefix+"t_min_mac_ber.p", "wb"))
     pickle.dump(rank_Q, open(prefix+"rank_Q.p", "wb"))
 
-
-if save_globals:
-    pickle.dump(graph, open("const_graph.p", "wb"))
-    pickle.dump(species_traits, open("const_species_traits.p", "wb"))
-    pickle.dump(deploy_robots_init, open("const_deploy_robots_init.p", "wb"))
-    pickle.dump(deploy_traits_init, open("const_deploy_traits_init.p", "wb"))
-    pickle.dump(deploy_traits_desired, open("const_deploy_traits_desired.p", "wb"))
-
 # -----------------------------------------------------------------------------#
 # plots
 
-# plot graph
-#plt.axis('equal')
-#fig1 = nxmod.draw_circular(deploy_traits_init, graph,linewidths=3)
-#plt.show()
-#plt.axis('equal')
-#fig2  = nxmod.draw_circular(deploy_traits_desired, graph, linewidths=3)
-#plt.show()
-
 # plot traits ratio
-fig3 = plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_adapt, deploy_robots_euler, deploy_traits_desired,species_traits, delta_t, match)
+fig1 = plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_adapt, deploy_robots_euler, deploy_traits_desired,species_traits, delta_t, match)
 
 # plot time at which min ratio reached
-fig4 = plot_t_converge(delta_t,t_min_mic, t_min_adp, t_min_mac, t_min_mic_ber)
-#plt.show()
+fig2 = plot_t_converge(delta_t,t_min_mic, t_min_adp, t_min_mac, t_min_mic_ber)
 
-print rank_Q
 
 # -----------------------------------------------------------------------------#
 # save plots
  
 if save_plots:
-    prefix = "./plots/" + run + "_" 
-    fig1.savefig(prefix+'gi.eps') 
-    fig2.savefig(prefix+'gd.eps')                           
-    fig3.savefig(prefix+'micmicmac.eps') 
-    fig4.savefig(prefix+'time_converge.eps') 
+    prefix = "./plots/" + run + "_"                        
+    fig1.savefig(prefix+'micmicmac.eps') 
+    fig2.savefig(prefix+'time_converge.eps') 
 
 
