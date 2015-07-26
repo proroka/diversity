@@ -46,10 +46,10 @@ tstart = time.strftime("%Y%m%d-%H%M%S")
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
 t_max_sim = 7.0 # influences simulations and plotting
-num_iter = 1 # iterations of micro sim
+num_iter = 4 # iterations of micro sim
 delta_t = 0.04 # time step
 max_rate = 2.0 # Maximum rate possible for K.
-num_graph_iter = 4
+num_graph_iter = 40
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
@@ -160,7 +160,7 @@ for g in range(num_graph_iter):
         deploy_robots_init_slice = deploy_robots_init.copy()
         robots_slice = robots.copy()
         for sl in range(slices):
-            print "RHC Iteration: ", it+1 , "/", num_iter, "Slice: ", sl+1,"/", slices
+            print "G iter: ", g+1, "/", num_graph_iter, "Adp iter: ", it+1 , "/", num_iter, "Slice: ", sl+1,"/", slices
             robots_slice, deploy_robots_micro_slice = microscopic_sim(numts_window + 1, delta_t, robots_slice, deploy_robots_init_slice, transition_m)
             deploy_robots_init_slice = deploy_robots_micro_slice[:,-1,:]
             # put together slices
