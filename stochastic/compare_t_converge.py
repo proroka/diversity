@@ -36,21 +36,22 @@ import funcdef_draw_network as nxmod
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
+run = 'V10'
+
 save_data = True
 save_plots = True
 load_globals = True
 load_graph = False
 save_globals = False
-fix_species = True
 tstart = time.strftime("%Y%m%d-%H%M%S")
 
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
-t_max_sim = 5.0 # influences simulations and plotting
-num_iter = 3 # iterations of micro sim
+t_max_sim = 6.0 # influences simulations and plotting
+num_iter = 4 # iterations of micro sim
 delta_t = 0.04 # time step
 max_rate = 2.0 # Maximum rate possible for K.
-num_graph_iter = 3
+num_graph_iter = 10
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
@@ -62,7 +63,7 @@ match = 1 # 1: exact 0: at-least
 
 num_tot_iter = num_iter * num_graph_iter
 
-min_ratio = 0.08
+min_ratio = 0.05
 t_min_mic = np.zeros((num_tot_iter))
 t_min_mic_ber = np.zeros((num_tot_iter))
 t_min_adp = np.zeros((num_tot_iter))
@@ -189,7 +190,7 @@ for g in range(num_graph_iter):
 if save_data:
     
     tend = time.strftime("%Y%m%d-%H%M%S")
-    run = 'V08'
+
     prefix = "./data/" + run + "_"
     print "Time start: ", tstart
     print "Time end: ", tend
@@ -208,7 +209,7 @@ if save_data:
     pickle.dump(t_min_adp, open(prefix+"t_min_adp.p", "wb"))
     pickle.dump(t_min_mic_ber, open(prefix+"t_min_mic_ber.p", "wb"))
     pickle.dump(t_min_mac_ber, open(prefix+"t_min_mic_ber.p", "wb"))
-    pickle.dump(rank_Q, open(prefix+"rank_Q", "wb"))
+    pickle.dump(rank_Q, open(prefix+"rank_Q.p", "wb"))
 
 
 if save_globals:
