@@ -36,7 +36,7 @@ import funcdef_draw_network as nxmod
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'V11'
+run = 'V12'
 
 save_data = True
 save_plots = True

@@ -23,7 +23,7 @@ from funcdef_util_heterogeneous import *
 import funcdef_draw_network as nxmod
 
 
-run = 'V10'
+run = 'V11'
 
 # -----------------------------------------------------------------------------#
 def plot_t_converge(delta_t,t_min_mic, t_min_adp, t_min_ber):
