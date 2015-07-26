@@ -274,6 +274,7 @@ def get_traits_ratio_time(deploy_robots, deploy_traits_desired, transform, match
 def get_species_trait_matrix(rank, num_species, num_traits):
     max_trait_values = 2
     species_traits = np.zeros((num_species, num_traits))
+    r = 0
     while ((min(np.sum(species_traits,0))==0 or min(np.sum(species_traits,1))==0) and r!=rank):
         species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
         r = np.linalg.matrix_rank(species_traits)
