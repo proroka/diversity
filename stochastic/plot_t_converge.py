@@ -23,7 +23,7 @@ from funcdef_util_heterogeneous import *
 import funcdef_draw_network as nxmod
 
 
-run = 'V11'
+run = 'V12'
 
 # -----------------------------------------------------------------------------#
 def plot_t_converge(delta_t,t_min_mic, t_min_adp, t_min_ber):
@@ -40,8 +40,8 @@ def plot_t_converge(delta_t,t_min_mic, t_min_adp, t_min_ber):
     plt.setp(bp['fliers'], color='black', marker='+')
     
     off = 1.0
-    ymin = delta_t * np.min([t_min_mic, t_min_adp])
-    ymax = delta_t * np.max([t_min_mic, t_min_adp])
+    ymin = delta_t * np.min([t_min_mic, t_min_adp, t_min_ber])
+    ymax = delta_t * np.max([t_min_mic, t_min_adp, t_min_ber])
     ax.set_ylim([0, ymax+off])    
     ax.set_xlim([0.5, N-1.5])
 
@@ -49,9 +49,9 @@ def plot_t_converge(delta_t,t_min_mic, t_min_adp, t_min_ber):
     plt.ylabel('Time [s]')    
     plt.xlabel('Optimization Methods')
     #plt.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
-    labels = ['Micro', 'Adapt', 'Berman']
+    labels = ['J3', 'J3-tilde', 'Convex']
     x = [1,2,3]    
-    plt.xticks(x, labels, rotation='vertical')
+    plt.xticks(x, labels) #, rotation='vertical')
 
     return fig
     
@@ -95,17 +95,19 @@ tma = t_min_adp[ranks==4]
 tmb = t_min_mic_ber[ranks==4]
 fig2 = plot_t_converge(delta_t, tmm, tma, tmb)
 
+fig3 = plot_t_converge(delta_t, t_min_mic, t_min_adp, t_min_mic_ber)
+
 #plt.show()
 
 
 # -----------------------------------------------------------------------------#
 # save plots
  
-if 0:
-    prefix = "./plots/" + run + "_" 
-    fig1.savefig(prefix+'gi.eps') 
-    fig2.savefig(prefix+'gd.eps')                           
-    fig3.savefig(prefix+'micmicmac.eps') 
-    fig4.savefig(prefix+'time_converge.eps') 
+save_plots = True
+if save_plots:
+    fig1.savefig(prefix+'rank3_t_conv.eps') 
+    fig2.savefig(prefix+'rank4_t_conv.eps')                      
+    fig3.savefig(prefix+'all_t_conv.eps')                      
+
 
 

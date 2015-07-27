@@ -36,20 +36,21 @@ import funcdef_draw_network as nxmod
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'V12'
+run = 'V13'
 
 save_data = True
 save_plots = True
+fixed_species = False
 
 tstart = time.strftime("%Y%m%d-%H%M%S")
 
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
-t_max_sim = 7.0 # influences simulations and plotting
-num_iter = 4 # iterations of micro sim
+t_max_sim = 8.0 # influences simulations and plotting
+num_iter = 1 # iterations of micro sim
 delta_t = 0.04 # time step
 max_rate = 2.0 # Maximum rate possible for K.
-num_graph_iter = 40
+num_graph_iter = 1
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
@@ -78,15 +79,15 @@ for g in range(num_graph_iter):
     # initialize robots
     num_nodes = 8
     # set of traits
-    num_traits = 4
+    num_traits = 6
     max_trait_values = 2 # [0,1]: trait availability
     # robot species
-    num_species = 4
+    num_species = 6
     max_robots = 200 # maximum number of robots per node
     deploy_robots_init = np.random.randint(0, max_robots, size=(num_nodes, num_species))
     # ensure each species has at least 1 trait, and that all traits are present
     
-    if(num_species==4 and num_traits==4):
+    if(num_species==4 and num_traits==4 and fixed_species):
         rank = ranks[np.mod(g,2)]
         species_traits = get_species_trait_matrix_44(rank)    
     else:
