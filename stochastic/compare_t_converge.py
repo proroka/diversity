@@ -46,11 +46,11 @@ tstart = time.strftime("%Y%m%d-%H%M%S")
 
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
-t_max_sim = 8.0 # influences simulations and plotting
-num_iter = 1 # iterations of micro sim
+t_max_sim = 10.0 # influences simulations and plotting
+num_iter = 2 # iterations of micro sim
 delta_t = 0.04 # time step
 max_rate = 2.0 # Maximum rate possible for K.
-num_graph_iter = 1
+num_graph_iter = 20
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
