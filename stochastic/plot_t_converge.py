@@ -33,12 +33,12 @@ def plot_t_converge(delta_t,t_min_mic, t_min_adp, t_min_ber):
     N = 5  
     
     
-    bp = plt.boxplot([delta_t*t_min_mic, delta_t*t_min_adp, delta_t*t_min_ber],
+    bp = plt.boxplot([delta_t*t_min_ber, delta_t*t_min_mic, delta_t*t_min_adp],
                      notch=0, sym='+', vert=1, whis=1.5) #,medianprops=medianprops)
     plt.setp(bp['boxes'], color='black')
     plt.setp(bp['whiskers'], color='black')
     plt.setp(bp['fliers'], color='black', marker='+')
-    
+    plt.grid(axis='y')
     off = 1.0
     ymin = delta_t * np.min([t_min_mic, t_min_adp, t_min_ber])
     ymax = delta_t * np.max([t_min_mic, t_min_adp, t_min_ber])
@@ -46,10 +46,10 @@ def plot_t_converge(delta_t,t_min_mic, t_min_adp, t_min_ber):
     ax.set_xlim([0.5, N-1.5])
 
     #plt.legend(loc='upper right', shadow=False, fontsize='large')     
-    plt.ylabel('Time [s]')    
-    plt.xlabel('Optimization Methods')
+    plt.ylabel('T')    
+    plt.xlabel('O')
     #plt.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
-    labels = ['J3', 'J3-tilde', 'Convex']
+    labels = ['a', 'b', 'c']
     x = [1,2,3]    
     plt.xticks(x, labels) #, rotation='vertical')
 
@@ -59,8 +59,8 @@ def plot_t_converge(delta_t,t_min_mic, t_min_adp, t_min_ber):
 # -----------------------------------------------------------------------------#
 # load data
 
-#prefix = "./data/" + run + "/" + run + "_"
-prefix = "./data/" + run + "_"
+prefix = "./data/" + run + "/" + run + "_"
+#prefix = "./data/" + run + "_"
 
 rank_Q = pickle.load(open(prefix+"rank_Q.p", "rb"))
 t_min_mic = pickle.load(open(prefix+"t_min_mic.p", "rb"))
@@ -86,18 +86,24 @@ delta_t = 0.04
 # plot traits ratio
 #fig3 = plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_adapt, deploy_robots_euler, deploy_traits_desired,species_traits, delta_t, match)
 
+
 # plot time at which min ratio reached
-tmm = t_min_mic[ranks==3]
-tma = t_min_adp[ranks==3]
-tmb = t_min_mic_ber[ranks==3]
+r = 5
+tmm = t_min_mic[ranks==r]
+tma = t_min_adp[ranks==r]
+tmb = t_min_mic_ber[ranks==r]
 fig1 = plot_t_converge(delta_t, tmm, tma, tmb)
+plt.axes().set_aspect(0.5,'box')
 
-tmm = t_min_mic[ranks==4]
-tma = t_min_adp[ranks==4]
-tmb = t_min_mic_ber[ranks==4]
+
+r = 6
+tmm = t_min_mic[ranks==r]
+tma = t_min_adp[ranks==r]
+tmb = t_min_mic_ber[ranks==r]
 fig2 = plot_t_converge(delta_t, tmm, tma, tmb)
+plt.axes().set_aspect(0.5,'box')
 
-fig3 = plot_t_converge(delta_t, t_min_mic, t_min_adp, t_min_mic_ber)
+#fig3 = plot_t_converge(delta_t, t_min_mic, t_min_adp, t_min_mic_ber)
 
 #plt.show()
 
@@ -109,7 +115,7 @@ save_plots = True
 if save_plots:
     fig1.savefig(prefix+'rank3_t_conv.eps') 
     fig2.savefig(prefix+'rank4_t_conv.eps')                      
-    fig3.savefig(prefix+'all_t_conv.eps')                      
+    #fig3.savefig(prefix+'all_t_conv.eps')                      
 
 
 

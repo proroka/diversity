@@ -24,7 +24,7 @@ import funcdef_draw_network as nxmod
 # initialize world and robot community
 save_data = False
 save_plots = False
-load_globals = True
+load_globals = False
 save_globals = False
 tstart = time.strftime("%Y%m%d-%H%M%S")
 fix_species = True
