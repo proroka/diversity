@@ -23,7 +23,8 @@ from funcdef_util_heterogeneous import *
 import funcdef_draw_network as nxmod
 
 
-run = 'V13'
+run = 'V12'
+save_plots = False
 
 # -----------------------------------------------------------------------------#
 def plot_t_converge(delta_t,t_min_mic, t_min_adp, t_min_ber):
@@ -45,9 +46,21 @@ def plot_t_converge(delta_t,t_min_mic, t_min_adp, t_min_ber):
     ax.set_ylim([0, ymax+off])    
     ax.set_xlim([0.5, N-1.5])
 
+    # print values
+    med_ber=  np.median(delta_t*t_min_ber)    
+    med_mic=  np.median(delta_t*t_min_mic)
+    med_adp=  np.median(delta_t*t_min_adp)
+    print ' *** '
+    print 'Median ber: ', med_ber
+    print 'Median mic: ', med_mic
+    print 'Median adp: ', med_adp
+    imp = (med_ber-med_mic)/med_ber
+    imp2 = (med_mic-med_adp)/med_mic
+    print 'Impr. of mic over ber: ', imp
+    print 'Impr. of adp over mic: ', imp2
+
     #plt.legend(loc='upper right', shadow=False, fontsize='large')     
     plt.ylabel('T')    
-    plt.xlabel('O')
     #plt.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
     labels = ['a', 'b', 'c']
     x = [1,2,3]    
@@ -88,7 +101,7 @@ delta_t = 0.04
 
 
 # plot time at which min ratio reached
-r = 5
+r = 3
 tmm = t_min_mic[ranks==r]
 tma = t_min_adp[ranks==r]
 tmb = t_min_mic_ber[ranks==r]
@@ -96,7 +109,7 @@ fig1 = plot_t_converge(delta_t, tmm, tma, tmb)
 plt.axes().set_aspect(0.5,'box')
 
 
-r = 6
+r = 4
 tmm = t_min_mic[ranks==r]
 tma = t_min_adp[ranks==r]
 tmb = t_min_mic_ber[ranks==r]
@@ -111,7 +124,6 @@ plt.axes().set_aspect(0.5,'box')
 # -----------------------------------------------------------------------------#
 # save plots
  
-save_plots = True
 if save_plots:
     fig1.savefig(prefix+'rank3_t_conv.eps') 
     fig2.savefig(prefix+'rank4_t_conv.eps')                      

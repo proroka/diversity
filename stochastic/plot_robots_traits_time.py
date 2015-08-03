@@ -64,8 +64,26 @@ fig3 = plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro
                                         deploy_robots_euler, deploy_traits_desired, 
                                         species_traits, delta_t, match)
 
+# plot graph
+plt.axis('equal')
+fig4 = nxmod.draw_circular(deploy_traits_init, graph,linewidths=3)
+plt.show()
+plt.axis('equal')
+fig5  = nxmod.draw_circular(deploy_traits_desired, graph, linewidths=3)
+plt.show()
+adjacency_m = nx.to_numpy_matrix(graph)
+adjacency_m = np.squeeze(np.asarray(adjacency_m))
+
 
 if save_plots:
     fig1.savefig('./plots/'+run+'/num_robots_time.eps')              
     fig2.savefig('./plots/'+run+'/num_traits_time.eps')      
     fig3.savefig('./plots/'+run+'/ratio_time_micmicmac.eps')              
+    fig4.savefig('./plots/'+run+'/graph_init.eps') 
+    fig5.savefig('./plots/'+run+'/graph_desired.eps') 
+
+
+
+
+
+
