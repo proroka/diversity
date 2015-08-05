@@ -63,6 +63,11 @@ match = 1
 fig3 = plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_adapt, 
                                         deploy_robots_euler, deploy_traits_desired, 
                                         species_traits, delta_t, match)
+plt.show()
+
+fig6 = plot_traits_ratio_time_micmac(deploy_robots_micro, deploy_robots_euler, 
+                                     deploy_traits_desired, species_traits, delta_t, match)
+plt.show()
 
 # plot graph
 plt.axis('equal')
@@ -81,6 +86,7 @@ if save_plots:
     fig3.savefig('./plots/'+run+'/ratio_time_micmicmac.eps')              
     fig4.savefig('./plots/'+run+'/graph_init.eps') 
     fig5.savefig('./plots/'+run+'/graph_desired.eps') 
+    fig6.savefig('./plots/'+run+'/ratio_time_micmac.eps') 
 
 
 

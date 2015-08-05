@@ -36,6 +36,8 @@ def plot_t_converge(delta_t,t_min_mic, t_min_adp, t_min_ber):
     
     bp = plt.boxplot([delta_t*t_min_ber, delta_t*t_min_mic, delta_t*t_min_adp],
                      notch=0, sym='+', vert=1, whis=1.5) #,medianprops=medianprops)
+                     
+                     
     plt.setp(bp['boxes'], color='black')
     plt.setp(bp['whiskers'], color='black')
     plt.setp(bp['fliers'], color='black', marker='+')
@@ -68,7 +70,46 @@ def plot_t_converge(delta_t,t_min_mic, t_min_adp, t_min_ber):
 
     return fig
     
+# -----------------------------------------------------------------------------#
+def plot_t_converge_mod(delta_t,t_min_mic, t_min_ber):
+    
+    fig = plt.figure()
+    ax = plt.gca()
+    N = 4  
+    
+    
+    bp = plt.boxplot([delta_t*t_min_ber, delta_t*t_min_mic],
+                     notch=0, sym='+', vert=1, whis=1.5) #,medianprops=medianprops)
+                     
+                     
+    plt.setp(bp['boxes'], color='black')
+    plt.setp(bp['whiskers'], color='black')
+    plt.setp(bp['fliers'], color='black', marker='+')
+    plt.grid(axis='y')
+    off = 1.0
+    ymin = delta_t * np.min([t_min_mic, t_min_ber])
+    ymax = delta_t * np.max([t_min_mic, t_min_ber])
+    ax.set_ylim([0, ymax+off])    
+    ax.set_xlim([0.5, N-1.5])
 
+    # print values
+    med_ber=  np.median(delta_t*t_min_ber)    
+    med_mic=  np.median(delta_t*t_min_mic)
+    print ' *** '
+    print 'Median ber: ', med_ber
+    print 'Median mic: ', med_mic
+    imp = (med_ber-med_mic)/med_ber
+    print 'Impr. of mic over ber: ', imp
+
+    #plt.legend(loc='upper right', shadow=False, fontsize='large')     
+    plt.ylabel('T')    
+    #plt.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+    labels = ['a', 'b']
+    x = [1,2]    
+    plt.xticks(x, labels) #, rotation='vertical')
+
+    return fig
+    
 # -----------------------------------------------------------------------------#
 # load data
 
@@ -116,8 +157,10 @@ tmb = t_min_mic_ber[ranks==r]
 fig2 = plot_t_converge(delta_t, tmm, tma, tmb)
 plt.axes().set_aspect(0.5,'box')
 
-#fig3 = plot_t_converge(delta_t, t_min_mic, t_min_adp, t_min_mic_ber)
+fig3 = plot_t_converge(delta_t, t_min_mic, t_min_adp, t_min_mic_ber)
 
+fig4 = plot_t_converge_mod(delta_t, t_min_mic, t_min_mic_ber)
+    
 #plt.show()
 
 
@@ -127,7 +170,8 @@ plt.axes().set_aspect(0.5,'box')
 if save_plots:
     fig1.savefig(prefix+'rank3_t_conv.eps') 
     fig2.savefig(prefix+'rank4_t_conv.eps')                      
-    #fig3.savefig(prefix+'all_t_conv.eps')                      
+    fig3.savefig(prefix+'all_t_conv.eps')  
+    fig4.savefig(prefix+'short_t_conv.eps')                         
 
 
 
