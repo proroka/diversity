@@ -341,10 +341,10 @@ def plot_t_converge_3(delta_t, t_min_mic, t_min_mac, t_min_ber):
     plt.setp(bp['whiskers'], color='black')
     plt.setp(bp['fliers'], color='black', marker='+')
     
-    off = 1.0
-    ymin = delta_t * np.min([t_min_mic, t_min_mac, t_min_ber])
-    ymax = delta_t * np.max([t_min_mic, t_min_mac, t_min_ber])
-    ax.set_ylim([0, ymax+off])    
+    #off = 1.0
+    #ymin = delta_t * np.min([t_min_mic, t_min_mac, t_min_ber])
+    #ymax = delta_t * np.max([t_min_mic, t_min_mac, t_min_ber])
+    ax.set_ylim([0, 10.0])    
     ax.set_xlim([0.5, N-1.5])
 
     #plt.legend(loc='upper right', shadow=False, fontsize='large')     

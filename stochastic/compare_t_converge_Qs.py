@@ -37,21 +37,18 @@ from generate_Q import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'V14'
+run = 'Q1'
 
 save_data = True
 save_plots = True
-fixed_species = False
 
 tstart = time.strftime("%Y%m%d-%H%M%S")
 
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
 t_max_sim = 10.0 # influences simulations and plotting
-num_iter = 1 # iterations of micro sim
 delta_t = 0.04 # time step
 max_rate = 2.0 # Maximum rate possible for K.
-num_graph_iter = 1
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
@@ -59,25 +56,15 @@ match = 1 # 1: exact 0: at-least
 
 
 # -----------------------------------------------------------------------------#
-# initialize robots and graph
+# initialize system
 
-num_nodes = 4
+num_nodes = 8
+num_species = 5
 
-# load Qs
-num_species = 4
-#num_traits = 10
-
-run = 'S10_U10'
-prefix = "./data/Q/" + run + "_"
-
-#q_rs = pickle.load(open(prefix+"q_rs.p", "rb"))
-#q_rs1 = pickle.load(open(prefix+"q_rs1.p", "rb"))
-#q_rs2 = pickle.load(open(prefix+"q_rs2.p", "rb"))
-#q_rs_all = np.concatenate((q_rs, q_rs1, q_rs2),axis=2)
-
-#num_q_iter = q_rs_all.shape[2]
-
-num_q_iter = num_species 
+num_iter = 10 # iterations of micro sim
+num_q_iter = num_species # num_traits from 1 to num_species
+num_graph_iter = 10 # number of different graphs
+ 
  
 # -----------------------------------------------------------------------------#
 # find time at which min ratio is found
@@ -97,8 +84,6 @@ rank_Q = np.zeros((num_graph_iter, num_q_iter))
 for gi in range(num_graph_iter):
 
     for qi in range(num_q_iter):
-
-        #species_traits = q_rs_all[qi]
 
         rk = 0
         num_traits = qi+1
@@ -156,7 +141,7 @@ for gi in range(num_graph_iter):
         deploy_robots_mic_ber = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
         for it in range(num_iter):
             
-            print "Mic. iteration: ", gi*num_graph_iter + qi*num_q_iter + it, " / ", num_graph_iter * num_q_iter * num_iter
+            print "Iteration: ", gi, qi, it 
             robots_new, deploy_robots_micro[:,:,:,it] = microscopic_sim(num_timesteps, delta_t, robots, deploy_robots_init, transition_m_init)
             robots_new_ber, deploy_robots_mic_ber[:,:,:,it] = microscopic_sim(num_timesteps, delta_t, robots, deploy_robots_init, transition_m_berman)
        
@@ -203,19 +188,20 @@ if save_data:
 # -----------------------------------------------------------------------------#
 # plots
 
+# flatten for plotting function
+for rk in range(num_species):
+    prefix = "./plots/" + run + "_rank" + str(rk+1)+"_"    
+    t_mic_f = t_min_mic[:,rk,:].flatten()
+    t_ber_f = t_min_mic_ber[:,rk,:].flatten()
+    t_mac_f = t_min_mac[:,rk].flatten()
+
+    fig = plot_t_converge_3(delta_t, t_mic_f, t_mac_f, t_ber_f)
+    fig.savefig(prefix+'time_converge.eps') 
+    
+
 # plot traits ratio
-fig1 = plot_traits_ratio_time_micmac(deploy_robots_micro, deploy_robots_euler, deploy_traits_desired,species_traits, delta_t, match)
-
-# plot time at which min ratio reached
-fig2 = plot_t_converge_3(delta_t, t_min_mic, t_min_mac, t_min_mic_ber)
+# fig1 = plot_traits_ratio_time_micmac(deploy_robots_micro, deploy_robots_euler, deploy_traits_desired,species_traits, delta_t, match)
 
 
-# -----------------------------------------------------------------------------#
-# save plots
- 
-if save_plots:
-    prefix = "./plots/" + run + "_"                        
-    fig1.savefig(prefix+'micmicmac.eps') 
-    fig2.savefig(prefix+'time_converge.eps') 
 
 
