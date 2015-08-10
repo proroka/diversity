@@ -293,7 +293,7 @@ def get_species_trait_matrix_44(rank):
     
     
 # -----------------------------------------------------------------------------#
-# get ratio of desired vs actual trait distrib for 1 run
+# convergence time plots
 
 def plot_t_converge(delta_t,t_min_mic, t_min_adp, t_min_mac, t_min_ber):
     
@@ -324,7 +324,39 @@ def plot_t_converge(delta_t,t_min_mic, t_min_adp, t_min_mac, t_min_ber):
 
     return fig
     
+
+# -----------------------------------------------------------------------------#
+# convergence time plots
+
+def plot_t_converge_3(delta_t, t_min_mic, t_min_mac, t_min_ber):
     
+    fig = plt.figure()
+    ax = plt.gca()
+    N = 5   
+    
+    
+    bp = plt.boxplot([delta_t*t_min_mic, delta_t*t_min_mac, delta_t*t_min_ber],
+                     notch=0, sym='+', vert=1, whis=1.5) #,medianprops=medianprops)
+    plt.setp(bp['boxes'], color='black')
+    plt.setp(bp['whiskers'], color='black')
+    plt.setp(bp['fliers'], color='black', marker='+')
+    
+    off = 1.0
+    ymin = delta_t * np.min([t_min_mic, t_min_mac, t_min_ber])
+    ymax = delta_t * np.max([t_min_mic, t_min_mac, t_min_ber])
+    ax.set_ylim([0, ymax+off])    
+    ax.set_xlim([0.5, N-1.5])
+
+    #plt.legend(loc='upper right', shadow=False, fontsize='large')     
+    plt.ylabel('Time [s]')    
+    plt.xlabel('Optimization Methods')
+    #plt.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+    labels = ['Micro', 'Macro', 'Berman']
+    x = [1,2,3]    
+    plt.xticks(x, labels, rotation='vertical')
+
+    return fig
+        
 # -----------------------------------------------------------------------------#
 # plot ratio of desired vs actual robot distribution
 
