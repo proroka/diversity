@@ -176,14 +176,14 @@ def Optimize_Berman(adjacency_matrix, initial_state, desired_steadystate, transf
     #---
     # basinhopping function
     minimizer_kwargs = {'constraints': {'type': 'eq', 'fun': lambda x: Cons_Berman(x, desired_steadystate, adjacency_matrix)},
-                        'bounds': bounds, 'options': {'disp': True}}
+                        'bounds': bounds, 'options': {'disp': True,'ftol': 1e-4, 'maxiter': 50}}
     success = False
     while not success:
         try:
             ret = scipy.optimize.basinhopping(CostFunction,
                                               init_elements,
                                               minimizer_kwargs=minimizer_kwargs,
-                                              niter=100, niter_success=3,  # Actually since it is convex, we're good with one iteration.
+                                              niter=3,  # Actually since it is convex, we're good with one iteration.
                                               accept_test=BoundFunction)
             # success = True
             success = (ret.fun < 0.0)
