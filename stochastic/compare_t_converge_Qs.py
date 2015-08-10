@@ -24,7 +24,7 @@ from funcdef_macro_heterogeneous import *
 from funcdef_micro_heterogeneous import *
 from funcdef_util_heterogeneous import *
 import funcdef_draw_network as nxmod
-
+from generate_Q import *
 
 # -----------------------------------------------------------------------------#
 
@@ -61,21 +61,23 @@ match = 1 # 1: exact 0: at-least
 # -----------------------------------------------------------------------------#
 # initialize robots and graph
 
-num_nodes = 8
+num_nodes = 4
 
 # load Qs
-num_species = 10
-num_traits = 10
+num_species = 4
+#num_traits = 10
 
 run = 'S10_U10'
 prefix = "./data/Q/" + run + "_"
 
-q_rs = pickle.load(open(prefix+"q_rs.p", "rb"))
-q_rs1 = pickle.load(open(prefix+"q_rs1.p", "rb"))
-q_rs2 = pickle.load(open(prefix+"q_rs2.p", "rb"))
-q_rs_all = np.concatenate((q_rs, q_rs1, q_rs2),axis=2)
+#q_rs = pickle.load(open(prefix+"q_rs.p", "rb"))
+#q_rs1 = pickle.load(open(prefix+"q_rs1.p", "rb"))
+#q_rs2 = pickle.load(open(prefix+"q_rs2.p", "rb"))
+#q_rs_all = np.concatenate((q_rs, q_rs1, q_rs2),axis=2)
 
-num_q_iter = q_rs_all.shape[2]
+#num_q_iter = q_rs_all.shape[2]
+
+num_q_iter = num_species 
  
 # -----------------------------------------------------------------------------#
 # find time at which min ratio is found
@@ -84,19 +86,25 @@ num_mic_iter = num_iter * num_graph_iter * num_q_iter
 num_mac_iter = num_graph_iter * num_q_iter
 
 min_ratio = 0.05
-t_min_mic = np.zeros((num_mic_iter))
-t_min_mic_ber = np.zeros((num_mic_iter))
-t_min_mac = np.zeros((num_mac_iter))
-t_min_mac_ber = np.zeros((num_mac_iter))
+t_min_mic = np.zeros((num_graph_iter, num_q_iter, num_iter))
+t_min_mic_ber = np.zeros((num_graph_iter, num_q_iter, num_iter))
+t_min_mac = np.zeros((num_graph_iter, num_q_iter))
+t_min_mac_ber = np.zeros((num_graph_iter, num_q_iter))
 
-rank_Q = np.zeros((num_tot_iter))
+rank_Q = np.zeros((num_graph_iter, num_q_iter))
 
 
 for gi in range(num_graph_iter):
 
     for qi in range(num_q_iter):
 
-        species_traits = q_rs_all[qi]
+        #species_traits = q_rs_all[qi]
+
+        rk = 0
+        num_traits = qi+1
+        while rk != num_traits:
+            species_traits, rk, s = generate_Q(num_species, num_traits)
+
 
         max_robots = 200    
         # generate a random end state
@@ -147,27 +155,25 @@ for gi in range(num_graph_iter):
         deploy_robots_micro = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
         deploy_robots_mic_ber = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
         for it in range(num_iter):
-            curr_mic_it = gi*num_q_iter+qi*num_iter+it
             
-            print "Mic. iteration: ", curr_mic_it, " / ", num_mic_iter
+            print "Mic. iteration: ", gi*num_graph_iter + qi*num_q_iter + it, " / ", num_graph_iter * num_q_iter * num_iter
             robots_new, deploy_robots_micro[:,:,:,it] = microscopic_sim(num_timesteps, delta_t, robots, deploy_robots_init, transition_m_init)
             robots_new_ber, deploy_robots_mic_ber[:,:,:,it] = microscopic_sim(num_timesteps, delta_t, robots, deploy_robots_init, transition_m_berman)
        
-            t_min_mic[curr_mic_it] = get_traits_ratio_time(deploy_robots_micro[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)
-            t_min_mic_ber[curr_mic_it] = get_traits_ratio_time(deploy_robots_mic_ber[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)
+            t_min_mic[gi,qi,it] = get_traits_ratio_time(deploy_robots_micro[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)
+            t_min_mic_ber[gi,qi,it] = get_traits_ratio_time(deploy_robots_mic_ber[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)
     
        
         # -----------------------------------------------------------------------------#
         # euler integration
-        curr_mac_it = gi*num_q_iter+qi        
-        
-        rank_Q[curr_mac_it] = np.linalg.matrix_rank(species_traits)
+       
+        rank_Q[gi,qi] = np.linalg.matrix_rank(species_traits)
 
         deploy_robots_mac_ber = run_euler_integration(deploy_robots_init, transition_m_berman, t_max_sim, delta_t)
         deploy_robots_euler = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
         
-        t_min_mac_ber[curr_mac_it] = get_traits_ratio_time(deploy_robots_mac_ber, deploy_traits_desired, species_traits, match, min_ratio)
-        t_min_mac[curr_mac_it] = get_traits_ratio_time(deploy_robots_euler, deploy_traits_desired, species_traits, match, min_ratio)
+        t_min_mac_ber[gi,qi] = get_traits_ratio_time(deploy_robots_mac_ber, deploy_traits_desired, species_traits, match, min_ratio)
+        t_min_mac[gi,qi] = get_traits_ratio_time(deploy_robots_euler, deploy_traits_desired, species_traits, match, min_ratio)
 
 # -----------------------------------------------------------------------------#
 # save variables
