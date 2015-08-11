@@ -37,7 +37,7 @@ from generate_Q import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'Q1'
+run = 'Q2'
 
 save_data = True
 save_plots = True
@@ -52,7 +52,7 @@ max_rate = 2.0 # Maximum rate possible for K.
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
-match = 1 # 1: exact 0: at-least
+match = 0 # 1: exact 0: at-least
 
 
 # -----------------------------------------------------------------------------#
@@ -79,7 +79,7 @@ t_min_mac = np.zeros((num_graph_iter, num_q_iter))
 t_min_mac_ber = np.zeros((num_graph_iter, num_q_iter))
 
 rank_Q = np.zeros((num_graph_iter, num_q_iter))
-
+list_Q = []
 
 for gi in range(num_graph_iter):
 
@@ -89,7 +89,7 @@ for gi in range(num_graph_iter):
         num_traits = qi+1
         while rk != num_traits:
             species_traits, rk, s = generate_Q(num_species, num_traits)
-
+        list_Q.append(species_traits)    
 
         max_robots = 200    
         # generate a random end state
@@ -184,6 +184,7 @@ if save_data:
     pickle.dump(t_min_mic_ber, open(prefix+"t_min_mic_ber.p", "wb"))
     pickle.dump(t_min_mac_ber, open(prefix+"t_min_mac_ber.p", "wb"))
     pickle.dump(rank_Q, open(prefix+"rank_Q.p", "wb"))
+    pickle.dump(list_Q, open(prefix+"list_Q.p", "wb"))
 
 # -----------------------------------------------------------------------------#
 # plots

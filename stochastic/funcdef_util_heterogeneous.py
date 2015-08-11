@@ -257,7 +257,7 @@ def get_traits_ratio_time(deploy_robots, deploy_traits_desired, transform, match
     for t in range(num_tsteps):
         if match==0:
             traits = np.dot(deploy_robots[:,t,:], transform)
-            diffmic = np.abs(np.minimum(traits - deploy_traits_desired, 0))
+            diff = np.abs(np.minimum(traits - deploy_traits_desired, 0))
         else:
             traits = np.dot(deploy_robots[:,t,:], transform)
             diff = np.abs(traits - deploy_traits_desired)  
