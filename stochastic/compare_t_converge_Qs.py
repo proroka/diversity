@@ -37,8 +37,6 @@ from generate_Q import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'Q2'
-
 save_data = True
 save_plots = True
 
@@ -50,21 +48,21 @@ t_max_sim = 10.0 # influences simulations and plotting
 delta_t = 0.04 # time step
 max_rate = 2.0 # Maximum rate possible for K.
 
-# cost function
-l_norm = 2 # 2: quadratic 1: absolute
-match = 0 # 1: exact 0: at-least
-
 
 # -----------------------------------------------------------------------------#
 # initialize system
 
-num_nodes = 8
-num_species = 5
+run = 'Q5'
 
-num_iter = 10 # iterations of micro sim
+num_nodes = 8
+num_species = 6
+num_iter = 10 # micro sim
 num_q_iter = num_species # num_traits from 1 to num_species
-num_graph_iter = 10 # number of different graphs
- 
+num_graph_iter = 30 # random graphs
+
+# cost function
+l_norm = 2 # 2: quadratic 1: absolute
+match = 1 # 1: exact 0: at-least
  
 # -----------------------------------------------------------------------------#
 # find time at which min ratio is found
@@ -102,7 +100,7 @@ for gi in range(num_graph_iter):
         deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
         # if 'at-least' cost function, reduce number of traits desired
         if match==0:
-            deploy_traits_desired *= (np.random.rand()*0.1 + 0.85)
+            deploy_traits_desired *= (np.random.rand()*0.03 + 0.97)
             print "total traits, at least: \t", np.sum(np.sum(deploy_traits_desired))
     
         # initialize robots

@@ -24,7 +24,7 @@ from funcdef_util_heterogeneous import *
 import funcdef_draw_network as nxmod
 
 
-run = 'Q1'
+run = 'Q3'
 save_plots = False
 
 # -----------------------------------------------------------------------------#
@@ -94,7 +94,7 @@ def plot_t_converge(delta_t, t_min_a, t_min_b):
 prefix = "./data/" + run + "/" + run + "_"
 #prefix = "./data/" + run + "_"
 
-rank_Q = pickle.load(open(prefix+"rank_Q.p", "rb"))
+#rank_Q = pickle.load(open(prefix+"rank_Q.p", "rb"))
 t_min_mic = pickle.load(open(prefix+"t_min_mic.p", "rb"))
 t_min_mac = pickle.load(open(prefix+"t_min_mac.p", "rb"))
 t_min_mic_ber = pickle.load(open(prefix+"t_min_mic_ber.p", "rb"))
