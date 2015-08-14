@@ -52,11 +52,11 @@ max_rate = 2.0 # Maximum rate possible for K.
 # -----------------------------------------------------------------------------#
 # initialize system
 
-run = 'Q5'
+run = 'Q6'
 
 num_nodes = 8
-num_species = 6
-num_iter = 10 # micro sim
+num_species = 5
+num_iter = 15 # micro sim
 num_q_iter = num_species # num_traits from 1 to num_species
 num_graph_iter = 30 # random graphs
 
