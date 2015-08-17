@@ -126,11 +126,12 @@ fig1 = plot_t_converge_OR_rk(delta_t, t_min_mic, t_min_mic_ber, rks)
 plt.axes().set_aspect(0.5,'box')
 plt.show()
 
+"""
 fig2 = plot_t_converge_OR_rk(delta_t, t_min_mac, t_min_mac_ber, rks)
 plt.axes().set_aspect(0.5,'box')
 plt.show()
 
-
+"""
 
 
 

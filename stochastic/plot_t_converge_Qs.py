@@ -24,7 +24,7 @@ from funcdef_util_heterogeneous import *
 import funcdef_draw_network as nxmod
 
 
-run = 'Q5'
+run = 'Q6'
 
 # -----------------------------------------------------------------------------#
 def plot_t_converge(delta_t, t_min_a, t_min_b):
@@ -70,7 +70,7 @@ def plot_t_converge(delta_t, t_min_a, t_min_b):
     plt.setp(bp['fliers'], color='black', marker='+')
     plt.grid(axis='y')
     ymin = 0 
-    ymax = 10 
+    ymax = 10
     ax.set_ylim([0, ymax])    
     ax.set_xlim([0.4, num_rk+0.6])
 
@@ -103,10 +103,11 @@ fig1 = plot_t_converge(delta_t, t_min_mic, t_min_mic_ber)
 plt.axes().set_aspect(0.5,'box')
 plt.show()
 
+"""
 fig2 = plot_t_converge(delta_t, t_min_mac, t_min_mac_ber)
 plt.axes().set_aspect(0.5,'box')
 plt.show()
-
+"""
 
 # -----------------------------------------------------------------------------#
 # save plots
