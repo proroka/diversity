@@ -25,6 +25,7 @@ from funcdef_micro_heterogeneous import *
 from funcdef_util_heterogeneous import *
 import funcdef_draw_network as nxmod
 from generate_Q import *
+from simple_orrank import *
 
 # -----------------------------------------------------------------------------#
 
@@ -39,6 +40,7 @@ from generate_Q import *
 
 save_data = True
 save_plots = True
+berman = False
 
 tstart = time.strftime("%Y%m%d-%H%M%S")
 
@@ -52,17 +54,17 @@ max_rate = 2.0 # Maximum rate possible for K.
 # -----------------------------------------------------------------------------#
 # initialize system
 
-run = 'Q6'
+run = 'Q9'
 
 num_nodes = 8
-num_species = 5
-num_iter = 15 # micro sim
+num_species = 6
+num_iter = 10 # micro sim
 num_q_iter = num_species # num_traits from 1 to num_species
 num_graph_iter = 30 # random graphs
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
-match = 1 # 1: exact 0: at-least
+match = 0 # 1: exact 0: at-least
  
 # -----------------------------------------------------------------------------#
 # find time at which min ratio is found
@@ -85,8 +87,12 @@ for gi in range(num_graph_iter):
 
         rk = 0
         num_traits = qi+1
-        while rk != num_traits:
-            species_traits, rk, s = generate_Q(num_species, num_traits)
+        
+        if match==1:
+            while rk != num_traits:
+                species_traits, rk, s = generate_Q(num_species, num_traits)
+        else:
+            species_traits = generate_matrix_with_orrank(num_species, num_traits, num_traits)
         list_Q.append(species_traits)    
 
         max_robots = 200    
@@ -125,9 +131,10 @@ for gi in range(num_graph_iter):
         
         # -----------------------------------------------------------------------------#
         # Berman's method 
-        print "Calculating optimal transition matrix, Berman..."
-        sys.stdout.flush()
-        transition_m_berman = Optimize_Berman(adjacency_m, deploy_robots_init, deploy_robots_final, species_traits,max_rate, max_time=t_max, verbose=True)
+        if berman:
+            print "Calculating optimal transition matrix, Berman..."
+            sys.stdout.flush()
+            transition_m_berman = Optimize_Berman(adjacency_m, deploy_robots_init, deploy_robots_final, species_traits,max_rate, max_time=t_max, verbose=True)
         
         
         # -----------------------------------------------------------------------------#
@@ -141,21 +148,25 @@ for gi in range(num_graph_iter):
             
             print "Iteration: ", gi, qi, it 
             robots_new, deploy_robots_micro[:,:,:,it] = microscopic_sim(num_timesteps, delta_t, robots, deploy_robots_init, transition_m_init)
-            robots_new_ber, deploy_robots_mic_ber[:,:,:,it] = microscopic_sim(num_timesteps, delta_t, robots, deploy_robots_init, transition_m_berman)
+            if berman:
+                robots_new_ber, deploy_robots_mic_ber[:,:,:,it] = microscopic_sim(num_timesteps, delta_t, robots, deploy_robots_init, transition_m_berman)
        
             t_min_mic[gi,qi,it] = get_traits_ratio_time(deploy_robots_micro[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)
-            t_min_mic_ber[gi,qi,it] = get_traits_ratio_time(deploy_robots_mic_ber[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)
+            if berman:            
+                t_min_mic_ber[gi,qi,it] = get_traits_ratio_time(deploy_robots_mic_ber[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)
     
        
         # -----------------------------------------------------------------------------#
         # euler integration
        
         rank_Q[gi,qi] = np.linalg.matrix_rank(species_traits)
-
-        deploy_robots_mac_ber = run_euler_integration(deploy_robots_init, transition_m_berman, t_max_sim, delta_t)
+        
+        if berman:
+            deploy_robots_mac_ber = run_euler_integration(deploy_robots_init, transition_m_berman, t_max_sim, delta_t)
         deploy_robots_euler = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
         
-        t_min_mac_ber[gi,qi] = get_traits_ratio_time(deploy_robots_mac_ber, deploy_traits_desired, species_traits, match, min_ratio)
+        if berman:
+            t_min_mac_ber[gi,qi] = get_traits_ratio_time(deploy_robots_mac_ber, deploy_traits_desired, species_traits, match, min_ratio)
         t_min_mac[gi,qi] = get_traits_ratio_time(deploy_robots_euler, deploy_traits_desired, species_traits, match, min_ratio)
 
 # -----------------------------------------------------------------------------#
@@ -179,27 +190,28 @@ if save_data:
     pickle.dump(deploy_robots_euler, open(prefix+"deploy_robots_euler.p", "wb"))
     pickle.dump(t_min_mic, open(prefix+"t_min_mic.p", "wb"))
     pickle.dump(t_min_mac, open(prefix+"t_min_mac.p", "wb"))
-    pickle.dump(t_min_mic_ber, open(prefix+"t_min_mic_ber.p", "wb"))
-    pickle.dump(t_min_mac_ber, open(prefix+"t_min_mac_ber.p", "wb"))
+
     pickle.dump(rank_Q, open(prefix+"rank_Q.p", "wb"))
     pickle.dump(list_Q, open(prefix+"list_Q.p", "wb"))
+    
+    if berman:
+        pickle.dump(t_min_mic_ber, open(prefix+"t_min_mic_ber.p", "wb"))
+        pickle.dump(t_min_mac_ber, open(prefix+"t_min_mac_ber.p", "wb"))
 
 # -----------------------------------------------------------------------------#
 # plots
 
-# flatten for plotting function
-for rk in range(num_species):
-    prefix = "./plots/" + run + "_rank" + str(rk+1)+"_"    
-    t_mic_f = t_min_mic[:,rk,:].flatten()
-    t_ber_f = t_min_mic_ber[:,rk,:].flatten()
-    t_mac_f = t_min_mac[:,rk].flatten()
-
-    fig = plot_t_converge_3(delta_t, t_mic_f, t_mac_f, t_ber_f)
-    fig.savefig(prefix+'time_converge.eps') 
+if berman:
+    # flatten for plotting function
+    for rk in range(num_species):
+        prefix = "./plots/" + run + "_rank" + str(rk+1)+"_"    
+        t_mic_f = t_min_mic[:,rk,:].flatten()
+        t_ber_f = t_min_mic_ber[:,rk,:].flatten()
+        t_mac_f = t_min_mac[:,rk].flatten()
     
-
-# plot traits ratio
-# fig1 = plot_traits_ratio_time_micmac(deploy_robots_micro, deploy_robots_euler, deploy_traits_desired,species_traits, delta_t, match)
+        fig = plot_t_converge_3(delta_t, t_mic_f, t_mac_f, t_ber_f)
+        fig.savefig(prefix+'time_converge.eps') 
+    
 
 
 

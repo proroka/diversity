@@ -24,7 +24,8 @@ from funcdef_util_heterogeneous import *
 import funcdef_draw_network as nxmod
 
 
-run = 'Q6'
+run = 'Q7'
+berman = False
 
 # -----------------------------------------------------------------------------#
 def plot_t_converge(delta_t, t_min_a, t_min_b):
@@ -85,12 +86,12 @@ def plot_t_converge(delta_t, t_min_a, t_min_b):
 # load data
 
 prefix = "./data/" + run + "/" + run + "_"
-#prefix = "./data/" + run + "_"
 
 t_min_mic = pickle.load(open(prefix+"t_min_mic.p", "rb"))
 t_min_mac = pickle.load(open(prefix+"t_min_mac.p", "rb"))
-t_min_mic_ber = pickle.load(open(prefix+"t_min_mic_ber.p", "rb"))
-t_min_mac_ber = pickle.load(open(prefix+"t_min_mac_ber.p", "rb"))
+if berman:
+    t_min_mic_ber = pickle.load(open(prefix+"t_min_mic_ber.p", "rb"))
+    t_min_mac_ber = pickle.load(open(prefix+"t_min_mac_ber.p", "rb"))
 
 # -----------------------------------------------------------------------------#
 
@@ -98,8 +99,10 @@ t_min_mac_ber = pickle.load(open(prefix+"t_min_mac_ber.p", "rb"))
 # plot
 delta_t = 0.04
 
-
-fig1 = plot_t_converge(delta_t, t_min_mic, t_min_mic_ber)
+if berman:
+    fig1 = plot_t_converge(delta_t, t_min_mic, t_min_mic_ber)
+else:
+    fig1 = plot_t_converge(delta_t, t_min_mic, t_min_mic)
 plt.axes().set_aspect(0.5,'box')
 plt.show()
 
