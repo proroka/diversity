@@ -269,6 +269,34 @@ def get_traits_ratio_time(deploy_robots, deploy_traits_desired, transform, match
     return num_tsteps  
 
 # -----------------------------------------------------------------------------#
+# get ratio of desired vs actual trait distrib for 1 run, take into account deviation of robot distribution
+
+def get_traits_ratio_time_strict(deploy_robots, deploy_traits_desired, deploy_robots_desired, transform, match, min_val):
+    
+    num_tsteps = deploy_robots.shape[1]
+    total_num_traits = np.sum(deploy_traits_desired)
+    total_num_robots = np.sum(deploy_robots_desired)
+    
+    for t in range(num_tsteps):
+        if match==0:
+            traits = np.dot(deploy_robots[:,t,:], transform)
+            diff = np.abs(np.minimum(traits - deploy_traits_desired, 0))
+            diffr =  np.abs(np.minimum(deploy_robots[:,t,:] - deploy_robots_desired, 0))
+        else:
+            traits = np.dot(deploy_robots[:,t,:], transform)
+            diff = np.abs(traits - deploy_traits_desired)  
+            diffr =  np.abs(deploy_robots[:,t,:] - deploy_robots_desired)
+            
+        ratio = np.sum(diff) / total_num_traits  
+        ratior = np.sum(diffr) / total_num_robots  
+        if ratio <= min_val and ratior <= (min_val*1.05):
+            return t
+        
+    return num_tsteps  
+
+
+
+# -----------------------------------------------------------------------------#
 # get species traits matrix for 4 species and 4 traits
 
 def get_species_trait_matrix_44(rank):

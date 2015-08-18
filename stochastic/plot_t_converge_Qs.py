@@ -24,10 +24,10 @@ from funcdef_util_heterogeneous import *
 import funcdef_draw_network as nxmod
 
 
-# good runs for rank: Q5
-# good runs for ORrank:
-run = 'Q5'
-berman = True
+# good runs for rank: Q5 (old berman cost), Q10 (new berman cost)
+# good runs for ORrank: Q9
+run = 'Q9'
+berman = False
 
 # -----------------------------------------------------------------------------#
 def plot_t_converge(delta_t, t_min_a, t_min_b):
@@ -150,7 +150,7 @@ def plot_t_converge_shaded(delta_t, t_min_a, t_min_b=None):
     
     plt.grid(axis='y')
     ymin = 0 
-    ymax = 6
+    ymax = 14
     ax.set_ylim([0, ymax])    
     ax.set_xlim([1, num_rk])
 

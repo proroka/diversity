@@ -40,7 +40,7 @@ from simple_orrank import *
 
 save_data = True
 save_plots = True
-berman = False
+berman = True
 
 tstart = time.strftime("%Y%m%d-%H%M%S")
 
@@ -54,17 +54,17 @@ max_rate = 2.0 # Maximum rate possible for K.
 # -----------------------------------------------------------------------------#
 # initialize system
 
-run = 'Q9'
+run = 'Q10'
 
 num_nodes = 8
 num_species = 6
-num_iter = 10 # micro sim
+num_iter = 2 # micro sim
 num_q_iter = num_species # num_traits from 1 to num_species
-num_graph_iter = 30 # random graphs
+num_graph_iter = 2 # random graphs
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
-match = 0 # 1: exact 0: at-least
+match = 1 # 1: exact 0: at-least
  
 # -----------------------------------------------------------------------------#
 # find time at which min ratio is found
@@ -153,8 +153,8 @@ for gi in range(num_graph_iter):
        
             t_min_mic[gi,qi,it] = get_traits_ratio_time(deploy_robots_micro[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)
             if berman:            
-                t_min_mic_ber[gi,qi,it] = get_traits_ratio_time(deploy_robots_mic_ber[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)
-    
+                #t_min_mic_ber[gi,qi,it] = get_traits_ratio_time(deploy_robots_mic_ber[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)
+                t_min_mic_ber[gi,qi,it] = get_traits_ratio_time_strict(deploy_robots_mic_ber[:,:,:,it], deploy_traits_desired, deploy_robots_final, species_traits, match, min_ratio)
        
         # -----------------------------------------------------------------------------#
         # euler integration
@@ -166,7 +166,8 @@ for gi in range(num_graph_iter):
         deploy_robots_euler = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
         
         if berman:
-            t_min_mac_ber[gi,qi] = get_traits_ratio_time(deploy_robots_mac_ber, deploy_traits_desired, species_traits, match, min_ratio)
+            #t_min_mac_ber[gi,qi] = get_traits_ratio_time(deploy_robots_mac_ber, deploy_traits_desired, species_traits, match, min_ratio)
+            t_min_mac_ber[gi,qi] = get_traits_ratio_time_strict(deploy_robots_mac_ber, deploy_traits_desired, deploy_robots_final, species_traits, match, min_ratio)
         t_min_mac[gi,qi] = get_traits_ratio_time(deploy_robots_euler, deploy_traits_desired, species_traits, match, min_ratio)
 
 # -----------------------------------------------------------------------------#
