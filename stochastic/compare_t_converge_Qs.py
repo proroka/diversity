@@ -40,7 +40,8 @@ from simple_orrank import *
 
 save_data = True
 save_plots = True
-berman = False
+berman = True
+use_strict = True
 
 tstart = time.strftime("%Y%m%d-%H%M%S")
 
@@ -54,13 +55,13 @@ max_rate = 2.0 # Maximum rate possible for K.
 # -----------------------------------------------------------------------------#
 # initialize system
 
-run = 'Q21'
+run = 'Q22'
 
 num_nodes = 8
 num_species = 6
 num_iter = 10 # micro sim
 num_q_iter = num_species # num_traits from 1 to num_species
-num_graph_iter = 40 # random graphs
+num_graph_iter = 15 # random graphs
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
@@ -128,6 +129,9 @@ for gi in range(num_graph_iter):
         init_transition_values = np.array([])
         transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init, deploy_traits_desired,
                                                       species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=2.0)
+        if use_strict:
+            # Get final robot distribution.
+            strict_deploy_robots_final = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)[:,-1,:]
         
         # -----------------------------------------------------------------------------#
         # Berman's method 
@@ -151,10 +155,15 @@ for gi in range(num_graph_iter):
             if berman:
                 robots_new_ber, deploy_robots_mic_ber[:,:,:,it] = microscopic_sim(num_timesteps, delta_t, robots, deploy_robots_init, transition_m_berman)
        
-            t_min_mic[gi,qi,it] = get_traits_ratio_time(deploy_robots_micro[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)
-            if berman:            
-                #t_min_mic_ber[gi,qi,it] = get_traits_ratio_time(deploy_robots_mic_ber[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)
-                t_min_mic_ber[gi,qi,it] = get_traits_ratio_time_strict(deploy_robots_mic_ber[:,:,:,it], deploy_traits_desired, deploy_robots_final, species_traits, match, min_ratio)
+            if use_strict:
+                t_min_mic[gi,qi,it] = get_traits_ratio_time_strict(deploy_robots_micro[:,:,:,it], deploy_traits_desired, strict_deploy_robots_final, species_traits, match, min_ratio)
+            else:
+                t_min_mic[gi,qi,it] = get_traits_ratio_time(deploy_robots_micro[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)
+            if berman:
+                if not use_strict:
+                    t_min_mic_ber[gi,qi,it] = get_traits_ratio_time(deploy_robots_mic_ber[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)
+                else:
+                    t_min_mic_ber[gi,qi,it] = get_traits_ratio_time_strict(deploy_robots_mic_ber[:,:,:,it], deploy_traits_desired, deploy_robots_final, species_traits, match, min_ratio)
        
         # -----------------------------------------------------------------------------#
         # euler integration
