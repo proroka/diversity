@@ -40,7 +40,7 @@ from simple_orrank import *
 
 save_data = True
 save_plots = True
-berman = True
+berman = False
 
 tstart = time.strftime("%Y%m%d-%H%M%S")
 
@@ -54,17 +54,17 @@ max_rate = 2.0 # Maximum rate possible for K.
 # -----------------------------------------------------------------------------#
 # initialize system
 
-run = 'Q10'
+run = 'Q21'
 
 num_nodes = 8
 num_species = 6
-num_iter = 2 # micro sim
+num_iter = 10 # micro sim
 num_q_iter = num_species # num_traits from 1 to num_species
-num_graph_iter = 2 # random graphs
+num_graph_iter = 40 # random graphs
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
-match = 1 # 1: exact 0: at-least
+match = 0 # 1: exact 0: at-least
  
 # -----------------------------------------------------------------------------#
 # find time at which min ratio is found

@@ -277,24 +277,20 @@ def get_traits_ratio_time_strict(deploy_robots, deploy_traits_desired, deploy_ro
     total_num_traits = np.sum(deploy_traits_desired)
     total_num_robots = np.sum(deploy_robots_desired)
     
+    reached_robots = False
     for t in range(num_tsteps):
-        if match==0:
-            traits = np.dot(deploy_robots[:,t,:], transform)
-            diff = np.abs(np.minimum(traits - deploy_traits_desired, 0))
-            diffr =  np.abs(np.minimum(deploy_robots[:,t,:] - deploy_robots_desired, 0))
-        else:
-            traits = np.dot(deploy_robots[:,t,:], transform)
-            diff = np.abs(traits - deploy_traits_desired)  
-            diffr =  np.abs(deploy_robots[:,t,:] - deploy_robots_desired)
-            
-        ratio = np.sum(diff) / total_num_traits  
-        ratior = np.sum(diffr) / total_num_robots  
-        if ratio <= min_val and ratior <= (min_val*1.05):
+        traits = np.dot(deploy_robots[:,t,:], transform)
+        diff = np.abs(traits - deploy_traits_desired)
+        diffr = np.abs(deploy_robots[:,t,:] - deploy_robots_desired)
+        ratio = np.sum(diff) / total_num_traits
+        ratior = np.sum(diffr) / total_num_robots
+
+        if ratior <= (min_val*1.3):
+            reached_robots = True
+        if ratio <= min_val and reached_robots:
             return t
         
-    return num_tsteps  
-
-
+    return num_tsteps 
 
 # -----------------------------------------------------------------------------#
 # get species traits matrix for 4 species and 4 traits
