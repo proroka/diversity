@@ -271,7 +271,7 @@ def get_traits_ratio_time(deploy_robots, deploy_traits_desired, transform, match
 # -----------------------------------------------------------------------------#
 # get ratio of desired vs actual trait distrib for 1 run, take into account deviation of robot distribution
 
-def get_traits_ratio_time_strict(deploy_robots, deploy_traits_desired, deploy_robots_desired, transform, match, min_val):
+def get_traits_ratio_time_strict(deploy_robots, deploy_traits_desired, deploy_robots_desired, transform, match, min_val, slack):
     
     num_tsteps = deploy_robots.shape[1]
     total_num_traits = np.sum(deploy_traits_desired)
@@ -285,7 +285,7 @@ def get_traits_ratio_time_strict(deploy_robots, deploy_traits_desired, deploy_ro
         ratio = np.sum(diff) / total_num_traits
         ratior = np.sum(diffr) / total_num_robots
 
-        if ratior <= (min_val*1.3):
+        if ratior <= (min_val*slack):
             reached_robots = True
         if ratio <= min_val and reached_robots:
             return t

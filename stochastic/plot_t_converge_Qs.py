@@ -24,9 +24,11 @@ from funcdef_util_heterogeneous import *
 import funcdef_draw_network as nxmod
 
 
-# good runs for rank: Q5 (old berman cost), Q10 (new berman cost)
-# good runs for ORrank: Q9
-run = 'Q19'
+# use_strict=0: Q5 
+# use_strict=1, only Berman, factor 1.0: Q10
+# use_strict=1, on both mic sims, f=1.3: Q22
+# ORrank: Q9
+run = 'Q22'
 berman = True
 
 # -----------------------------------------------------------------------------#
@@ -73,7 +75,7 @@ def plot_t_converge(delta_t, t_min_a, t_min_b):
     plt.setp(bp['fliers'], color='black', marker='+')
     plt.grid(axis='y')
     ymin = 0 
-    ymax = 10
+    ymax = 12
     ax.set_ylim([0, ymax])    
     ax.set_xlim([0.4, num_rk+0.6])
 
@@ -146,11 +148,11 @@ def plot_t_converge_shaded(delta_t, t_min_a, t_min_b=None):
         l2 = plt.plot(x, pc_b[:,1], color='red', linewidth=2, label='implicit')
         plt.fill_between(x, pc_b[:,2], pc_b[:,0], facecolor='red', alpha=0.3)
         
-    plt.legend(loc='upper right', shadow=False, fontsize='large')  
+    plt.legend(loc='upper left', shadow=False, fontsize='large')  
     
     plt.grid(axis='y')
     ymin = 0 
-    ymax = 10
+    ymax = 12
     ax.set_ylim([0, ymax])    
     ax.set_xlim([1, num_rk])
 

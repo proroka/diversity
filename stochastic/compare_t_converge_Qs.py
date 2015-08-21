@@ -40,8 +40,6 @@ from simple_orrank import *
 
 save_data = True
 save_plots = True
-berman = True
-use_strict = True
 
 tstart = time.strftime("%Y%m%d-%H%M%S")
 
@@ -57,15 +55,19 @@ max_rate = 2.0 # Maximum rate possible for K.
 
 run = 'Q22'
 
+berman = True
+use_strict = True
+
 num_nodes = 8
 num_species = 6
-num_iter = 10 # micro sim
+num_iter = 1 # micro sim
 num_q_iter = num_species # num_traits from 1 to num_species
-num_graph_iter = 15 # random graphs
+num_graph_iter = 50 # random graphs
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
 match = 0 # 1: exact 0: at-least
+strict_slack = 1.4 # max 1.4*err on desired robot distrib must be true for trait distrib to be valid 
  
 # -----------------------------------------------------------------------------#
 # find time at which min ratio is found
@@ -156,14 +158,14 @@ for gi in range(num_graph_iter):
                 robots_new_ber, deploy_robots_mic_ber[:,:,:,it] = microscopic_sim(num_timesteps, delta_t, robots, deploy_robots_init, transition_m_berman)
        
             if use_strict:
-                t_min_mic[gi,qi,it] = get_traits_ratio_time_strict(deploy_robots_micro[:,:,:,it], deploy_traits_desired, strict_deploy_robots_final, species_traits, match, min_ratio)
+                t_min_mic[gi,qi,it] = get_traits_ratio_time_strict(deploy_robots_micro[:,:,:,it], deploy_traits_desired, strict_deploy_robots_final, species_traits, match, min_ratio, strict_slack)
             else:
                 t_min_mic[gi,qi,it] = get_traits_ratio_time(deploy_robots_micro[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)
             if berman:
                 if not use_strict:
                     t_min_mic_ber[gi,qi,it] = get_traits_ratio_time(deploy_robots_mic_ber[:,:,:,it], deploy_traits_desired, species_traits, match, min_ratio)
                 else:
-                    t_min_mic_ber[gi,qi,it] = get_traits_ratio_time_strict(deploy_robots_mic_ber[:,:,:,it], deploy_traits_desired, deploy_robots_final, species_traits, match, min_ratio)
+                    t_min_mic_ber[gi,qi,it] = get_traits_ratio_time_strict(deploy_robots_mic_ber[:,:,:,it], deploy_traits_desired, deploy_robots_final, species_traits, match, min_ratio, strict_slack)
        
         # -----------------------------------------------------------------------------#
         # euler integration
@@ -175,8 +177,10 @@ for gi in range(num_graph_iter):
         deploy_robots_euler = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
         
         if berman:
-            #t_min_mac_ber[gi,qi] = get_traits_ratio_time(deploy_robots_mac_ber, deploy_traits_desired, species_traits, match, min_ratio)
-            t_min_mac_ber[gi,qi] = get_traits_ratio_time_strict(deploy_robots_mac_ber, deploy_traits_desired, deploy_robots_final, species_traits, match, min_ratio)
+            if not use_strict:
+                t_min_mac_ber[gi,qi] = get_traits_ratio_time(deploy_robots_mac_ber, deploy_traits_desired, species_traits, match, min_ratio)
+            else:  
+                t_min_mac_ber[gi,qi] = get_traits_ratio_time_strict(deploy_robots_mac_ber, deploy_traits_desired, deploy_robots_final, species_traits, match, min_ratio, strict_slack)
         t_min_mac[gi,qi] = get_traits_ratio_time(deploy_robots_euler, deploy_traits_desired, species_traits, match, min_ratio)
 
 # -----------------------------------------------------------------------------#
