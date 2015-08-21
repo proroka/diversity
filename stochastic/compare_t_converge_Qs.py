@@ -64,11 +64,12 @@ num_graph_iter = 50 # random graphs
 
 num_species = 6
 num_q_iter = num_species # num_traits from 1 to num_species
-range_q_iter = np.array([4, 5]) # num_traits-1
+range_q_iter = np.array([0, 1, 2, 3]) # num_traits-1
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
 match = 0 # 1: exact 0: at-least
+match_margin = 0.03 # used when match=0
 strict_slack = 1.4 # max 1.4*err on desired robot distrib must be true for trait distrib to be valid 
  
 # -----------------------------------------------------------------------------#
@@ -94,6 +95,7 @@ for gi in range(num_graph_iter):
         rk = 0
         num_traits = qi+1
 
+        print "Graph: ", gi, "rank: ", num_traits
         if match==1:
             while rk != num_traits:
                 species_traits, rk, s = generate_Q(num_species, num_traits)
@@ -112,7 +114,7 @@ for gi in range(num_graph_iter):
         deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
         # if 'at-least' cost function, reduce number of traits desired
         if match==0:
-            deploy_traits_desired *= (np.random.rand()*0.03 + 0.97)
+            deploy_traits_desired *= (np.random.rand()*match_margin + (1.0-match_margin))
             print "total traits, at least: \t", np.sum(np.sum(deploy_traits_desired))
 
         # initialize robots

@@ -28,7 +28,7 @@ import funcdef_draw_network as nxmod
 # use_strict=1, only Berman, factor 1.0: Q10
 # use_strict=1, on both mic sims, f=1.3: Q22
 # ORrank: Q9
-run = 'Q23'
+run = 'Q24'
 berman = True
 
 # -----------------------------------------------------------------------------#
