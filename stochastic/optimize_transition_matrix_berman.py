@@ -175,7 +175,7 @@ def Optimize_Berman(adjacency_matrix, initial_state, desired_steadystate, transf
 
     #---
     # basinhopping function
-    minimizer_kwargs = {'constraints': {'type': 'eq', 'fun': lambda x: Cons_Berman(x, desired_steadystate, adjacency_matrix)},
+    minimizer_kwargs = {'method':'SLSQP','constraints': {'type': 'eq', 'fun': lambda x: Cons_Berman(x, desired_steadystate, adjacency_matrix)},
                         'bounds': bounds, 'options': {'disp': True,'ftol': 1e-4, 'maxiter': 50}}
     success = False
     while not success:

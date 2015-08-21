@@ -89,4 +89,53 @@ def microscopic_sim(num_timesteps, delta_t, robots_init, deploy_robots_init, tra
     return (robots, deploy_robots)
 
 
+def microscopic_sim_get_time(num_timesteps, delta_t, robots_init, deploy_robots_init, transition_m,
+                             deploy_traits_desired, deploy_robots_desired, transform, match, min_val, slack):
 
+    num_nodes = deploy_robots_init.shape[0]
+    num_species = deploy_robots_init.shape[1]
+
+    deploy_robots = np.zeros((num_nodes, num_timesteps, num_species))
+    deploy_robots[:,0,:] = deploy_robots_init
+
+    robots = robots_init.copy()
+
+    # Pre-compute transition probabilities.
+    ps = []
+    for s in range(num_species):
+        ks = transition_m[:,:,s] # transition rates
+        ps.append(sp.linalg.expm(delta_t*ks)) # transition probabilities
+
+    total_num_traits = np.sum(deploy_traits_desired)
+    if deploy_robots_desired is not None:
+        reached_robots = False
+        total_num_robots = np.sum(deploy_robots_desired)
+    for t in range(1, num_timesteps):
+        # Check if we are done.
+        if deploy_robots_desired is not None:
+            diffr = np.abs(deploy_robots[:,t-1,:] - deploy_robots_desired)
+            ratior = np.sum(diffr) / total_num_robots
+            if ratior <= (min_val*slack):
+                reached_robots = True
+        traits = np.dot(deploy_robots[:,t-1,:], transform)
+        if match == 0:
+            diff = np.abs(np.minimum(traits - deploy_traits_desired, 0))
+        else:
+            diff = np.abs(traits - deploy_traits_desired)
+        ratio = np.sum(diff) / total_num_traits
+        if ratio <= min_val and reached_robots:
+            return t - 1
+
+        # Propagate previous state.
+        deploy_robots[:, t, :] = deploy_robots[:, t-1, :]
+
+        for r in range(robots.shape[0]):
+            r_s = robots[r,0] # robot species
+            r_n = robots[r,1] # current node
+            node = pick_transition(ps[int(r_s)][:,r_n])
+            # update
+            deploy_robots[r_n, t, r_s] -= 1
+            deploy_robots[node, t, r_s]  += 1
+            robots[r,1] = node
+
+    return num_timesteps - 1

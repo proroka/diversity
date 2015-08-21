@@ -28,7 +28,7 @@ import funcdef_draw_network as nxmod
 # use_strict=1, only Berman, factor 1.0: Q10
 # use_strict=1, on both mic sims, f=1.3: Q22
 # ORrank: Q9
-run = 'Q22'
+run = 'Q23'
 berman = True
 
 # -----------------------------------------------------------------------------#
@@ -181,6 +181,8 @@ delta_t = 0.04
 
 if berman:
     fig1 = plot_t_converge_shaded(delta_t, t_min_mic, t_min_mic_ber)
+    #fig1 = plot_t_converge_shaded(delta_t, t_min_mic)
+    #fig1 = plot_t_converge_shaded(delta_t, t_min_mic_ber)
     #fig2 = plot_t_converge_shaded(delta_t, t_min_mac, t_min_mac_ber)
 else:
     fig1 = plot_t_converge_shaded(delta_t, t_min_mic)
