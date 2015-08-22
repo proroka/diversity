@@ -53,9 +53,9 @@ max_rate = 2.0 # Maximum rate possible for K.
 # -----------------------------------------------------------------------------#
 # initialize system
 
-run = 'Q27'
+run = 'Q28'
 
-berman = True
+berman = False
 use_strict = True
 
 num_nodes = 8
@@ -70,7 +70,7 @@ range_q_iter = range(num_q_iter)
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
 match = 0 # 1: exact 0: at-least
-match_margin = 0.05 # used when match=0
+match_margin = 0.1 # used when match=0
 strict_slack = 1.4 # max 1.4*err on desired robot distrib must be true for trait distrib to be valid 
  
 # -----------------------------------------------------------------------------#
