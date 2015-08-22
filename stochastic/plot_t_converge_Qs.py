@@ -28,8 +28,8 @@ import funcdef_draw_network as nxmod
 # use_strict=1, only Berman, factor 1.0: Q10
 # use_strict=1, on both mic sims, f=1.3: Q22
 # ORrank: Q9
-run = 'Q25'
-berman = True
+run = 'Q28'
+berman = False
 
 # -----------------------------------------------------------------------------#
 def plot_t_converge(delta_t, t_min_a, t_min_b):
@@ -152,7 +152,7 @@ def plot_t_converge_shaded(delta_t, t_min_a, t_min_b=None):
     
     plt.grid(axis='y')
     ymin = 0 
-    ymax = 12
+    ymax = 8
     ax.set_ylim([0, ymax])    
     ax.set_xlim([1, num_rk])
 

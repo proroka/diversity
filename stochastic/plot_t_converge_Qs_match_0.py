@@ -25,9 +25,9 @@ import funcdef_draw_network as nxmod
 
 # match = 0 is 'at-least' cost function 
 # runs: Q2, Q3, Q4
-run = 'Q2'
+run = 'Q28'
 
-plot_orrank = True
+plot_orrank = False
 
 # -----------------------------------------------------------------------------#
 def plot_t_converge_OR_rk(delta_t, t_min_a, t_min_b, rks):
@@ -186,7 +186,7 @@ prefix = "./data/" + run + "/" + run + "_"
 list_Q = pickle.load(open(prefix+"list_Q.p", "rb"))
 t_min_mic = pickle.load(open(prefix+"t_min_mic.p", "rb"))
 #t_min_mac = pickle.load(open(prefix+"t_min_mac.p", "rb"))
-t_min_mic_ber = pickle.load(open(prefix+"t_min_mic_ber.p", "rb"))
+#t_min_mic_ber = pickle.load(open(prefix+"t_min_mic_ber.p", "rb"))
 #t_min_mac_ber = pickle.load(open(prefix+"t_min_mac_ber.p", "rb"))
 
 
@@ -214,7 +214,7 @@ max_rk = int(max(rks))
 delta_t = 0.04
 
 
-fig1 = plot_t_converge_OR_rk_shaded(delta_t, t_min_mic, t_min_mic_ber, rks)
+fig1 = plot_t_converge_OR_rk_shaded(delta_t, t_min_mic, t_min_mic, rks)
 plt.axes().set_aspect(0.5,'box')
 plt.show()
 
