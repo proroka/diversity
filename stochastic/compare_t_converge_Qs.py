@@ -53,23 +53,24 @@ max_rate = 2.0 # Maximum rate possible for K.
 # -----------------------------------------------------------------------------#
 # initialize system
 
-run = 'Q23'
+run = 'Q26'
 
 berman = True
 use_strict = True
 
 num_nodes = 8
 num_iter = 1 # micro sim
-num_graph_iter = 50 # random graphs
+num_graph_iter = 60 # random graphs
 
 num_species = 6
 num_q_iter = num_species # num_traits from 1 to num_species
-range_q_iter = np.array([0, 1, 2, 3]) # num_traits-1
+#range_q_iter = np.array([0, 1, 2, 3]) # num_traits-1
+range_q_iter = range(num_q_iter)
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
-match = 0 # 1: exact 0: at-least
-match_margin = 0.03 # used when match=0
+match = 1 # 1: exact 0: at-least
+match_margin = 0.05 # used when match=0
 strict_slack = 1.4 # max 1.4*err on desired robot distrib must be true for trait distrib to be valid 
  
 # -----------------------------------------------------------------------------#
@@ -100,7 +101,7 @@ for gi in range(num_graph_iter):
             while rk != num_traits:
                 species_traits, rk, s = generate_Q(num_species, num_traits)
         else:
-            species_traits = generate_matrix_with_orrank(num_species, num_traits, num_traits)
+            species_traits = generate_matrix_with_orrank(num_species, num_species, num_traits)
         list_Q.append(species_traits)
 
         max_robots = 200

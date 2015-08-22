@@ -28,7 +28,7 @@ import funcdef_draw_network as nxmod
 # use_strict=1, only Berman, factor 1.0: Q10
 # use_strict=1, on both mic sims, f=1.3: Q22
 # ORrank: Q9
-run = 'Q24'
+run = 'Q25'
 berman = True
 
 # -----------------------------------------------------------------------------#
@@ -168,10 +168,10 @@ def plot_t_converge_shaded(delta_t, t_min_a, t_min_b=None):
 prefix = "./data/" + run + "/" + run + "_"
 
 t_min_mic = pickle.load(open(prefix+"t_min_mic.p", "rb"))
-t_min_mac = pickle.load(open(prefix+"t_min_mac.p", "rb"))
+#t_min_mac = pickle.load(open(prefix+"t_min_mac.p", "rb"))
 if berman:
     t_min_mic_ber = pickle.load(open(prefix+"t_min_mic_ber.p", "rb"))
-    t_min_mac_ber = pickle.load(open(prefix+"t_min_mac_ber.p", "rb"))
+    #t_min_mac_ber = pickle.load(open(prefix+"t_min_mac_ber.p", "rb"))
 
 # -----------------------------------------------------------------------------#
 
