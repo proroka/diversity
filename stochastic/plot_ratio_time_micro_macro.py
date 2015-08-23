@@ -22,7 +22,7 @@ import funcdef_draw_network as nxmod
 
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
-run = 'V21'
+run = 'V23'
 
 save_data = True
 save_plots = True
@@ -30,17 +30,20 @@ load_globals = False
 save_globals = False
 tstart = time.strftime("%Y%m%d-%H%M%S")
 fix_species = True
+fix_init = True
+fix_final = True
+do_micro = False
 
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
 t_max_sim = 8.0 # influences simulations and plotting
-num_iter = 100 # iterations of micro sim
+num_iter = 2 # iterations of micro sim
 delta_t = 0.04 # time step
 max_rate = 2.0 # Maximum rate possible for K.
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
-match = 0 # 1: exact 0: at-least
+match = 1 # 1: exact 0: at-least
 
 if load_globals:
     graph = pickle.load(open("const_graph.p", "rb"))
@@ -61,6 +64,9 @@ else:
     num_species = 3
     max_robots = 300 # maximum number of robots per node
     deploy_robots_init = np.random.randint(0, max_robots, size=(num_nodes, num_species))
+    if (fix_init):
+            deploy_robots_init[3:,:] = 0
+            sum_species = np.sum(deploy_robots_init,axis=0)
     num_species = 3
     num_traits = 4
 
@@ -75,8 +81,16 @@ else:
             species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
     # generate a random end state
     random_transition = random_transition_matrix(num_nodes, max_rate/2)  # Divide max_rate by 2 for the random matrix to give some slack.        
-    # sample final desired trait distribution based on random transition matrix   
-    deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition, t_max*4., delta_t)
+    if fix_final: 
+        deploy_robots_final = np.random.randint(0, max_robots, size=(num_nodes, num_species))
+        deploy_robots_final[:3,:] = 0
+        ts = np.sum(deploy_robots_final, axis=0)
+        for i in range(num_species):    
+            deploy_robots_final[:,i] = deploy_robots_final[:,i] / float(ts[i]) * float(sum_species[i])
+    else:
+        # sample final desired trait distribution based on random transition matrix   
+        deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition, t_max*4., delta_t)
+    
     deploy_traits_init = np.dot(deploy_robots_init, species_traits)
     deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
     # if 'at-least' cost function, reduce number of traits desired
@@ -97,7 +111,7 @@ print "total traits, init: \t", np.sum(np.sum(deploy_traits_init))
 if load_globals:
     graph = pickle.load(open("const_graph.p", "rb"))
 else:
-    graph = nx.connected_watts_strogatz_graph(num_nodes, 3, 0.6)
+    graph = nx.connected_watts_strogatz_graph(num_nodes, 3, 0.3)
 
 # get the adjencency matrix
 adjacency_m = nx.to_numpy_matrix(graph)
@@ -122,11 +136,12 @@ num_timesteps = int(t_max_sim / delta_t)
 robots = initialize_robots(deploy_robots_init)
 
 deploy_robots_micro = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
-print "Starting micro "
-for it in range(num_iter):
-    print "Iteration: ", it
-    robots_new, deploy_robots_micro[:,:,:,it] = microscopic_sim(num_timesteps, delta_t, robots, deploy_robots_init, transition_m)
-avg_deploy_robots_micro = np.mean(deploy_robots_micro,3)
+if do_micro:
+    print "Starting micro "
+    for it in range(num_iter):
+        print "Iteration: ", it
+        robots_new, deploy_robots_micro[:,:,:,it] = microscopic_sim(num_timesteps, delta_t, robots, deploy_robots_init, transition_m)
+    avg_deploy_robots_micro = np.mean(deploy_robots_micro,3)
 
 
 
@@ -170,8 +185,10 @@ if save_globals:
 
 #nx.draw_circular(graph)
 fig1 = nxmod.draw_circular(deploy_traits_init, graph, linewidths=3)
+plt.axis('equal')
 plt.show()
-fig2 = nxmod.draw_circular(deploy_traits_final,graph, linewidths=3)
+fig2 = nxmod.draw_circular(deploy_traits_desired,graph, linewidths=3)
+plt.axis('equal')
 plt.show()
 #nxmod.draw_circular(deploy_traits_desired,graph)
 #plt.show()
