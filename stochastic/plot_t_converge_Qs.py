@@ -28,8 +28,9 @@ import funcdef_draw_network as nxmod
 # use_strict=1, only Berman, factor 1.0: Q10
 # use_strict=1, on both mic sims, f=1.3: Q22
 # ORrank: Q9
-run = 'Q28'
-berman = False
+run = 'Q26'
+berman = True
+save_plots = True
 
 # -----------------------------------------------------------------------------#
 def plot_t_converge(delta_t, t_min_a, t_min_b):
@@ -152,7 +153,7 @@ def plot_t_converge_shaded(delta_t, t_min_a, t_min_b=None):
     
     plt.grid(axis='y')
     ymin = 0 
-    ymax = 8
+    ymax = 7
     ax.set_ylim([0, ymax])    
     ax.set_xlim([1, num_rk])
 
@@ -174,9 +175,8 @@ if berman:
     #t_min_mac_ber = pickle.load(open(prefix+"t_min_mac_ber.p", "rb"))
 
 # -----------------------------------------------------------------------------#
-
-# -----------------------------------------------------------------------------#
 # plot
+
 delta_t = 0.04
 
 if berman:
@@ -186,7 +186,7 @@ if berman:
     #fig2 = plot_t_converge_shaded(delta_t, t_min_mac, t_min_mac_ber)
 else:
     fig1 = plot_t_converge_shaded(delta_t, t_min_mic)
-plt.axes().set_aspect(0.5,'box')
+plt.axes().set_aspect(0.65,'box')
 plt.show()
 
 """
@@ -198,8 +198,10 @@ plt.show()
 # -----------------------------------------------------------------------------#
 # save plots
  
-#if save_plots:
-    #fig1.savefig(prefix+'rank3_t_conv.eps') 
+prefix = "./plots/"  + run + "_"
+
+if save_plots:
+    fig1.savefig(prefix+'all_rks_t_conv.eps') 
                         
 
 

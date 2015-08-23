@@ -150,12 +150,15 @@ def plot_traits_ratio_time_micmac(deploy_robots_micro, deploy_robots_mac, deploy
     # plot micro with errorbars
     m_mic = np.mean(diffmic_rat,1)
     s_mic = np.std(diffmic_rat,1)
-    l1 = plt.plot(x,m_mic, label='Microscopic')
+    l1 = plt.plot(x,m_mic, color='green', linewidth=2, label='Microscopic')
     err_ax = np.arange(0,num_tsteps,int(num_tsteps/20))
-    plt.errorbar(x[err_ax],m_mic[err_ax],s_mic[err_ax],fmt='o',markersize=3,color='black')
+    #plt.errorbar(x[err_ax],m_mic[err_ax],s_mic[err_ax],fmt='o',markersize=3,color='black')
     
+    #l1 = plt.plot(x, pc_a[:,1], color='green', linewidth=2, label='explicit')
+    plt.fill_between(x, m_mic+s_mic, m_mic-s_mic, facecolor='green', alpha=0.3)    
+
     # plot macro
-    l2 = plt.plot(x,diffmac_rat, label='Macroscropic')
+    l2 = plt.plot(x,diffmac_rat, color='blue', linewidth=2, label='Macroscropic')
 
     # plot legend and labels
     plt.legend(loc='upper right', shadow=False, fontsize='x-large')     

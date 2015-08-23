@@ -23,7 +23,7 @@ import funcdef_draw_network as nxmod
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 save_data = False
-save_plots = False
+save_plots = True
 load_globals = False
 save_globals = False
 tstart = time.strftime("%Y%m%d-%H%M%S")
@@ -32,13 +32,13 @@ fix_species = True
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
 t_max_sim = 8.0 # influences simulations and plotting
-num_iter = 10 # iterations of micro sim
+num_iter = 2 # iterations of micro sim
 delta_t = 0.04 # time step
 max_rate = 2.0 # Maximum rate possible for K.
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
-match = 1 # 1: exact 0: at-least
+match = 0 # 1: exact 0: at-least
 
 if load_globals:
     graph = pickle.load(open("const_graph.p", "rb"))
@@ -51,7 +51,7 @@ if load_globals:
     num_species = species_traits.shape[0]
 else:
     # create network of sites
-    num_nodes = 10 
+    num_nodes = 8 
     # set of traits
     num_traits = 4
     max_trait_values = 2 # [0,1]: trait availability
@@ -142,7 +142,7 @@ deploy_traits_final = np.dot(deploy_robots_final, species_traits)
 if save_data:
         
     tend = time.strftime("%Y%m%d-%H%M%S")
-    prefix = "./data/micmac_V05_" # + tend + "_"
+    prefix = "./data/" + run + "_micmac_"
     print "Time start: ", tstart
     print "Time end: ", tend
     
@@ -179,7 +179,7 @@ plt.show()
 trait_index = 0
 #plot_robots_time(avg_deploy_robots_micro, species_index) # plot micro average
 #plot_robots_time(deploy_robots_euler, species_index) # plot macro
-plot_traits_time(deploy_robots_euler, species_traits, trait_index)
+# plot_traits_time(deploy_robots_euler, species_traits, trait_index)
     
 # plot_robots_ratio_time_micmac(avg_deploy_robots_micro, deploy_robots_euler, deploy_robots_final, delta_t)
 fig3 = plot_traits_ratio_time_micmac(deploy_robots_micro, deploy_robots_euler, deploy_traits_desired, 
@@ -190,9 +190,11 @@ plt.show()
 # save plots
  
 if save_plots:  
-    fig1.savefig('./plots/gi.eps') 
-    fig2.savefig('./plots/gd.eps')                           
-    fig3.savefig('./plots/trt.eps')                             
+    prefix = "./plots/" + run + "_" # + tend + "_"
+
+    fig1.savefig(prefix+'graph_i.eps') 
+    fig2.savefig(prefix+'graph_d.eps')                           
+    fig3.savefig(prefix+'micmac_time_ratio.eps')                             
 
 
 
