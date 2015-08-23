@@ -22,7 +22,9 @@ import funcdef_draw_network as nxmod
 
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
-save_data = False
+run = 'V21'
+
+save_data = True
 save_plots = True
 load_globals = False
 save_globals = False
@@ -32,7 +34,7 @@ fix_species = True
 # simulation parameters
 t_max = 10.0 # influences desired state and optmization of transition matrix
 t_max_sim = 8.0 # influences simulations and plotting
-num_iter = 2 # iterations of micro sim
+num_iter = 100 # iterations of micro sim
 delta_t = 0.04 # time step
 max_rate = 2.0 # Maximum rate possible for K.
 

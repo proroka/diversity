@@ -151,11 +151,12 @@ def plot_traits_ratio_time_micmac(deploy_robots_micro, deploy_robots_mac, deploy
     m_mic = np.mean(diffmic_rat,1)
     s_mic = np.std(diffmic_rat,1)
     l1 = plt.plot(x,m_mic, color='green', linewidth=2, label='Microscopic')
-    err_ax = np.arange(0,num_tsteps,int(num_tsteps/20))
+    err_ax = np.arange(0,num_tsteps,int(num_tsteps/5))
     #plt.errorbar(x[err_ax],m_mic[err_ax],s_mic[err_ax],fmt='o',markersize=3,color='black')
     
     #l1 = plt.plot(x, pc_a[:,1], color='green', linewidth=2, label='explicit')
     plt.fill_between(x, m_mic+s_mic, m_mic-s_mic, facecolor='green', alpha=0.3)    
+    #plt.fill_between(x[err_ax], m_mic[err_ax]+s_mic[err_ax], m_mic[err_ax]-s_mic[err_ax], facecolor='green', alpha=0.3)    
 
     # plot macro
     l2 = plt.plot(x,diffmac_rat, color='blue', linewidth=2, label='Macroscropic')
