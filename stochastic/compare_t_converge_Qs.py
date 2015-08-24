@@ -53,10 +53,14 @@ max_rate = 2.0 # Maximum rate possible for K.
 # -----------------------------------------------------------------------------#
 # initialize system
 
-run = 'Q26'
+run = 'Q34'
 
-berman = True
-use_strict = True
+# goal function
+match = 0 # 1: exact 0: at-least
+if match==1:
+    berman = True
+else:
+    berman = False
 
 num_nodes = 8
 num_iter = 1 # micro sim
@@ -69,10 +73,13 @@ range_q_iter = range(num_q_iter)
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
-match = 1 # 1: exact 0: at-least
-match_margin = 0.05 # used when match=0
+
+# eval convergence time 
+use_strict = True
 strict_slack = 1.4 # max 1.4*err on desired robot distrib must be true for trait distrib to be valid 
- 
+match_margin = 0.02 # used when match=0 
+
+
 # -----------------------------------------------------------------------------#
 # find time at which min ratio is found
 

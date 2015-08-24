@@ -28,8 +28,14 @@ import funcdef_draw_network as nxmod
 # use_strict=1, only Berman, factor 1.0: Q10
 # use_strict=1, on both mic sims, f=1.3: Q22
 # ORrank: Q9
-run = 'Q26'
-berman = True
+run = 'Q32'
+
+match = False
+if match:
+    berman = True
+else:
+    berman = False
+
 save_plots = True
 
 # -----------------------------------------------------------------------------#
