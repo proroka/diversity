@@ -29,7 +29,9 @@ deploy_traits_desired_2 = pickle.load(open(prefix+"td_2.p", "rb"))
 
 delta_t = 0.04 # time step
 
+# -----------------------------------------------------------------------------#
 # Plot initial and final graphs
+
 fig1 = nxmod.draw_circular(deploy_traits_init_0, graph, linewidths=3)
 plt.axis('equal')
 plt.show()
@@ -37,20 +39,51 @@ fig2 = nxmod.draw_circular(deploy_traits_desired_0,graph, linewidths=3)
 plt.axis('equal')
 plt.show()
 
+#fig3 = nxmod.draw_circular(deploy_traits_init_1, graph, linewidths=3)
+#plt.axis('equal')
+#plt.show()
+fig4 = nxmod.draw_circular(deploy_traits_desired_1,graph, linewidths=3)
+plt.axis('equal')
+plt.show()
 
-# Plot robot distributions.
+#fig5 = nxmod.draw_circular(deploy_traits_init_2, graph, linewidths=3)
+#plt.axis('equal')
+#plt.show()
+fig6 = nxmod.draw_circular(deploy_traits_desired_2,graph, linewidths=3)
+plt.axis('equal')
+plt.show()
+
+# -----------------------------------------------------------------------------#
+# plot flows
+
+#  robot distributions.
 if plot_robots:
     for index in range(deploy_robots.shape[2]):
         plot_robot_share(deploy_robots, delta_t=delta_t, robot_index=index,
                          cmap_name='Spectral')
         plt.show()
 
-# Plot trait distributions.
+#  trait distributions.
 for index in range(transform.shape[1]):
-    fig = plot_trait_share(deploy_robots, transform=transform, delta_t=delta_t,
+    figE = plot_trait_share(deploy_robots, transform=transform, delta_t=delta_t,
                      trait_index=index, cmap_name='Spectral')
 
-    #hold(True)    
-    #plt.plot(ax,[7,7],[0,1], linewidth=2)
     plt.show()
-    fig.savefig('./plots/' + run + '_evol_trait_' + str(index) + '.eps') 
+    figE.savefig('./plots/' + run + '_evol_trait_' + str(index) + '.eps') 
+    
+# -----------------------------------------------------------------------------#
+# save figs   
+ 
+fig1.savefig('./plots/' + run + '_gi_0.eps') 
+fig2.savefig('./plots/' + run + '_gd_0.eps') 
+
+#fig3.savefig('./plots/' + run + '_gi_1.eps') 
+fig4.savefig('./plots/' + run + '_gd_1.eps') 
+
+#fig5.savefig('./plots/' + run + '_gi_2.eps') 
+fig6.savefig('./plots/' + run + '_gd_2.eps') 
+
+
+
+   
+    
