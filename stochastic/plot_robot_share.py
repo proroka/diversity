@@ -18,7 +18,12 @@ def plot_trait_share(deploy_robots, transform, delta_t=1., trait_index=0, cmap_n
     for i in range(deploy_robots.shape[1]):
         traits[:, i, :] = deploy_robots[:, i, :].dot(transform)
     x = traits[:, :, trait_index]
-    fig, ax = plt.subplots(figsize=(4,4))
+    
+    # square
+    #fig, ax = plt.subplots(figsize=(4,4))
+    # rectangular    
+    fig, ax = plt.subplots(figsize=(8,4))    
+    
     ax.stackplot(t, x, colors=colors_from(cmap_name, deploy_robots.shape[0]))
     ax.set_xlim([0, t[-1]])
     ax.set_ylim([0, np.sum(x[:, 0])])
@@ -32,11 +37,15 @@ def plot_trait_share(deploy_robots, transform, delta_t=1., trait_index=0, cmap_n
     ax.get_yaxis().tick_left()
     ax.patch.set_visible(False)
     ax.yaxis.tick_left()
+    
+    #plt.plot([7,7],[0,1], linewidth=2)
+    
     return fig
 
 
 def plot_robot_share(deploy_robots, delta_t=1., robot_index=0, cmap_name='jet'):
-    return plot_trait_share(deploy_robots, np.identity(deploy_robots.shape[2]), delta_t=delta_t, trait_index=robot_index, cmap_name=cmap_name, ylabel='species')
+    return plot_trait_share(deploy_robots, np.identity(deploy_robots.shape[2]), delta_t=delta_t,
+                            trait_index=robot_index, cmap_name=cmap_name, ylabel='species')
 
 
 if __name__ == '__main__':

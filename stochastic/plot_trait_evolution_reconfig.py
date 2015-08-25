@@ -1,0 +1,56 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Aug 25 09:39:06 2015
+
+@author: amanda
+"""
+
+
+from plot_robot_share import *
+
+run = "V24"
+
+plot_robots = False
+
+prefix = "./data/" + run + "_micmac_"
+
+transform = pickle.load(open(prefix+"st.p", "rb"))
+deploy_robots = pickle.load(open(prefix+"drev.p", "rb"))
+graph = pickle.load(open(prefix+"graph.p", "rb"))
+
+deploy_traits_init_0 = pickle.load(open(prefix+"ti_0.p", "rb"))
+deploy_traits_desired_0 = pickle.load(open(prefix+"td_0.p", "rb"))
+
+deploy_traits_init_1 = pickle.load(open(prefix+"ti_1.p", "rb"))
+deploy_traits_desired_1 = pickle.load(open(prefix+"td_1.p", "rb"))
+
+deploy_traits_init_2 = pickle.load(open(prefix+"ti_2.p", "rb"))
+deploy_traits_desired_2 = pickle.load(open(prefix+"td_2.p", "rb"))
+
+delta_t = 0.04 # time step
+
+# Plot initial and final graphs
+fig1 = nxmod.draw_circular(deploy_traits_init_0, graph, linewidths=3)
+plt.axis('equal')
+plt.show()
+fig2 = nxmod.draw_circular(deploy_traits_desired_0,graph, linewidths=3)
+plt.axis('equal')
+plt.show()
+
+
+# Plot robot distributions.
+if plot_robots:
+    for index in range(deploy_robots.shape[2]):
+        plot_robot_share(deploy_robots, delta_t=delta_t, robot_index=index,
+                         cmap_name='Spectral')
+        plt.show()
+
+# Plot trait distributions.
+for index in range(transform.shape[1]):
+    fig = plot_trait_share(deploy_robots, transform=transform, delta_t=delta_t,
+                     trait_index=index, cmap_name='Spectral')
+
+    #hold(True)    
+    #plt.plot(ax,[7,7],[0,1], linewidth=2)
+    plt.show()
+    fig.savefig('./plots/' + run + '_evol_trait_' + str(index) + '.eps') 

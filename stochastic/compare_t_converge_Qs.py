@@ -56,7 +56,7 @@ max_rate = 2.0 # Maximum rate possible for K.
 run = 'Q34'
 
 # goal function
-match = 0 # 1: exact 0: at-least
+match = 1 # 1: exact 0: at-least
 if match==1:
     berman = True
 else:
