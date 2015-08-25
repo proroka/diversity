@@ -104,9 +104,9 @@ ts0 = np.sum(deploy_robots_final_0, axis=0)
 ts1 = np.sum(deploy_robots_final_1, axis=0)
 ts2 = np.sum(deploy_robots_final_2, axis=0)
 for i in range(num_species):    
-    deploy_robots_final_0[:,i] = deploy_robots_final_0[:,i] / (float(ts0[i]) * float(sum_species[i]))
-    deploy_robots_final_1[:,i] = deploy_robots_final_1[:,i] / (float(ts1[i]) * float(sum_species[i]))
-    deploy_robots_final_2[:,i] = deploy_robots_final_2[:,i] / (float(ts2[i]) * float(sum_species[i]))
+    deploy_robots_final_0[:,i] = deploy_robots_final_0[:,i] / float(ts0[i]) * float(sum_species[i])
+    deploy_robots_final_1[:,i] = deploy_robots_final_1[:,i] / float(ts1[i]) * float(sum_species[i])
+    deploy_robots_final_2[:,i] = deploy_robots_final_2[:,i] / float(ts2[i]) * float(sum_species[i])
 
 # allocate the following intial distribs
 deploy_robots_init_1 = deploy_robots_final_0.copy()
