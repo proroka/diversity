@@ -37,35 +37,44 @@ print 'Adjacency matrix =\n', adjacency_m
 
 # Create initial robot distribution (M x S).
 # N=4
-deploy_robots_init = np.array([[2, 0],
-                               [0, 2],
-                               [0, 0],
-                               [0, 0]])
+#deploy_robots_init = np.array([[2, 0],
+#                               [0, 2],
+#                               [0, 0],
+#                               [0, 0]])
 # N=6                               
 #deploy_robots_init = np.array([[4, 0],
 #                               [0, 2],
 #                               [0, 0],
 #                               [0, 0]])
+# N=7                               
+deploy_robots_init = np.array([[4, 0],
+                               [0, 1],
+                               [0, 0],
+                               [0, 0]])
 print 'Number of robots =', np.sum(deploy_robots_init)
 print 'Number of robots per species =', np.sum(deploy_robots_init, axis=0)
 
 # Create final robot distribution (M x S).
 # N=4
-deploy_robots_final = np.array([[0, 0],
-                                [0, 0],
-                                [0, 2],
-                                [2, 0]])
+#deploy_robots_final = np.array([[0, 0],
+#                                [0, 0],
+#                                [0, 2],
+#                                [2, 0]])
 # N=6
 #deploy_robots_final = np.array([[0, 0],
 #                                [0, 0],
 #                                [0, 2],
 #                                [4, 0]])
-                                
+ # N=7
+deploy_robots_final = np.array([[0, 0],
+                                [0, 0],
+                                [0, 1],
+                                [4, 0]])                               
 assert np.sum(np.abs(np.sum(deploy_robots_init, axis=0) - np.sum(deploy_robots_final, axis=0))) == 0, 'Number of robots is different between initial and final distribution'
 
 # Create Q matrix (species_traits, S x U).
 #species_traits = np.array([[1, 0],
-#                           [0, 1]]);
+ #                          [0, 1]]);
 
 # redundant species                           
 species_traits = np.array([[1, 0],
