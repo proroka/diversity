@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Sep  4 10:13:22 2015
+@author: amandaprorok
+
+"""
+
 import numpy as np
 import scipy as sp
 import pylab as pl

@@ -1,16 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Sep  4 10:13:22 2015
-@author: amandaprorok
-
-"""
-
 import numpy as np
 import scipy as sp
 import scipy.io
 import scipy.ndimage.filters
 import pylab as pl
 import matplotlib.animation as animation
+from matplotlib.collections import LineCollection
 import matplotlib.pyplot as plt
 import networkx as nx
 import sys
@@ -26,20 +20,22 @@ import funcdef_draw_network as nxmod
 
 # Extra control vars.
 save_movie = False
+save_all_movie_frames = False
 movie_filename = 'run.mp4'
 show_movie = False
-show_plots = True
+show_trait_ratio = False
+show_overall_plot = True
+overall_plot_filename = 'overall.eps'
+show_empty_arena = False
 remove_setup_time = True
 remove_last_part = True
-save_data = True
 
-##-------------------------------
-# Two experiment sets: rank-1 and rank-2
-# rank 1: 23, 26
-# rank 2: 25, 22
-run = 22 # choose run
-##-------------------------------
+# Vars for the overall plot.
+overall_trail_size = 6.0 * 300  # In time-steps, 1 mins == 60 / 0.2 == 300
+overall_remove_last_timestamps = 0.1 * 300  # Number of timestamps to remove from the end of the run.
 
+# Set the matlab workspace to load.
+matlab_workspace_file = 'data/boats/run_25_all_data.mat'
 
 # Set these variables as in optimize_for_boats.py
 match = 1
@@ -58,22 +54,9 @@ deploy_robots_final = np.array([[0, 0],
                                 [2, 0]])
 
 # Set the species-trait matrix used.
-if run == 25 or run == 22:
-    # Set the matlab workspace to load.
-    if run==25:
-        matlab_workspace_file = 'data/boats/run_25_all_data.mat'
-    else:
-        matlab_workspace_file = 'data/boats/run_22_all_data.mat'
-    species_traits = np.array([[1, 0],
-                               [0, 1]])
-elif run == 23 or run == 26:
-    # Set the matlab workspace to load.
-    if run==23:    
-        matlab_workspace_file = 'data/boats/run_23_all_data.mat'
-    else:
-        matlab_workspace_file = 'data/boats/run_26_all_data.mat'
-    species_traits = np.array([[1, 0],
-                               [1, 0]])
+species_traits = np.array([[1, 0],
+                           [0, 1]])
+
 
 ####################
 # Rest of the code #
@@ -86,7 +69,6 @@ assert np.sum(np.abs(np.sum(deploy_robots_init, axis=0) - np.sum(deploy_robots_f
 # Get trait distributions.
 deploy_traits_init = np.dot(deploy_robots_init, species_traits)
 deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
-
 
 # Load mat file and get relevant matrices.
 matlab_data = sp.io.loadmat(matlab_workspace_file)
@@ -107,8 +89,7 @@ assert deploy_robots_final.shape[1] == nspecies, 'Wrong number of species'
 assert species_traits.shape[0] == nspecies, 'Wrong number of species'
 assert species_traits.shape[1] == ntraits, 'Wrong number of traits'
 
-#t_max = matlab_data['max_time']
-t_max = 400 #set so that all same
+t_max = matlab_data['max_time']
 delta_t = matlab_data['dt']
 setup_time = matlab_data['setup_time']
 
@@ -154,7 +135,7 @@ for t in range(ntimesteps):
 # Plotting code #
 #################
 
-if show_plots:
+if show_movie or save_movie:
     #######################
     # Plot boat animation #
     #######################
@@ -163,26 +144,44 @@ if show_plots:
     ax = fig.add_subplot(111, autoscale_on=False,  aspect='equal', xlim=(0, arena_size), ylim=(0, arena_size))
     ax.grid()
 
+    trail_size = 50
     boats_line = []
     boats_current_line = []
     colors = ['b', 'g']
+    colormaps = ['Blues', 'Greens']
     for i in range(nspecies):
-        boats_line.append(ax.plot([], [], colors[i] + '-', lw=1)[0])
-        boats_current_line.append(ax.plot([], [], colors[i] + 'o', lw=1)[0])
+        boats_current_line.append(ax.plot([], [], colors[i] + 'o', lw=1, markersize=8)[0])
+    for i in range(nboats):
+        lc = LineCollection(np.array([[[0, 0],[0, 0]]]), cmap=plt.get_cmap(colormaps[boats_species[i]]),
+                            norm=plt.Normalize(0, trail_size), linewidths=np.linspace(1, 8, trail_size))
+        boats_line.append(lc)
+        lc.set_linewidth(3)
+        ax.add_collection(lc)
 
     def plot_init():
         for i in range(nspecies):
-            boats_line[i].set_data([], [])
             boats_current_line[i].set_data([], [])
-        ax.plot(task_sites[:, 0], task_sites[:, 1], 'ro')
+        for i in range(nboats):
+            boats_line[i].set_segments(np.array([[[0, 0],[0, 0]]]))
         for i in range(ntasks):
-            circle = plt.Circle((task_sites[i, 0], task_sites[i, 1]), task_radius * 2., color='r', fill=False)
+            circle = plt.Circle((task_sites[i, 0], task_sites[i, 1]), task_radius * 2., color='r', fill=False, lw=2)
             ax.add_artist(circle)
 
     def plot_next_frame(i):
         ax.set_title('Time = %.2f[s] - %d' % (i * delta_t, i))
         for j in range(nspecies):
             boats_current_line[j].set_data(boats_pos[boats_species == j, i, 0], boats_pos[boats_species == j, i, 1])
+        for j in range(nboats):
+            x = boats_pos[j, max(i-trail_size, 0):i, 0]
+            y = boats_pos[j, max(i-trail_size, 0):i, 1]
+            points = np.array([x, y]).T.reshape(-1, 1, 2)
+            segments = np.concatenate([points[:-1], points[1:]], axis=1)
+            boats_line[j].set_array(np.arange(trail_size))
+            boats_line[j].set_segments(segments)
+            boats_line[j].set_linewidths(np.linspace(1, 8, trail_size - 1))
+            if save_all_movie_frames:
+                plt.savefig('plot_outputs/img_%05d.png' % i, bbox_inches='tight')
+
 
     speedup = 32
     interval = int(1000. * delta_t / speedup)
@@ -195,7 +194,16 @@ if show_plots:
     else:
         plt.close(fig)
 
+if show_empty_arena:
+    fig = plt.figure()
+    ax = fig.add_subplot(111, autoscale_on=False,  aspect='equal', xlim=(0, arena_size), ylim=(0, arena_size))
+    ax.grid()
+    for i in range(ntasks):
+        circle = plt.Circle((task_sites[i, 0], task_sites[i, 1]), task_radius * 2., color='g', fill=False, lw=2)
+        ax.add_artist(circle)
+    plt.show()
 
+if show_trait_ratio:
     #########################################
     # Plot macroscopic model on top of boat #
     #########################################
@@ -214,7 +222,6 @@ if show_plots:
             diffmac_rat[t] = np.sum(diffmac) / total_num_traits
         x = np.squeeze(np.arange(0, num_tsteps) * delta_t)
         l2 = ax.plot(x, diffmac_rat, color=color, linewidth=2, label=label)
-        plt.xlim([0,400])
         return fig
 
     # Simulate macro.
@@ -227,16 +234,43 @@ if show_plots:
     ax.set_ylabel('Ratio of misplaced traits')
     plt.legend()
     plt.show()
-    
-    if save_data:
-        prefix = 'data/boats/run_' + str(run) + '_'
-        pickle.dump(delta_t, open("delta_t", "wb"))
-        pickle.dump(t_max, open("t_max.p", "wb"))
-        pickle.dump(match, open("match.p", "wb"))
-        pickle.dump(K, open(prefix+"K.p", "wb"))
-        pickle.dump(deploy_robots_init, open(prefix+"deploy_robots_init.p", "wb"))
-        pickle.dump(deploy_boats, open(prefix+"deploy_boats.p", "wb"))
-        pickle.dump(deploy_robots_euler, open(prefix+"deploy_robots_euler.p", "wb"))
-        pickle.dump(deploy_traits_desired, open(prefix+"deploy_traits_desired.p", "wb"))
-        pickle.dump(species_traits, open(prefix+"species_traits.p", "wb"))
-        
+
+if show_overall_plot:
+    #########################################################
+    # Show an overall plot of the trajectories.             #
+    # A bit ugly - as it is copy-pasted from the movie code #
+    #########################################################
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, autoscale_on=False,  aspect='equal', xlim=(0, arena_size), ylim=(0, arena_size))
+    ax.grid()
+    boats_line = []
+    boats_current_line = []
+    colors = ['r', 'g']
+    colormaps = ['Reds', 'Greens']
+    for i in range(ntasks):
+        circle = plt.Circle((task_sites[i, 0], task_sites[i, 1]), task_radius * 2., color='black', fill=False, lw=2)
+        ax.add_artist(circle)
+    for i in range(nspecies):
+        boats_current_line.append(ax.plot([], [], colors[i] + 'o', lw=1, markersize=8)[0])
+    for i in range(nboats):
+        lc = LineCollection(np.array([[[0, 0], [0, 0]]]), cmap=plt.get_cmap(colormaps[boats_species[i]]),
+                            norm=plt.Normalize(0, overall_trail_size), linewidths=np.linspace(1, 8, overall_trail_size))
+        boats_line.append(lc)
+        lc.set_linewidth(3)
+        ax.add_collection(lc)
+    for j in range(nspecies):
+        boats_current_line[j].set_data(boats_pos[boats_species == j, -overall_remove_last_timestamps, 0],
+                                       boats_pos[boats_species == j, -overall_remove_last_timestamps, 1])
+    for j in range(nboats):
+        x = boats_pos[j, -overall_remove_last_timestamps-overall_trail_size:-overall_remove_last_timestamps, 0]
+        y = boats_pos[j, -overall_remove_last_timestamps-overall_trail_size:-overall_remove_last_timestamps, 1]
+        points = np.array([x, y]).T.reshape(-1, 1, 2)
+        segments = np.concatenate([points[:-1], points[1:]], axis=1)
+        color_offset = overall_trail_size / 5
+        boats_line[j].set_array(np.arange(color_offset, overall_trail_size + color_offset))
+        boats_line[j].set_segments(segments)
+        boats_line[j].set_linewidths(np.linspace(2, 8, overall_trail_size - 1))
+    if overall_plot_filename:
+        plt.savefig(overall_plot_filename, bbox_inches='tight')
+    plt.show()
