@@ -28,15 +28,19 @@ import funcdef_draw_network as nxmod
 # use_strict=1, only Berman, factor 1.0: Q10
 # use_strict=1, on both mic sims, f=1.3: Q22
 # ORrank: Q9
-run = 'Q34'
 
-match = False
+# used in paper: Q26 match = 1
+# used in paper: Q28 match = 0
+# M=8
+run = 'Q26'
+
+match = True
 if match:
     berman = True
 else:
     berman = False
 
-save_plots = True
+save_plots = False
 
 # -----------------------------------------------------------------------------#
 def plot_t_converge(delta_t, t_min_a, t_min_b):
@@ -136,6 +140,13 @@ def plot_t_converge_shaded(delta_t, t_min_a, t_min_b=None):
             pc_b[rk,1] = np.percentile(tb_f[rk,:],p1)
             pc_b[rk,2] = np.percentile(tb_f[rk,:],p2)
             labels.append(str(rk+1))
+            
+             # improvement over b for rk 1
+            imp = (pc_b[rk,1]-pc_a[rk,1]) / pc_b[rk,1]
+            print 'Improvement over B. for rank ', rk+1, 'is ', imp*100., '%'
+            
+    
+   
     
     N = num_rk*2 + 2
     fig = plt.figure()

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun Aug 23 16:05:33 2015
-
 @author: amandaprorok
+
 """
 
 import numpy as np
@@ -15,8 +15,8 @@ import pickle
 import time
 from funcdef_util_heterogeneous import *
 
-run = 'V20'
-match = 1 # 0 for V21, 1 for V20
+run = 'V21'
+match = 0 # 0 for V21, 1 for V20
 delta_t = 0.04
 
 prefix = "./data/" + run + "/" + run + "_micmac_"
@@ -24,7 +24,9 @@ prefix = "./data/" + run + "/" + run + "_micmac_"
 
     
 species_traits = pickle.load(open(prefix+"st.p", "rb"))
+graph = pickle.load(open(prefix+"graph.p", "rb"))
 deploy_traits_desired = pickle.load(open(prefix+"dtd.p", "rb"))
+deploy_traits_init = pickle.load(open(prefix+"dti.p", "rb"))
 deploy_robots_micro = pickle.load(open(prefix+"drm.p", "rb"))
 deploy_robots_euler = pickle.load(open(prefix+"dre.p", "rb"))
     
@@ -38,4 +40,9 @@ plt.show()
 
 fig.savefig('./plots/' + run + '_trait_time_micmac.eps')     
 
-                              
+fig2 = nxmod.draw_circular(deploy_traits_init, graph, linewidths=3)
+plt.axis('equal')
+plt.show()
+fig2 = nxmod.draw_circular(deploy_traits_desired,graph, linewidths=3)
+plt.axis('equal')
+plt.show()
