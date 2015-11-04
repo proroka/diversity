@@ -17,6 +17,7 @@ from optimize_transition_matrix_hetero import *
 
 # -----------------------------------------------------------------------------#
 # initialize robots
+# converts robot distribution to robot array (species and node specified for each robot)
 
 def initialize_robots(deploy_robots_init):
     num_nodes = deploy_robots_init.shape[0]
