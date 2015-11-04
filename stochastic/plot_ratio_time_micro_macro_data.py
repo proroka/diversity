@@ -15,12 +15,12 @@ import pickle
 import time
 from funcdef_util_heterogeneous import *
 
-run = 'V21'
+run = 'V30'
 match = 0 # 0 for V21, 1 for V20
 delta_t = 0.04
 
-prefix = "./data/" + run + "/" + run + "_micmac_"
-
+#prefix = "./data/" + run + "/" + run + "_micmac_"
+prefix = "./data/" + run + "_micmac_"
 
     
 species_traits = pickle.load(open(prefix+"st.p", "rb"))

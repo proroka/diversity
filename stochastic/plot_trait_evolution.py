@@ -4,13 +4,28 @@ Created on Sun Aug 23 12:58:32 2015
 @author: amandaprorok
 
 """
+import numpy as np
+import scipy as sp
+import pylab as pl
+import matplotlib.pyplot as plt
+import networkx as nx
+import sys
+import pickle
+import time
 
+# my modules
+from optimize_transition_matrix_hetero import *
+from funcdef_macro_heterogeneous import *
+from funcdef_micro_heterogeneous import *
+from funcdef_util_heterogeneous import *
+import funcdef_draw_network as nxmod
 from plot_robot_share import *
 
-run = "V23"
+run = "V33"
 
 plot_robots = False
 
+#prefix = "./data/" + run + "/" + run + "_micmac_"
 prefix = "./data/" + run + "_micmac_"
 
 transform = pickle.load(open(prefix+"st.p", "rb"))
@@ -41,7 +56,8 @@ if plot_robots:
 for index in range(transform.shape[1]):
     fig = plot_trait_share(deploy_robots, transform=transform, delta_t=delta_t,
                      trait_index=index, cmap_name='Spectral')
-    #plt.axes().set_aspect(1./7.,'box')
-
+    #plt.axes().set_aspect(0.5,'box')
+    #plt.axis('equal')
+                     
     plt.show()
     fig.savefig('./plots/' + run + '_evol_trait_' + str(index) + '.eps') 

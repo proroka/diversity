@@ -238,6 +238,10 @@ def plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_ad
     err_ax = np.arange(0,num_tsteps,int(num_tsteps/20))
     plt.errorbar(x[err_ax],y[err_ax],s_mic[err_ax],fmt='o',markersize=3,color='black')
     
+    #ax = plt.gca()
+    #ax.set_ylim([0, 2])    
+    #ax.set_xlim([0.5, N-1.5])
+    
     # plot macro
     l3 = plt.plot(x,diffmac_rat, label='Macroscropic')
 

@@ -20,9 +20,9 @@ def plot_trait_share(deploy_robots, transform, delta_t=1., trait_index=0, cmap_n
     x = traits[:, :, trait_index]
     
     # square
-    #fig, ax = plt.subplots(figsize=(4,4))
+    fig, ax = plt.subplots(figsize=(4,4))
     # rectangular    
-    fig, ax = plt.subplots(figsize=(8,4))    
+    #fig, ax = plt.subplots(figsize=(8,4))    
     
     ax.stackplot(t, x, colors=colors_from(cmap_name, deploy_robots.shape[0]))
     ax.set_xlim([0, t[-1]])

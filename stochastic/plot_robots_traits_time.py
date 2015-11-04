@@ -39,7 +39,7 @@ deploy_robots_euler = pickle.load(open(prefix+"deploy_robots_euler.p", "rb"))
 num_nodes = deploy_robots_init.shape[0]
 num_traits = species_traits.shape[1]
 num_species = species_traits.shape[0]
-
+o
 # get averages
 avg_deploy_robots_micro_adapt = np.mean(deploy_robots_micro_adapt,3)
 avg_deploy_robots_micro = np.mean(deploy_robots_micro,3)
