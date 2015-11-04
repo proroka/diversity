@@ -90,6 +90,46 @@ def microscopic_sim(num_timesteps, delta_t, robots_init, deploy_robots_init, tra
     return (robots, deploy_robots)
 
 
+# -----------------------------------------------------------------------------#
+# distributed version of microscopic model
+# transition_m: [num_nodes, num_nodes, num_species, num_nodes]
+
+
+def microscopic_sim_distrib(num_timesteps, delta_t, robots_init, deploy_robots_init, transition_m):
+
+    num_nodes = deploy_robots_init.shape[0]
+    num_species = deploy_robots_init.shape[1]
+    num_robots = robots_init.shape[0]
+
+    deploy_robots = np.zeros((num_nodes, num_timesteps, num_species))
+    deploy_robots[:,0,:] = deploy_robots_init
+
+    robots = robots_init.copy()
+
+    # Pre-compute transition probabilities. 4th dimension: distributed version, p's according to local-node belief
+    ps = np.zeros((num_nodes, num_nodes, num_species, num_nodes))
+    for nd in range(num_nodes):    
+        for s in range(num_species):
+            ks = transition_m[:,:,s,nd] # transition rates
+            ps[:,:,s,nd] = sp.linalg.expm(delta_t*ks) # transition probabilities
+
+    for t in range(1, num_timesteps):
+        # Propagate previous state.
+        deploy_robots[:, t, :] = deploy_robots[:, t-1, :]
+
+        for r in range(num_robots):
+            r_s = robots[r,0] # robot species
+            r_n = robots[r,1] # current node
+            node = pick_transition(ps[:,r_n,int(r_s),r_n])
+            # update
+            deploy_robots[r_n, t, r_s] -= 1
+            deploy_robots[node, t, r_s]  += 1
+            robots[r,1] = node
+
+    return (robots, deploy_robots)
+
+# -----------------------------------------------------------------------------#
+    
 def microscopic_sim_get_time(num_timesteps, delta_t, robots_init, deploy_robots_init, transition_m,
                              deploy_traits_desired, deploy_robots_desired, transform, match, min_val, slack):
 
