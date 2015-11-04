@@ -168,6 +168,7 @@ transition_m_d = np.zeros(num_nodes, num_nodes, num_species, num_nodes)
 
 for it in range(num_iter):
 
+    # initialize structure for transition matrices
     for nd in range(num_nodes):
         transition_m_d[:,:,:,nd] = transition_m_init.copy()
 
