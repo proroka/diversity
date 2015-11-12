@@ -22,7 +22,8 @@ from funcdef_macro_heterogeneous import *
 from funcdef_micro_heterogeneous import *
 from funcdef_util_heterogeneous import *
 import funcdef_draw_network as nxmod
-
+from generate_Q import *
+from simple_orrank import *
 
 # -----------------------------------------------------------------------------#
 
@@ -40,9 +41,7 @@ run = 'D01'
 
 save_data = False
 save_plots = False
-load_globals = False
-save_globals = False
-fix_species = True
+load_graph = False
 fix_init = True
 fix_final = True
 
@@ -57,62 +56,74 @@ delta_t = 0.04 # time step
 max_rate = 2.0 # Maximum rate possible for K.
 numts_window = 10 # number of time steps per window for adaptive opt.
 
+# eval convergence time 
+#use_strict = True
+#strict_slack = 1.4 # max 1.4*err on desired robot distrib must be true for trait distrib to be valid 
+match_margin = 0.02 # used when match=0 
+
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
 match = 1 # 1: exact 0: at-least
 
-if load_globals:
+# robot species
+total_num_robots = 100.0 
+num_species = 3
+num_traits = 4
+
+
+# -----------------------------------------------------------------------------#
+# initialize graph: all species move on same graph
+
+if load_graph:
     graph = pickle.load(open("const_graph.p", "rb"))
-    species_traits = pickle.load(open("const_species_traits.p", "rb"))
-    deploy_robots_init = pickle.load(open("const_deploy_robots_init.p", "rb"))
-    deploy_traits_init = pickle.load(open("const_deploy_traits_init.p", "rb"))
-    deploy_traits_desired = pickle.load(open("const_deploy_traits_desired.p", "rb"))
-    num_nodes = deploy_robots_init.shape[0]
-    num_traits = species_traits.shape[1]
-    num_species = species_traits.shape[0]
+    num_nodes = nx.number_of_nodes(graph)
 else:
-    # create network of sites
-    num_nodes = 8 
-    # set of traits
-    num_traits = 4
-    max_trait_values = 2 # [0,1]: trait availability
-    # robot species
-    num_species = 3
-    max_robots = 30 # maximum number of robots per node
-    deploy_robots_init = np.random.randint(0, max_robots, size=(num_nodes, num_species))
-    if (fix_init):
-            deploy_robots_init[3:,:] = 0
-            sum_species = np.sum(deploy_robots_init,axis=0)
-    
-    if fix_species:
-        num_species = 3
-        num_traits = 4
-        species_traits = np.array([[1,0,1,0],[1,0,0,1],[0,1,0,1]])
-    else:
-        # ensure each species has at least 1 trait, and that all traits are present
-        species_traits = np.zeros((num_species, num_traits))
-        while (min(np.sum(species_traits,0))==0 or min(np.sum(species_traits,1))==0):
-            species_traits = np.random.randint(0, max_trait_values, (num_species, num_traits))
-    # generate a random end state
-    random_transition = random_transition_matrix(num_nodes, max_rate/2)  # Divide max_rate by 2 for the random matrix to give some slack.        
-    if fix_final: 
-        deploy_robots_final = np.random.randint(0, max_robots, size=(num_nodes, num_species))
-        deploy_robots_final[:3,:] = 0
-        ts = np.sum(deploy_robots_final, axis=0)
-        for i in range(num_species):    
-            deploy_robots_final[:,i] = deploy_robots_final[:,i] / float(ts[i]) * float(sum_species[i])
-    else:
-        # sample final desired trait distribution based on random transition matrix   
-        deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition, t_max*4., delta_t)
-    
-    deploy_traits_init = np.dot(deploy_robots_init, species_traits)
-    deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
-    # if 'at-least' cost function, reduce number of traits desired
-    if match==0:
-        deploy_traits_desired *= (np.random.rand()*0.1 + 0.85)
-        print "total traits, at least: \t", np.sum(np.sum(deploy_traits_desired))
+    # graph (only needed of not loading graph)
+    num_nodes = 8
+    graph = nx.connected_watts_strogatz_graph(num_nodes, 3, 0.6)
 
+# get the adjencency matrix
+adjacency_m = nx.to_numpy_matrix(graph)
+adjacency_m = np.squeeze(np.asarray(adjacency_m))
 
+half_num_nodes = num_nodes / 2
+
+# -----------------------------------------------------------------------------#
+# generate random robot species with fized diversity
+list_Q = []
+if match==1:
+    rk = 0
+    while rk != num_species:
+        species_traits, rk, s = generate_Q(num_species, num_traits)
+else:
+    species_traits = generate_matrix_with_orrank(num_species, num_species, num_traits)
+list_Q.append(species_traits)
+    
+# generate a random end state
+    
+random_transition = random_transition_matrix(num_nodes, max_rate/2)  # Divide max_rate by 2 for the random matrix to give some slack.
+deploy_robots_init = np.random.randint(0, 100, size=(num_nodes, num_species))
+# normalize
+deploy_robots_init = deploy_robots_init * total_num_robots / np.sum(np.sum(deploy_robots_init, axis=0))
+if (fix_init):
+    deploy_robots_init[half_num_nodes:,:] = 0
+    sum_species = np.sum(deploy_robots_init,axis=0)
+            
+# sample final desired trait distribution based on random transition matrix
+deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition, t_max*4., delta_t)
+if fix_final: 
+    deploy_robots_final[:half_num_nodes,:] = 0
+    ts = np.sum(deploy_robots_final, axis=0)
+    for i in range(num_species):    
+        deploy_robots_final[:,i] = deploy_robots_final[:,i] / float(ts[i]) * float(sum_species[i])
+        
+# trait distribution
+deploy_traits_init = np.dot(deploy_robots_init, species_traits)
+deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
+# if 'at-least' cost function, reduce number of traits desired
+if match==0:
+    deploy_traits_desired *= (np.random.rand()*match_margin + (1.0-match_margin))
+    print "total traits, at least: \t", np.sum(np.sum(deploy_traits_desired))
 
 # initialize robots
 robots = initialize_robots(deploy_robots_init)
@@ -120,19 +131,6 @@ robots = initialize_robots(deploy_robots_init)
 print "total robots, init: \t", np.sum(np.sum(deploy_robots_init))
 print "total traits, init: \t", np.sum(np.sum(deploy_traits_init))
 
-
-
-# -----------------------------------------------------------------------------#
-# initialize graph: all species move on same graph
-
-if load_globals:
-    graph = pickle.load(open("const_graph.p", "rb"))
-else:
-    graph = nx.connected_watts_strogatz_graph(num_nodes, 3, 0.6)
-
-# get the adjencency matrix
-adjacency_m = nx.to_numpy_matrix(graph)
-adjacency_m = np.squeeze(np.asarray(adjacency_m))
 
 
 # -----------------------------------------------------------------------------#
@@ -180,7 +178,7 @@ for it in range(num_iter):
     for sl in range(slices):
         print "RHC Iteration: ", it+1 , "/", num_iter, "Slice: ", sl+1,"/", slices
         
-        ####### TODO, add adaptive without distribution
+        ####### TODO, add adaptive, centralized version (essentially: original version)
         # adaptive, non-distributed
         #robots_slice, deploy_robots_micro_slice = microscopic_sim(numts_window + 1, delta_t, robots_slice, deploy_robots_init_slice, transition_m)
         #deploy_robots_init_slice = deploy_robots_micro_slice[:,-1,:]
@@ -251,12 +249,6 @@ if save_data:
     pickle.dump(deploy_robots_euler, open(prefix+"deploy_robots_euler.p", "wb"))
 
 
-if save_globals:
-    pickle.dump(graph, open("const_graph.p", "wb"))
-    pickle.dump(species_traits, open("const_species_traits.p", "wb"))
-    pickle.dump(deploy_robots_init, open("const_deploy_robots_init.p", "wb"))
-    pickle.dump(deploy_traits_init, open("const_deploy_traits_init.p", "wb"))
-    pickle.dump(deploy_traits_desired, open("const_deploy_traits_desired.p", "wb"))
 
 
 # -----------------------------------------------------------------------------#
