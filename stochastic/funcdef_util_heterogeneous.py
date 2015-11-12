@@ -213,9 +213,9 @@ def plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_ad
                 traits = np.dot(deploy_robots_mac[:,t,:], transform)
                 diffmac = np.abs(traits - deploy_traits_desired)  
             
-            diffmic_rat[t,it] = np.sum(diffmic) / total_num_traits   
-            diffadp_rat[t,it] = np.sum(diffadp) / total_num_traits 
-            diffmac_rat[t] = np.sum(diffmac) / total_num_traits       
+            diffmic_rat[t,it] = np.sum(diffmic) / (2.0*total_num_traits)   
+            diffadp_rat[t,it] = np.sum(diffadp) / (2.0*total_num_traits) 
+            diffmac_rat[t] = np.sum(diffmac) / (2.0*total_num_traits)       
         
         
     x = np.arange(0, num_tsteps) * delta_t
