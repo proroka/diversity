@@ -17,6 +17,8 @@ import time
 import pickle
 
 # my modules
+sys.path.append('plotting')
+sys.path.append('utilities')
 from optimize_transition_matrix_hetero import *
 from funcdef_macro_heterogeneous import *
 from funcdef_micro_heterogeneous import *
@@ -103,10 +105,11 @@ list_Q.append(species_traits)
     
 random_transition = random_transition_matrix(num_nodes, max_rate/2)  # Divide max_rate by 2 for the random matrix to give some slack.
 deploy_robots_init = np.random.randint(0, 100, size=(num_nodes, num_species))
-# normalize
-deploy_robots_init = deploy_robots_init * total_num_robots / np.sum(np.sum(deploy_robots_init, axis=0))
+
 if (fix_init):
     deploy_robots_init[half_num_nodes:,:] = 0
+    # normalize
+    deploy_robots_init = deploy_robots_init * total_num_robots / np.sum(np.sum(deploy_robots_init, axis=0))
     sum_species = np.sum(deploy_robots_init,axis=0)
             
 # sample final desired trait distribution based on random transition matrix
@@ -199,7 +202,7 @@ for it in range(num_iter):
             # create naive belief of robot distribution: uniform distrib outside this node
             deploy_tmp = deploy_robots_init_slice.copy()
             deploy_tmp[nd,:] = np.zeros((1,num_species))
-            uni_tmp = np.sum(deploy_tmp,0) / (num_nodes - 1)
+            uni_tmp = np.sum(deploy_tmp,0) / float(num_nodes - 1)
             deploy_robots_init_slice_d = np.ones((num_nodes, num_species)) * uni_tmp
             deploy_robots_init_slice_d[nd,:] = deploy_robots_init_slice[nd,:]
             # optimize transition matrix for this distribution belief
