@@ -180,3 +180,6 @@ def microscopic_sim_get_time(num_timesteps, delta_t, robots_init, deploy_robots_
             robots[r,1] = node
 
     return num_timesteps - 1
+    
+    
+    
