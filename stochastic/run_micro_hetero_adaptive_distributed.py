@@ -67,12 +67,12 @@ def BuildLocalDistribution(B, node_index, neighbors):
 
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
-run = 'D06'
+
+run = 'D09'
 
 plot_on = False
 save_data = True
 save_plots = False
-load_graph = False
 fix_init = True
 fix_final = True
 
@@ -81,17 +81,19 @@ tstart = time.strftime("%Y%m%d-%H%M%S")
 
 # simulation parameters
 t_max = 8.0 # influences desired state and optmization of transition matrix
-t_max_sim = 7.0 # influences simulations and plotting
-num_iter = 4 # iterations of micro sim
+t_max_sim = 4.0 # influences simulations and plotting
+num_graph_iter = 3 # iterations of micro sim
 delta_t = 0.04 # time step
 max_rate = 1.0 # Maximum rate possible for K.
 numts_window = 10 # number of time steps per window for adaptive opt.
 num_nodes = 8
-    
+half_num_nodes = num_nodes / 2    
+
 # eval convergence time 
 #use_strict = True
 #strict_slack = 1.4 # max 1.4*err on desired robot distrib must be true for trait distrib to be valid 
 match_margin = 0.02 # used when match=0 
+min_ratio = 0.1
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
@@ -100,28 +102,15 @@ match = 1 # 1: exact 0: at-least
 # robot species
 total_num_robots = 1000.0 
 num_species = 4
-num_traits = 4
+num_traits = 5
 
 # distributed belief distribution
 num_hops = 5
 
-# -----------------------------------------------------------------------------#
-# initialize graph: all species move on same graph
-
-if load_graph:
-    graph = pickle.load(open("const_graph.p", "rb"))
-    num_nodes = nx.number_of_nodes(graph)
-else:
-    # graph (only needed of not loading graph)
-    graph = nx.connected_watts_strogatz_graph(num_nodes, 3, 0.6)
-
-# get the adjencency matrix
-adjacency_m = nx.to_numpy_matrix(graph)
-adjacency_m = np.squeeze(np.asarray(adjacency_m))
-
-half_num_nodes = num_nodes / 2
 
 # -----------------------------------------------------------------------------#
+# initialize distributions
+
 # generate random robot species with fixed diversity
 list_Q = []
 if match==1:
@@ -133,7 +122,6 @@ else:
 list_Q.append(species_traits)
     
 # generate a random end state
-    
 random_transition = random_transition_matrix(num_nodes, max_rate/2)  # Divide max_rate by 2 for the random matrix to give some slack.
 deploy_robots_init = np.random.randint(0, 100, size=(num_nodes, num_species))
 
@@ -168,31 +156,13 @@ print "total traits, init: \t", np.sum(np.sum(deploy_traits_init))
 
 
 # -----------------------------------------------------------------------------#
-# find optimal transition matrix for plain micro
-
-init_transition_values = np.array([])
-transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init, deploy_traits_desired,
-                                              species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=4.0)
-
-# -----------------------------------------------------------------------------#
-# run microscopic stochastic simulation
+# initialize micro
 
 num_timesteps = int(t_max_sim / delta_t)
-
-deploy_robots_micro = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
-for it in range(num_iter):
-    print "Iteration: ", it
-    robots_new, deploy_robots_micro[:,:,:,it] = microscopic_sim(num_timesteps, delta_t, robots, deploy_robots_init, transition_m_init)
-avg_deploy_robots_micro = np.mean(deploy_robots_micro,3)
-
-  
-# -----------------------------------------------------------------------------#
-# run adaptive microscopic stochastic simulation, RHC
-
 t_window = float(numts_window) * delta_t
 slices = int(t_max_sim / t_window)
 
-deploy_robots_micro_adapt = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
+deploy_robots_micro = np.zeros((num_nodes, num_timesteps, num_species, num_graph_iter))
 
 init_transition_values = np.array([])
 # distributed version of transition matrix
@@ -200,20 +170,30 @@ transition_m_d = np.zeros((num_nodes, num_nodes, num_species, num_nodes))
 # distributed version of deployment beliefs
 deploy_robots_init_slice_d_all = np.zeros((num_nodes, num_species, num_nodes))
 
+deploy_robots_micro_adapt_hop = np.zeros((num_nodes, num_timesteps, num_species, num_graph_iter, num_hops))
+
+# -----------------------------------------------------------------------------#
 
 
-deploy_robots_micro_adapt_hop = np.zeros((num_nodes, num_timesteps, num_species, num_iter, num_hops))
+t_min_d = np.zeros((num_hops, num_graph_iter))
 
-#for gi in range(graph_iter):
-#graph = nx.connected_watts_strogatz_graph(num_nodes, 3, 0.6)
-# get the adjencency matrix
-#adjacency_m = nx.to_numpy_matrix(graph)
-#adjacency_m = np.squeeze(np.asarray(adjacency_m))
+for it in range(num_graph_iter):
+    
+    # initialize graph here
+    graph = nx.connected_watts_strogatz_graph(num_nodes, 3, 0.6)
+    
+    # get the adjencency matrix
+    adjacency_m = nx.to_numpy_matrix(graph)
+    adjacency_m = np.squeeze(np.asarray(adjacency_m))
+    
+    # find optimal transition matrix for plain micro
+    init_transition_values = np.array([])
+    transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init, deploy_traits_desired,
+                                                  species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=4.0)
 
-for nh in range(num_hops):
-    neighbor_nodes = GetNeighbors(adjacency_m, nh)
-    for it in range(num_iter):
-        
+    for nh in range(num_hops):
+        neighbor_nodes = GetNeighbors(adjacency_m, nh)
+        #for it in range(num_iter):
 
         # initialize structure for transition matrices
         for nd in range(num_nodes):
@@ -222,19 +202,16 @@ for nh in range(num_hops):
     
         deploy_robots_init_slice = deploy_robots_init.copy()
         robots_slice = robots.copy()
+        # initialize micro structure
+        deploy_robots_micro_adapt = np.zeros((num_nodes, num_timesteps, num_species))
+        
         for sl in range(slices):
-            print "Hop: ", nh, "Iteration: ", it+1 , "/", num_iter, "Slice: ", sl+1,"/", slices
+            print "Hop: ", nh, "Iteration: ", it+1 , "/", num_graph_iter, "Slice: ", sl+1,"/", slices
             
             # adaptive, distributed:
             # for robots at same task, compute belief of robot distribution and optimize transition matrix
             for nd in range(num_nodes):   
-                # create naive belief of robot distribution: uniform distrib outside this node
-                #deploy_tmp = deploy_robots_init_slice.copy()
-                #deploy_tmp[nd,:] = np.zeros((1,num_species))
-                #uni_tmp = np.sum(deploy_tmp,0) / float(num_nodes - 1)
-                #deploy_robots_init_slice_d = np.ones((num_nodes, num_species)) * uni_tmp
-                #deploy_robots_init_slice_d[nd,:] = deploy_robots_init_slice[nd,:]
-                
+                # create naive belief of robot distribution: uniform distrib outside this node             
                 deploy_robots_init_slice_d = BuildLocalDistribution(deploy_robots_init_slice, nd, neighbor_nodes)
                 
                 # optimize transition matrix for this distribution belief
@@ -246,11 +223,11 @@ for nh in range(num_hops):
             robots_slice, deploy_robots_micro_slice = microscopic_sim_distrib(numts_window + 1, delta_t, robots_slice, deploy_robots_init_slice, transition_m_d)
             deploy_robots_init_slice = deploy_robots_micro_slice[:,-1,:] # final time-step of micro is init distrib for next optim.
             # put together slices
-            deploy_robots_micro_adapt[:,sl*numts_window:(sl+1)*numts_window,:,it] = deploy_robots_micro_slice[:,:-1,:]
+            deploy_robots_micro_adapt[:,sl*numts_window:(sl+1)*numts_window,:] = deploy_robots_micro_slice[:,:-1,:]
                                                
-    deploy_robots_micro_adapt_hop[:,:,:,:,nh] =  deploy_robots_micro_adapt.copy()                                          
-   
-
+        deploy_robots_micro_adapt_hop[:,:,:,it,nh] =  deploy_robots_micro_adapt.copy()                                          
+       
+        t_min_d[nh,it] = get_traits_ratio_time(deploy_robots_micro_adapt_hop[:,:,:,it,nh], deploy_traits_desired, species_traits, match, min_ratio)    
 
 # -----------------------------------------------------------------------------#
 # euler integration
@@ -265,6 +242,7 @@ if save_data:
     tend = time.strftime("%Y%m%d-%H%M%S")
    
     prefix = "./data/" + run + "_"
+    print str(run)    
     print "Time start: ", tstart
     print "Time end: ", tend
     
@@ -276,9 +254,8 @@ if save_data:
     pickle.dump(deploy_robots_micro_adapt, open(prefix+"deploy_robots_micro_adapt.p", "wb"))
     pickle.dump(deploy_robots_micro, open(prefix+"deploy_robots_micro.p", "wb"))
     pickle.dump(deploy_robots_euler, open(prefix+"deploy_robots_euler.p", "wb"))
-    #pickle.dump(deploy_robots_micro_adapt_hop, open(prefix+"deploy_robots_euler.p", "wb"))
     pickle.dump(deploy_robots_micro_adapt_hop, open(prefix+"deploy_robots_micro_adapt_hop.p", "wb"))
-
+    pickle.dump(t_min_d, open(prefix+"t_min_d.p", "wb"))
 
 # -----------------------------------------------------------------------------#
 # plots

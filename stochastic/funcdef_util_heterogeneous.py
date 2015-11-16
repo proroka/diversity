@@ -110,7 +110,8 @@ def plot_robots_ratio_time_micmac(deploy_robots_mic, deploy_robots_mac, deploy_r
  
 # -----------------------------------------------------------------------------#
 # plot ratio of desired vs actual robot distribution
-
+# 
+  
 def plot_traits_ratio_time_micmac(deploy_robots_micro, deploy_robots_mac, deploy_traits_desired, transform, delta_t, match):
     
     fig = plt.figure()
@@ -574,6 +575,78 @@ def plot_traits_time(deploy_robots, species_traits, trait_ind):
 
 
 
+# -----------------------------------------------------------------------------#
+# plot ratio of desired vs actual robot distribution
+# for each hop
+  
+def plot_traits_ratio_time_mic_distributed(deploy_robots_mic_hop, deploy_robots_mac, deploy_traits_desired, transform, delta_t, match):
+    # deploy_robots_mic_hop[nodes,ts,S,it,nh]
+    
+    fig = plt.figure()
+    colors = ['green', 'blue', 'red', 'cyan', 'magenta', 'yellow']    
+    
+    num_hops = deploy_robots_mic_hop.shape[4]    
+    num_tsteps = deploy_robots_mic_hop.shape[1]
+    total_num_traits = np.sum(deploy_traits_desired)    
+    num_it = deploy_robots_mic_hop.shape[3]
+        
+    for nh in range(num_hops):   
+        #deploy_robots_mic = np.mean(deploy_robots_mic_hop[:,:,:,:,nh],3)
+        
+        
+        diffmic_rat = np.zeros((num_tsteps, num_it))
+        diffmac_rat = np.zeros(num_tsteps)
+    
+        for it in range(num_it):
+            deploy_robots_mic = deploy_robots_mic_hop[:,:,:,it,nh]
+            for t in range(num_tsteps):
+                
+                if match==0:
+                    traits = np.dot(deploy_robots_mic[:,t,:], transform)
+                    diffmic = np.abs(np.minimum(traits - deploy_traits_desired, 0))
+                    traits = np.dot(deploy_robots_mac[:,t,:], transform)
+                    diffmac = np.abs(np.minimum(traits - deploy_traits_desired, 0))
+                else:
+                    traits = np.dot(deploy_robots_mic[:,t,:], transform)
+                    diffmic = np.abs(traits - deploy_traits_desired)   
+                    traits = np.dot(deploy_robots_mac[:,t,:], transform)
+                    diffmac = np.abs(traits - deploy_traits_desired)  
+                
+                diffmic_rat[t,it] = np.sum(diffmic) / (2*total_num_traits)      
+                diffmac_rat[t] = np.sum(diffmac) / (2*total_num_traits)       
+            
+            
+        x = np.arange(0, num_tsteps) * delta_t
+    
+        # plot micro with errorbars
+        m_mic = np.mean(diffmic_rat,1)
+        s_mic = np.std(diffmic_rat,1)
+        
+        lab = 'H-'+str(nh)
+        col = colors[nh]
+        l1 = plt.plot(x,m_mic, color=col, linewidth=2, label=lab)
+        err_ax = np.arange(0,num_tsteps,int(num_tsteps/5))
+        #plt.errorbar(x[err_ax],m_mic[err_ax],s_mic[err_ax],fmt='o',markersize=3,color='black')
+        
+        #l1 = plt.plot(x, pc_a[:,1], color='green', linewidth=2, label='explicit')
+        plt.fill_between(x, m_mic+s_mic, m_mic-s_mic, facecolor=col, alpha=0.3)    
+        #plt.fill_between(x[err_ax], m_mic[err_ax]+s_mic[err_ax], m_mic[err_ax]-s_mic[err_ax], facecolor='green', alpha=0.3)    
+    
+        # plot macro
+        #l2 = plt.plot(x,diffmac_rat, color='blue', linewidth=2, label='Macroscropic')
+
+
+
+
+
+    # plot legend and labels
+    plt.legend(loc='upper right', shadow=False, fontsize='x-large')     
+    plt.xlabel('Time [s]')    
+    plt.ylabel('Ratio of misplaced traits')
+    
+
+    #plt.show()  
+    return fig
 
 
     
