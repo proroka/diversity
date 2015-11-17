@@ -29,7 +29,7 @@ from simple_orrank import *
 
 
 #load data
-run = 'D06'
+run = 'D30'
 prefix = "./data/" + run + "/" + run + '_'
 save_plots = False
 
@@ -47,9 +47,9 @@ deploy_robots_euler = pickle.load(open(prefix+"deploy_robots_euler.p", "rb"))
 deploy_robots_micro_adapt_hop = pickle.load(open(prefix+"deploy_robots_micro_adapt_hop.p", "rb"))
 
 # cut off end:
-fin = 170
-deploy_robots_micro_adapt_hop = deploy_robots_micro_adapt_hop[:,0:fin,:,:,:]
-deploy_robots_euler = deploy_robots_euler[:,0:fin,:]
+#fin = 170
+#deploy_robots_micro_adapt_hop = deploy_robots_micro_adapt_hop[:,0:fin,:,:,:]
+#deploy_robots_euler = deploy_robots_euler[:,0:fin,:]
 
 fig = plot_traits_ratio_time_mic_distributed(deploy_robots_micro_adapt_hop,deploy_robots_euler, deploy_traits_desired, species_traits, delta_t, match)
 
@@ -57,7 +57,7 @@ fig = plot_traits_ratio_time_mic_distributed(deploy_robots_micro_adapt_hop,deplo
 plt.show()
 
 # get time of convergence to min-ratio
-min_ratio = 0.07
+min_ratio = 0.15
 fig = plt.figure()
 ax = plt.gca()
 
