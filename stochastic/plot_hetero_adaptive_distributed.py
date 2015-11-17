@@ -79,3 +79,9 @@ ax.set_ylim([0, ymax])
 #ax.set_xlim([1, num_hops])
 
 plt.show()
+
+
+# plot graph
+plt.axis('equal')
+fig1 = nxmod.draw_circular(deploy_traits_init, graph,linewidths=3)
+plt.show()
