@@ -29,13 +29,16 @@ from simple_orrank import *
 
 
 #load data
-run = 'D30'
+run = 'D50'
 prefix = "./data/" + run + "/" + run + '_'
 save_plots = False
+plot_graph = False
 
 delta_t = 0.04 # time step
 match = 1
+min_ratio = 0.1
 
+# Load data
 graph = pickle.load(open(prefix+"graph.p", "rb"))
 species_traits = pickle.load(open(prefix+"species_traits.p", "rb"))
 deploy_robots_init = pickle.load(open(prefix+"deploy_robots_init.p", "rb"))
@@ -45,6 +48,7 @@ deploy_robots_micro_adapt = pickle.load(open(prefix+"deploy_robots_micro_adapt.p
 deploy_robots_micro = pickle.load(open(prefix+"deploy_robots_micro.p", "rb"))
 deploy_robots_euler = pickle.load(open(prefix+"deploy_robots_euler.p", "rb"))
 deploy_robots_micro_adapt_hop = pickle.load(open(prefix+"deploy_robots_micro_adapt_hop.p", "rb"))
+
 
 # cut off end:
 #fin = 170
@@ -56,8 +60,10 @@ fig = plot_traits_ratio_time_mic_distributed(deploy_robots_micro_adapt_hop,deplo
 #plt.axes().set_aspect(0.65,'box')
 plt.show()
 
+#---------------------------------------------------
+# Boxplots
+
 # get time of convergence to min-ratio
-min_ratio = 0.15
 fig = plt.figure()
 ax = plt.gca()
 
@@ -77,11 +83,13 @@ ymin = 0
 ymax = 7
 ax.set_ylim([0, ymax])    
 #ax.set_xlim([1, num_hops])
-
 plt.show()
 
 
+
+#---------------------------------------------------
 # plot graph
-plt.axis('equal')
-fig1 = nxmod.draw_circular(deploy_traits_init, graph,linewidths=3)
-plt.show()
+if plot_graph:
+    plt.axis('equal')
+    fig1 = nxmod.draw_circular(deploy_traits_init, graph,linewidths=3)
+    plt.show()

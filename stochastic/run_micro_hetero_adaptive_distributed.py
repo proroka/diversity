@@ -67,13 +67,15 @@ def BuildLocalDistribution(B, node_index, neighbors):
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'D31'
+run = 'D51'
 
 plot_on = False
 save_data = True
 save_plots = False
-fix_init = True
-fix_final = True
+
+# random initial and final trait distributions
+fix_init = False
+fix_final = False
 
 tstart = time.strftime("%Y%m%d-%H%M%S")
 print str(run)
@@ -82,10 +84,10 @@ print "Time start: ", tstart
 # simulation parameters
 t_max = 8.0 # influences desired state and optmization of transition matrix
 t_max_sim = 7.0 # influences simulations and plotting
-num_iter = 2 # iterations of micro sim
+num_iter = 3 # iterations of micro sim
 delta_t = 0.04 # time step
-max_rate = 1.0 # Maximum rate possible for K.
-numts_window = 15 # number of time steps per window for adaptive opt.
+max_rate = 2.0 # Maximum rate possible for K.
+numts_window = 20 # number of time steps per window for adaptive opt.
 num_nodes = 8
 half_num_nodes = num_nodes / 2    
 
@@ -93,6 +95,7 @@ half_num_nodes = num_nodes / 2
 #use_strict = True
 #strict_slack = 1.4 # max 1.4*err on desired robot distrib must be true for trait distrib to be valid 
 match_margin = 0.02 # used when match=0 
+FSS = numts_window * delta_t # force steady state
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
@@ -217,7 +220,7 @@ for it in range(num_iter):
                 # optimize transition matrix for this distribution belief
                 transition_m_d[:,:,:,nd] = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init_slice_d, deploy_traits_desired,
                                                                     species_traits, t_max, max_rate,l_norm, match, optimizing_t=True,
-                                                                    force_steady_state=0.0)            
+                                                                    force_steady_state=FSS)            
                 
             # run micro-dstributed with multiple K (1 for each node): robots at same node only use same transition matrix
             robots_slice, deploy_robots_micro_slice = microscopic_sim_distrib(numts_window + 1, delta_t, robots_slice, deploy_robots_init_slice, transition_m_d)
