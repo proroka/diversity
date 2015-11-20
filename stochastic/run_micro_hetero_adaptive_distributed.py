@@ -67,7 +67,7 @@ def BuildLocalDistribution(B, node_index, neighbors):
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'M25'
+run = 'M29'
 
 load_data = True
 load_run = 'M18'
@@ -93,8 +93,8 @@ delta_t = 0.04 # time step
 max_rate = 1.0 # Maximum rate possible for K.
 
 # adaptive
-numts_window = 5  # number of time steps per window for adaptive opt.
-FSS = 0.0 #numts_window * delta_t # force steady state, et to 0.0 if not used
+numts_window = 20  # number of time steps per window for adaptive opt.
+FSS = numts_window * delta_t # force steady state, et to 0.0 if not used
 
 # graph
 num_nodes = 8
@@ -129,7 +129,7 @@ if not load_data:
         species_traits, rk, s = generate_Q(num_species, num_traits)
 else:
     species_traits = pickle.load(open(load_prefix+"species_traits.p", "rb"))
-    
+    print species_traits    
     
 
 list_Q.append(species_traits)
@@ -138,14 +138,15 @@ list_Q.append(species_traits)
 random_transition = random_transition_matrix(num_nodes, max_rate/2)  # Divide max_rate by 2 for the random matrix to give some slack.
 deploy_robots_init = np.random.randint(0, 100, size=(num_nodes, num_species))
 
-if (fix_init):
+if fix_init:
     deploy_robots_init[half_num_nodes:,:] = 0
     # normalize
     deploy_robots_init = deploy_robots_init * total_num_robots / np.sum(np.sum(deploy_robots_init, axis=0))
     sum_species = np.sum(deploy_robots_init,axis=0)
 if load_data:
     deploy_robots_init = pickle.load(open(load_prefix+"deploy_robots_init.p", "rb"))
-            
+    sum_species = np.sum(deploy_robots_init,axis=0)
+        
 # sample final desired trait distribution based on random transition matrix
 deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition, t_max*4., delta_t)
 if fix_final: 
@@ -205,8 +206,17 @@ adjacency_m = np.squeeze(np.asarray(adjacency_m))
 
 # find optimal transition matrix for plain micro
 init_transition_values = np.array([])
+
+print init_transition_values
+print adjacency_m
+print deploy_robots_init
+print deploy_traits_desired
+print species_traits
+sys.stdout.flush()
+
 transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init, deploy_traits_desired,
                                               species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=4.0)
+
 
 
 # -----------------------------------------------------------------------------#

@@ -28,13 +28,14 @@ from simple_orrank import *
 
 
 #load data
-run = 'M24'
+run = 'M28'
+match = 0
+
 prefix = "./data/" + run + "/" + run + '_'
 save_plots = False
 plot_graph = False
 
 delta_t = 0.04 # time step
-match = 0
 min_ratio = 0.1
 
 # Load data
