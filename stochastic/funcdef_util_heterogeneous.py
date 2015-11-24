@@ -170,96 +170,7 @@ def plot_traits_ratio_time_micmac(deploy_robots_micro, deploy_robots_mac, deploy
     #plt.show()  
     return fig
 
-# -----------------------------------------------------------------------------#
-# plot ratio of desired vs actual robot distribution
 
-def plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_adapt, deploy_robots_mac, 
-                                     deploy_traits_desired, transform, delta_t, match):
-    
-    fig = plt.figure()
-    
-    deploy_robots_mic = np.mean(deploy_robots_micro,3)
-    deploy_robots_adp = np.mean(deploy_robots_micro_adapt,3)
-    
-    num_tsteps = deploy_robots_mic.shape[1]
-    total_num_traits = np.sum(deploy_traits_desired)
-
-    #deploy_robots_micro[:,:,:,it]
-    num_it = deploy_robots_micro.shape[3]
-    diffmic_rat = np.zeros((num_tsteps, num_it))
-    diffadp_rat = np.zeros((num_tsteps, num_it))
-    diffmac_rat = np.zeros(num_tsteps)
-
-    for it in range(num_it):
-        deploy_robots_mic = deploy_robots_micro[:,:,:,it]
-        deploy_robots_adp = deploy_robots_micro_adapt[:,:,:,it]
-        for t in range(num_tsteps):
-            
-            if match==0:
-                traits = np.dot(deploy_robots_mic[:,t,:], transform)
-                diffmic = np.abs(np.minimum(traits - deploy_traits_desired, 0))
-                
-                traits = np.dot(deploy_robots_adp[:,t,:], transform)
-                diffadp = np.abs(np.minimum(traits - deploy_traits_desired, 0))
-                
-                traits = np.dot(deploy_robots_mac[:,t,:], transform)
-                diffmac = np.abs(np.minimum(traits - deploy_traits_desired, 0))
-            else:
-                traits = np.dot(deploy_robots_mic[:,t,:], transform)
-                diffmic = np.abs(traits - deploy_traits_desired)   
-                
-                traits = np.dot(deploy_robots_adp[:,t,:], transform)
-                diffadp = np.abs(traits - deploy_traits_desired)   
-                
-                traits = np.dot(deploy_robots_mac[:,t,:], transform)
-                diffmac = np.abs(traits - deploy_traits_desired)  
-           
-            if match:
-                ff = 2.0
-            else:
-                ff = 1.0
-           
-            diffmic_rat[t,it] = np.sum(diffmic) / (ff*total_num_traits)   
-            diffadp_rat[t,it] = np.sum(diffadp) / (ff*total_num_traits) 
-            diffmac_rat[t] = np.sum(diffmac) / (ff*total_num_traits)       
-        
-        
-    x = np.arange(0, num_tsteps) * delta_t
-
-    # plot micro with errorbars
-    m_mic = np.mean(diffmic_rat,1)
-    s_mic = np.std(diffmic_rat,1)
-    #y = smooth(m_mic)
-    y = m_mic.copy()    
-    l1 = plt.plot(x,y, label='Microscopic')
-    err_ax = np.arange(0,num_tsteps,int(num_tsteps/20))
-    plt.errorbar(x[err_ax],y[err_ax],s_mic[err_ax],fmt='o',markersize=3,color='black')
-    
-    # plot adaptive micro with errorbars
-    m_mic = np.mean(diffadp_rat,1)
-    s_mic = np.std(diffadp_rat,1)
-    #y = smooth(m_mic)
-    y = m_mic.copy()    
-    l2 = plt.plot(x,y, label='Adaptive micro.')
-    err_ax = np.arange(0,num_tsteps,int(num_tsteps/20))
-    plt.errorbar(x[err_ax],y[err_ax],s_mic[err_ax],fmt='o',markersize=3,color='black')
-   
-    
-    # plot macro
-    l3 = plt.plot(x,diffmac_rat, label='Macroscropic')
-
-    ax = plt.gca()
-    ax.set_ylim([0.0, 1.0]) 
-    plt.axes().set_aspect(num_tsteps*delta_t,'box') 
-
-    # plot legend and labels
-    plt.legend(loc='upper right', shadow=False, fontsize='large')     
-    plt.xlabel('Time [s]')    
-    plt.ylabel('Ratio of misplaced traits')
-       
-    #plt.show()  
-    return fig    
-    
 # -----------------------------------------------------------------------------#
 # get ratio of desired vs actual trait distrib for 1 run
 
@@ -719,9 +630,13 @@ def plot_traits_ratio_time_mic_distributed_multirun(diffmic_ratio, delta_t):
     
     num_hops = diffmic_ratio.shape[2]    
     num_tsteps = diffmic_ratio.shape[0]  
-        
-    fig = plt.figure()
-    colors = ['green', 'blue', 'cyan', 'magenta', 'red', 'yellow']    
+    ef = 6 # number of errorbars
+    logscale = True    
+    shaded = False
+    
+    fig = plt.figure(figsize=(5,5))
+    
+    colors = ['green', 'blue', 'red', '#00ffa5', '#ff6600']    
     
     for nh in range(num_hops):   
         x = np.arange(0, num_tsteps) * delta_t
@@ -733,26 +648,151 @@ def plot_traits_ratio_time_mic_distributed_multirun(diffmic_ratio, delta_t):
         lab = 'H-'+str(nh)
         col = colors[nh]
         l1 = plt.plot(x,m_mic, color=col, linewidth=2, label=lab)
-
-        err_ax = np.arange(0,num_tsteps,int(num_tsteps/10))+nh
-        
-        plt.errorbar(x[err_ax],m_mic[err_ax],s_mic[err_ax],fmt='o',markersize=3,color=col)
-
+        #err_ax = np.arange(0,num_tsteps,int(num_tsteps/ef))-2*nh
+        #plt.errorbar(x[err_ax],m_mic[err_ax],s_mic[err_ax],fmt='o',markersize=3,color=col)
         #plt.fill_between(x, m_mic+s_mic, m_mic-s_mic, facecolor=col, alpha=0.3)    
-
-
+    
+    for nh in range(num_hops):   
+        x = np.arange(0, num_tsteps) * delta_t
+    
+        # plot micro with errorbars
+        m_mic = np.mean(diffmic_ratio[:,:,nh],1)
+        s_mic = np.std(diffmic_ratio[:,:,nh],1)
+        col = colors[nh]
+        err_ax = np.arange(0,num_tsteps,int(num_tsteps/ef))#-2*nh
+        if shaded:
+            plt.fill_between(x, m_mic+s_mic, m_mic-s_mic, facecolor=col, alpha=0.3)    
+        else:
+            plt.errorbar(x[err_ax],m_mic[err_ax],s_mic[err_ax],fmt='o',markersize=3,color=col)
+            
     # plot legend and labels
     plt.legend(loc='upper right', shadow=False, fontsize='x-large')     
     plt.xlabel('Time [s]')    
     plt.ylabel('Ratio of misplaced traits')
         
-    #0plt.gca().set_aspect()
-    #plt.axis('equal') 
-    plt.axes().set_aspect(7.0,'box')    
+    ax = plt.gca()
+     
+    if logscale:
+        ax.set_yscale('log')
+   
+    ax.set_ylim([0.02, 1.0])  
+    
+    #plt.axes().set_aspect(7.0,'box')       
     
     #plt.show()  
     return fig
 
+# -----------------------------------------------------------------------------#
+# plot ratio of desired vs actual robot distribution
+
+def plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_adapt, deploy_robots_mac, 
+                                     deploy_traits_desired, transform, delta_t, match):
+    
+    colors = ['green', 'blue', 'red', '#00ffa5', '#ffa500'] 
+    ef = 6 # number of errorbars
+    shift = 0
+    logscale = True
+    shaded = False
+    
+    fig = plt.figure(figsize=(5,5))
+    
+    deploy_robots_mic = np.mean(deploy_robots_micro,3)
+    deploy_robots_adp = np.mean(deploy_robots_micro_adapt,3)
+    
+    num_tsteps = deploy_robots_mic.shape[1]
+    total_num_traits = np.sum(deploy_traits_desired)
+
+    #deploy_robots_micro[:,:,:,it]
+    num_it = deploy_robots_micro.shape[3]
+    diffmic_rat = np.zeros((num_tsteps, num_it))
+    diffadp_rat = np.zeros((num_tsteps, num_it))
+    diffmac_rat = np.zeros(num_tsteps)
+
+    for it in range(num_it):
+        deploy_robots_mic = deploy_robots_micro[:,:,:,it]
+        deploy_robots_adp = deploy_robots_micro_adapt[:,:,:,it]
+        for t in range(num_tsteps):
+            
+            if match==0:
+                traits = np.dot(deploy_robots_mic[:,t,:], transform)
+                diffmic = np.abs(np.minimum(traits - deploy_traits_desired, 0))
+                
+                traits = np.dot(deploy_robots_adp[:,t,:], transform)
+                diffadp = np.abs(np.minimum(traits - deploy_traits_desired, 0))
+                
+                traits = np.dot(deploy_robots_mac[:,t,:], transform)
+                diffmac = np.abs(np.minimum(traits - deploy_traits_desired, 0))
+            else:
+                traits = np.dot(deploy_robots_mic[:,t,:], transform)
+                diffmic = np.abs(traits - deploy_traits_desired)   
+                
+                traits = np.dot(deploy_robots_adp[:,t,:], transform)
+                diffadp = np.abs(traits - deploy_traits_desired)   
+                
+                traits = np.dot(deploy_robots_mac[:,t,:], transform)
+                diffmac = np.abs(traits - deploy_traits_desired)  
+           
+            if match:
+                ff = 2.0
+            else:
+                ff = 1.0
+           
+            diffmic_rat[t,it] = np.sum(diffmic) / (ff*total_num_traits)   
+            diffadp_rat[t,it] = np.sum(diffadp) / (ff*total_num_traits) 
+            diffmac_rat[t] = np.sum(diffmac) / (ff*total_num_traits)       
+        
+        
+    x = np.arange(0, num_tsteps) * delta_t
+
+    # plot micro with errorbars
+    m_mic = np.mean(diffmic_rat,1)
+    s_mic = np.std(diffmic_rat,1)
+    y = m_mic.copy()    
+    l1 = plt.plot(x,y, label='Microscopic',color=colors[0],linewidth=2)
+    
+    
+    
+    # plot adaptive micro with errorbars
+    m_mic_adp = np.mean(diffadp_rat,1)
+    s_mic_adp = np.std(diffadp_rat,1)
+    y = m_mic_adp.copy()    
+    l2 = plt.plot(x,y, label='Adaptive micro.',color=colors[1],linewidth=2)
+    
+       
+    # plot macro
+    l3 = plt.plot(x,diffmac_rat, label='Macroscropic',color=colors[2],linewidth=2)
+
+    # errorbars
+    err_ax = np.arange(0,num_tsteps,int(num_tsteps/ef))-shift
+    if shaded:    
+        plt.fill_between(x, m_mic+s_mic, m_mic-s_mic, facecolor=colors[0], alpha=0.3)   
+    else:
+        plt.errorbar(x[err_ax],m_mic[err_ax],s_mic[err_ax],fmt='o',markersize=3,color=colors[0])
+
+    err_ax = np.arange(0,num_tsteps,int(num_tsteps/ef))    
+    if shaded:
+        plt.fill_between(x, m_mic_adp+s_mic_adp, m_mic_adp-s_mic_adp, facecolor=colors[1], alpha=0.3)       
+    else:
+        plt.errorbar(x[err_ax],m_mic_adp[err_ax],s_mic_adp[err_ax],fmt='o',markersize=3,color=colors[1])
+
+    ax = plt.gca()
+     
+    if logscale:
+        ax.set_yscale('log')
+    else:
+        ax.set_ylim([0.0, 1.0])
+    
+    ax.set_ylim([0.01, 1.0])    
+    plt.axes().set_aspect(num_tsteps*delta_t,'box') 
+
+    # plot legend and labels
+    plt.legend(loc='upper right', shadow=False, fontsize='large')     
+    plt.xlabel('Time [s]')    
+    plt.ylabel('Ratio of misplaced traits')
+       
+    #plt.show()  
+    return fig    
+    
     
 # -----------------------------------------------------------------------------#
 # plot ratio (with input of ratios for all hops)
@@ -762,7 +802,8 @@ def plot_traits_ratio_time_micmic_multirun(diffmic_ratio, diffmic_adp_ratio, del
     num_tsteps = diffmic_ratio.shape[0]  
         
     fig = plt.figure()
-    colors = ['green', 'blue', 'red', 'cyan', 'magenta', 'yellow']    
+    
+    colors = ['green', 'blue', 'red', '#00ffa5', '#ffa500']    
     
      
     x = np.arange(0, num_tsteps) * delta_t
@@ -775,12 +816,12 @@ def plot_traits_ratio_time_micmic_multirun(diffmic_ratio, diffmic_adp_ratio, del
     s_mic_adp = np.std(diffmic_adp_ratio[:,:],1)    
     
     
-    col = 'blue'
+    col = colors[0]
     l1 = plt.plot(x,m_mic, color=col, linewidth=2, label='Micro')
     err_ax = np.arange(0,num_tsteps,int(num_tsteps/5))
     plt.fill_between(x, m_mic+s_mic, m_mic-s_mic, facecolor=col, alpha=0.3)    
 
-    col = 'green'
+    col = colors[1]
     l2 = plt.plot(x,m_mic_adp, color=col, linewidth=2, label='Micro Adapt.')
     err_ax = np.arange(0,num_tsteps,int(num_tsteps/5))
     plt.fill_between(x, m_mic_adp+s_mic_adp, m_mic_adp-s_mic_adp, facecolor=col, alpha=0.3)    

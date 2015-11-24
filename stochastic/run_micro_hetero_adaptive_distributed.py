@@ -67,9 +67,9 @@ def BuildLocalDistribution(B, node_index, neighbors):
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'M29'
+run = 'D79'
 
-load_data = True
+load_data = False
 load_run = 'M18'
 load_prefix = "./data/" + load_run + '/' + load_run + "_"
 
@@ -79,7 +79,7 @@ save_data = True
 fix_init = True
 fix_final = True
 
-distributed = False
+distributed = True
 
 tstart = time.strftime("%Y%m%d-%H%M%S")
 print str(run)
@@ -88,13 +88,13 @@ print "Time start: ", tstart
 # simulation parameters
 t_max = 8.0 # influences desired state and optmization of transition matrix
 t_max_sim = 7.0 # influences simulations and plotting
-num_iter = 50 # iterations of micro sim
+num_iter = 5 # iterations of micro sim
 delta_t = 0.04 # time step
 max_rate = 1.0 # Maximum rate possible for K.
 
 # adaptive
-numts_window = 20  # number of time steps per window for adaptive opt.
-FSS = numts_window * delta_t # force steady state, et to 0.0 if not used
+numts_window = 175  # number of time steps per window for adaptive opt.
+FSS = 2.0 #numts_window * delta_t # force steady state, et to 0.0 if not used
 
 # graph
 num_nodes = 8
@@ -103,7 +103,7 @@ half_num_nodes = num_nodes / 2
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
 match = 1 # 1: exact 0: at-least
-match_margin = 0.1 # used when match=0 
+match_margin = 0.2 # used when match=0 
 
 # robot species
 total_num_robots = 1000.0 
@@ -207,12 +207,12 @@ adjacency_m = np.squeeze(np.asarray(adjacency_m))
 # find optimal transition matrix for plain micro
 init_transition_values = np.array([])
 
-print init_transition_values
-print adjacency_m
-print deploy_robots_init
-print deploy_traits_desired
-print species_traits
-sys.stdout.flush()
+#print init_transition_values
+#print adjacency_m
+#print deploy_robots_init
+#print deploy_traits_desired
+#print species_traits
+#sys.stdout.flush()
 
 transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init, deploy_traits_desired,
                                               species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=4.0)

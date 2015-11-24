@@ -38,14 +38,22 @@ from simple_orrank import *
 #runs = ['D52','D53','D54', 'D55'] 
 #runs = ['D56','D57', 'D59'] # D58 not done yet
 #runs = ['D60','D62', 'D63'] # D61 not done yet 
-#runs = ['D64','D65','D66'] #D67 not done yet 
 
 #runs = ['D68','D69','D70','D71'] 
 
-# 50/50 init/final, numts=20, with SS
+# 50/50 init/final, numts=20, with SS -- results for TRO journal
 runs = ['D52','D53','D54', 'D55','D68','D69','D70','D71'] 
+endt = 20
 
-save_plots = False
+# numts=175 (non-adaptive), SS=1
+#runs = ['D73', 'D75']
+#endt = 2
+
+# numts=175 (non-adaptive), SS=1
+#runs = ['D76', 'D77']
+#endt = 2
+
+save_plots = True
 plot_graph = False
 
 delta_t = 0.04 # time step
@@ -76,19 +84,23 @@ for i in range(len(runs)):
 # concatenate arrays
 diff_ratio_mic_stack = np.concatenate(diff_ratio_mic_list, axis=1)
 
-fig = plot_traits_ratio_time_mic_distributed_multirun(diff_ratio_mic_stack, delta_t)
+fig1 = plot_traits_ratio_time_mic_distributed_multirun(diff_ratio_mic_stack, delta_t)
 
   
 
 #------------------------------------------
 # Boxplots
 
-df = diff_ratio_final = diff_ratio_mic_stack[-20,:,:]
+df = diff_ratio_final = diff_ratio_mic_stack[-endt,:,:]
 
-fig = plt.figure()
+colors = ['green', 'blue', 'red', '#00ffa5', '#ff6600']  
+
+fig2 = plt.figure()
 ax = plt.gca()
 x = range(df.shape[1])
-bp = plt.boxplot(df, positions=x, widths=0.2, notch=0, sym='+', vert=1, whis=1.5) 
+bp = plt.boxplot(df, positions=x, widths=0.2, notch=0, sym='+', vert=1, whis=1.5, patch_artist=1) 
+for patch, color in zip(bp['boxes'], colors):
+    patch.set_facecolor(color)
 
 ymin = 0 
 ymax = 0.15
@@ -102,5 +114,6 @@ plt.ylabel('Ratio of misplaced traits')
 plt.show()
 
 
-
+fig1.savefig('./plots/'+'traits_ratio_hops.eps') 
+fig2.savefig('./plots/'+'traits_ratio_boxplot_hops.eps') 
 

@@ -28,11 +28,15 @@ from simple_orrank import *
 
 
 #load data
-run = 'M28'
-match = 0
+run = 'M30'
+match = 1
+if (run =='M29'):
+    match = 1
+elif run == 'M30':
+    match=0
 
 prefix = "./data/" + run + "/" + run + '_'
-save_plots = False
+save_plots = True
 plot_graph = False
 
 delta_t = 0.04 # time step
@@ -58,11 +62,16 @@ fig = plot_traits_ratio_time_micmicmac(deploy_robots_micro, deploy_robots_micro_
 #plt.axes().set_aspect(0.65,'box')
 plt.show()
 
-
-
+if run == 'M29':
+    fig.savefig('./plots/traits_ratio_mic_G1.eps') 
+elif run == 'M30':
+    fig.savefig('./plots/traits_ratio_mic_G2.eps') 
+    
 #---------------------------------------------------
 # plot graph
 if plot_graph:
     plt.axis('equal')
     fig1 = nxmod.draw_circular(deploy_traits_init, graph,linewidths=3)
     plt.show()
+    
+   
