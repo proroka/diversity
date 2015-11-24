@@ -4,3 +4,5 @@ stochastic/data/*
 stochastic/plots/*
 testing/*
 stochastic/bak/*
+stochastic/old
+stochastic/const/*
