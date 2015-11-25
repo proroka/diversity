@@ -18,11 +18,18 @@ import pickle
 import time
 
 # my modules
+sys.path.append('../../plotting')
+sys.path.append('../../utilities')
+sys.path.append('../..')
+
 from optimize_transition_matrix_hetero import *
 from funcdef_macro_heterogeneous import *
 from funcdef_micro_heterogeneous import *
 from funcdef_util_heterogeneous import *
 import funcdef_draw_network as nxmod
+
+
+##-------------------------------
 
 # Extra control vars.
 save_movie = False
@@ -31,57 +38,89 @@ show_movie = False
 show_plots = True
 remove_setup_time = True
 remove_last_part = True
-save_data = True
+save_data = False
+
 
 ##-------------------------------
-# Two experiment sets: rank-1 and rank-2
-# rank 1: 23, 26
-# rank 2: 25, 22
-run = 22 # choose run
-##-------------------------------
-
 
 # Set these variables as in optimize_for_boats.py
 match = 1
 l_norm = 2
 
+nspecies = 3
+ntraits = 4
+
+# Choose 1 out of 3 segments for evolution plot
+segment = 1
+
+# Matlab run file
+mat_run = 1
+
+#---------------------------------------------------
+
+# Version of code for TRO
+
+run = "B01"
+
+plot_robots = False
+
+prefix = "../../data/" + run + "/" + run + "_evolution_"
+
+species_traits = pickle.load(open(prefix+"st.p", "rb"))
+
+# this contains the 3 time segments
+deploy_robots = pickle.load(open(prefix+"drev.p", "rb"))
+
+graph = pickle.load(open(prefix+"graph.p", "rb"))
+
+deploy_traits_init_0 = pickle.load(open(prefix+"ti_0.p", "rb"))
+deploy_traits_desired_0 = pickle.load(open(prefix+"td_0.p", "rb"))
+
+deploy_traits_init_1 = pickle.load(open(prefix+"ti_1.p", "rb"))
+deploy_traits_desired_1 = pickle.load(open(prefix+"td_1.p", "rb"))
+
+deploy_traits_init_2 = pickle.load(open(prefix+"ti_2.p", "rb"))
+deploy_traits_desired_2 = pickle.load(open(prefix+"td_2.p", "rb"))
+
+
+#---------------------------------------------------
 # Set the initial robot distribution used.
-deploy_robots_init = np.array([[2, 0],
-                               [0, 2],
-                               [0, 0],
-                               [0, 0]])
 
-# Set the final robot distribution used.
-deploy_robots_final = np.array([[0, 0],
-                                [0, 0],
-                                [0, 2],
-                                [2, 0]])
 
-# Set the species-trait matrix used.
-if run == 25 or run == 22:
-    # Set the matlab workspace to load.
-    if run==25:
-        matlab_workspace_file = 'data/boats/run_25_all_data.mat'
-    else:
-        matlab_workspace_file = 'data/boats/run_22_all_data.mat'
-    species_traits = np.array([[1, 0],
-                               [0, 1]])
-elif run == 23 or run == 26:
-    # Set the matlab workspace to load.
-    if run==23:    
-        matlab_workspace_file = 'data/boats/run_23_all_data.mat'
-    else:
-        matlab_workspace_file = 'data/boats/run_26_all_data.mat'
-    species_traits = np.array([[1, 0],
-                               [1, 0]])
+time_steps = deploy_robots.shape[1]
+ind = time_steps / 3
+
+deploy_robots_init_0 = deploy_robots[:,0,:]
+deploy_robots_final_0 = deploy_robots[:,ind,:]
+
+deploy_robots_init_1 = deploy_robots[:,ind,:]
+deploy_robots_final_1 = deploy_robots[:,2*ind-1,:]
+
+deploy_robots_init_2= deploy_robots[:,2*ind,:]
+deploy_robots_final_2 = deploy_robots[:,3*ind-1,:]
+
+matlab_workspace_file = '../matlab/data/run_' + str(mat_run) + '_all_data.mat'
+
 
 ####################
 # Rest of the code #
 ####################
 
+if segment == 1:
+    deploy_robots_init = deploy_robots_init_0
+    deploy_robots_final = deploy_robots_final_0
+elif segment == 2:
+    deploy_robots_init = deploy_robots_init_1
+    deploy_robots_final = deploy_robots_final_1    
+elif segment == 3:
+    deploy_robots_init = deploy_robots_init_2
+    deploy_robots_final = deploy_robots_final_2    
+    
+    
+    
 print 'Number of robots =', np.sum(deploy_robots_init)
 print 'Number of robots per species =', np.sum(deploy_robots_init, axis=0)
-assert np.sum(np.abs(np.sum(deploy_robots_init, axis=0) - np.sum(deploy_robots_final, axis=0))) == 0, 'Number of robots is different between initial and final distribution'
+#assert np.sum(np.abs(np.sum(deploy_robots_init, axis=0) - np.sum(deploy_robots_final, axis=0))) == 0, 'Number of robots is different between initial and final distribution'
 
 # Get trait distributions.
 deploy_traits_init = np.dot(deploy_robots_init, species_traits)
@@ -96,8 +135,9 @@ ntasks = task_sites.shape[0]
 
 boats_species = np.squeeze(matlab_data['boats_species']) - 1
 nboats = boats_species.shape[0]
-nspecies = matlab_data['nspecies']
-ntraits = np.max(boats_species) + 1
+#nspecies = np.max(boats_species) + 1
+#matlab_data['nspecies']
+#ntraits = np.max(boats_species) + 1
 
 # Quick sanity checks.
 assert deploy_robots_init.shape[0] == ntasks, 'Wrong number of tasks'
@@ -107,8 +147,8 @@ assert deploy_robots_final.shape[1] == nspecies, 'Wrong number of species'
 assert species_traits.shape[0] == nspecies, 'Wrong number of species'
 assert species_traits.shape[1] == ntraits, 'Wrong number of traits'
 
-#t_max = matlab_data['max_time']
-t_max = 400 #set so that all same
+t_max = matlab_data['max_time']
+#t_max = 400 #set so that all same
 delta_t = matlab_data['dt']
 setup_time = matlab_data['setup_time']
 
@@ -165,7 +205,7 @@ if show_plots:
 
     boats_line = []
     boats_current_line = []
-    colors = ['b', 'g']
+    colors = ['b', 'g', 'r', 'c']
     for i in range(nspecies):
         boats_line.append(ax.plot([], [], colors[i] + '-', lw=1)[0])
         boats_current_line.append(ax.plot([], [], colors[i] + 'o', lw=1)[0])
@@ -229,10 +269,11 @@ if show_plots:
     plt.show()
     
     if save_data:
-        prefix = 'data/boats/run_' + str(run) + '_'
-        pickle.dump(delta_t, open("delta_t", "wb"))
-        pickle.dump(t_max, open("t_max.p", "wb"))
-        pickle.dump(match, open("match.p", "wb"))
+        prefix = 'processed_run_' + str(run) + '_'
+        
+        #pickle.dump(delta_t, open("delta_t", "wb"))
+        #pickle.dump(t_max, open("t_max.p", "wb"))
+        #pickle.dump(match, open("match.p", "wb"))
         pickle.dump(K, open(prefix+"K.p", "wb"))
         pickle.dump(deploy_robots_init, open(prefix+"deploy_robots_init.p", "wb"))
         pickle.dump(deploy_boats, open(prefix+"deploy_boats.p", "wb"))
