@@ -34,10 +34,10 @@ import funcdef_draw_network as nxmod
 # Extra control vars.
 save_movie = False
 movie_filename = 'run.mp4'
-show_movie = False
+show_movie = True 
 show_plots = True
-remove_setup_time = True
-remove_last_part = True
+remove_setup_time = False
+remove_last_part = False
 save_data = False
 
 
@@ -54,7 +54,7 @@ ntraits = 4
 segment = 1
 
 # Matlab run file
-mat_run = 1
+mat_run = 3
 
 #---------------------------------------------------
 
@@ -125,7 +125,7 @@ print 'Number of robots per species =', np.sum(deploy_robots_init, axis=0)
 # Get trait distributions.
 deploy_traits_init = np.dot(deploy_robots_init, species_traits)
 deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
-
+#deploy_traits_init
 
 # Load mat file and get relevant matrices.
 matlab_data = sp.io.loadmat(matlab_workspace_file)
@@ -250,19 +250,24 @@ if show_plots:
                 diffmac = np.abs(np.minimum(traits - deploy_traits_desired, 0))
             else:
                 traits = np.dot(deploy_robots[:,t,:], transform)
-                diffmac = np.abs(traits - deploy_traits_desired)
-            diffmac_rat[t] = np.sum(diffmac) / total_num_traits
+                diffmac = (np.abs(traits - deploy_traits_desired)) / 2.0
+            diffmac_rat[t] = np.sum(diffmac) / (total_num_traits)
         x = np.squeeze(np.arange(0, num_tsteps) * delta_t)
         l2 = ax.plot(x, diffmac_rat, color=color, linewidth=2, label=label)
-        plt.xlim([0,400])
+        #plt.xlim([0,400])
         return fig
 
     # Simulate macro.
     fig = plt.figure()
     ax = fig.add_subplot(111, autoscale_on=True)
     deploy_robots_euler = run_euler_integration(deploy_robots_init, K, t_max, delta_t)
-    plot_traits_ratio_time(ax, deploy_robots_euler, deploy_traits_desired, species_traits, delta_t, match, 'blue', 'Macroscopic')
-    plot_traits_ratio_time(ax, deploy_boats, deploy_traits_desired, species_traits, delta_t, match, 'green', 'Boats')
+    #plot_traits_ratio_time(ax, deploy_robots_euler, deploy_traits_desired, species_traits, delta_t, match, 'blue', 'Macroscopic')
+    #plot_traits_ratio_time(ax, deploy_boats, deploy_traits_desired, species_traits, delta_t, match, 'green', 'Boats')
+    
+    plot_traits_ratio_time(ax, deploy_robots_euler, deploy_traits_init, species_traits, delta_t, match, 'blue', 'Macroscopic')
+    plot_traits_ratio_time(ax, deploy_boats, deploy_traits_init, species_traits, delta_t, match, 'green', 'Boats')
+    
+    
     ax.set_xlabel('Time [s]')
     ax.set_ylabel('Ratio of misplaced traits')
     plt.legend()
