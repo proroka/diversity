@@ -28,7 +28,7 @@ run = "B01"
 
 plot_robots = False
 
-prefix = "./data/" + run + "_evolution_"
+prefix = "./data/" + run + "/" + run + "_evolution_"
 
 transform = pickle.load(open(prefix+"st.p", "rb"))
 deploy_robots = pickle.load(open(prefix+"drev.p", "rb"))
