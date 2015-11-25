@@ -13,31 +13,16 @@
 clear 
 file_time = datestr(clock);
 
-% 5: 1 task, 4 robs
-% 6: 4 tasks, 4  robs, failed at end
-% 7: 4 tasks, 4  robs, S=2
-% 8: 4 tasks, 4  robs, S=2, changed init pos to be spread out over 1 and 2
-% 9: fixed Ks, transposing; same as run 8
-% 10: longer, less avoidance, same as 9
-% 11: no avoidance
-% 12:
-run = 29;
+run = 1;
 
 save_data = true;
 ws_filename = strcat('run_',int2str(run),'_all_data.mat'); %strcat(file_time,'_data.mat');
 vars_filename = strcat('run_',int2str(run),'_vars_data.mat'); %strcat(file_time,'_pos.mat');
  
 % Real or simulated.
-simulate = false;
+simulate = true;
 make_movie = false;
-fix_Ks = false;
-% which case?
-N4Q1 = 1;
-N4Q2 = 0;
-N7Q1 = 0;
-N6Q1 = 0;
-N41Q1 = 0;
-N41Q2 = 0;
+fix_Ks = true;
 
 % Constants.
 max_time = 400;  % in seconds.
@@ -54,14 +39,11 @@ task_radius = 0.25;
 arena_size = 3;
 
 % initialize boats
-nboats = 1; % overloaded if ~simulate
+nboats = 10; % overloaded if ~simulate
 nspecies = 2;
 ntasks = 4; % currently works for 1,2,3,4
 if ~simulate
     % Setup boats.
-    %boat_ids = [101, 102, 103, 104, 105]
-    %boat_ids = [104, 101, 106, 103, 105, 112, 113];
-    %boat_hc_ids = [4, 1, 6, 3, 5, 12, 13];
     boat_ids = [104, 101, 103, 102];
     boat_hc_ids = [4, 1, 3, 2];
     nboats = length(boat_ids)
@@ -112,71 +94,6 @@ if fix_Ks
         K{2} = [-0.01, 0.01; 0.01, -0.01];
     end
 else % 2 species, 4 tasks; from init 1,2 to final 3,4
-    if N4Q1
-    %  Q is complementary; N=4
-    K{1} = [-0.02 0.0 0.0 0.0; ...
-        0.01 -0.01 0.0 0.0; ...
-        0.01 0.0 -0.01 0.0; ...
-        0.0 0.01 0.01 -0.0];
-    K{2} = [-0.01 0.01 0.0 0.0; ...
-        0.0 -0.02 0.0 0.0; ...
-        0.01 0.0 -0.0 0.01; ...
-        0.0 0.01 0.0 -0.01];
-    end
-    if N4Q2
-    % Q is redundant; N=4
-    K{1} = [-0.0193031387543 0.00929474771883 0.0 0.0; ...
-        0.00930313875426 -0.0192947477188 0.0 0.0; ...
-        0.01 0.0 -0.00799835383383 0.00840937795305; ...
-        0.0 0.01 0.00799835383383 -0.00840937795305];
-    K{2} = [-0.0179431595788 0.00796603329173 0.0 0.0; ...
-        0.0079431595788 -0.0179660332917 0.0 0.0; ...
-        0.01 0.0 -0.00886413867022 0.0084308753447; ...
-        0.0 0.01 0.00886413867022 -0.0084308753447];
-    end
-    if N7Q1
-        K{1} = [-0.02 0.0 0.0 0.0; ...
-        0.01 -0.01 0.0 0.0; ...
-        0.01 0.0 -0.01 0.0; ...
-        0.0 0.01 0.01 -0.0];
-        K{2} = [-0.01 0.00970463237956 0.0 0.0; ...
-        0.0 -0.0197046323796 0.0 0.0; ...
-        0.01 0.0 -0.0 0.01; ...
-        0.0 0.01 0.0 -0.01];
-
-    end
-    if N41Q1
-    K{1} = [-0.02 0 0.0 0.0; ...
-        0.01 -0.010 0.0 0.0; ...
-        0.01 0.0 -0.01 0.0; ...
-        0.0 0.01 0.01 -0.0];
-K{2} = [-0.0106009541946 0.01 0.0 0.0; ...
-        0.000600954194627 -0.018087591233 0.0 0.0; ...
-        0.01 0.0 -0.0 0.0085620560548; ...
-        0.0 0.00808759123296 0.0 -0.0085620560548];
-    end
-    if N41Q2
-
-K{1} = [-0.02 0.00175466480543 0.0 0.0; ...
-        0.01 -0.0117546648054 0.0 0.0; ...
-        0.01 0.0 -0.01 0.00327847760618; ...
-        0.0 0.01 0.01 -0.00327847760618];
-K{2} = [-0.018334612209 0.0 0.0 0.0; ...
-        0.00844838046167 -0.01 0.0 0.0; ...
-        0.00988623174729 0.0 -0.00874322218269 0.0; ...
-        0.0 0.01 0.00874322218269 -0.0];
-    end
-    if N6Q1
-        K{1} = [-0.02 3.13699471898e-06 1.178271887e-05 0.0; ...
-        0.01 -0.0100031369947 0.0 0.0; ...
-        0.01 0.0 -0.0100117827189 0.0; ...
-        0.0 0.01 0.01 -0.0];
-K{2} = [-0.0100476568277 0.01 0.0 0.0; ...
-        4.76568276985e-05 -0.02 0.0 0.0; ...
-        0.01 0.0 -0.0 0.0099941501237; ...
-        0.0 0.01 0.0 -0.0099941501237];
-
-    end
 end
 
 
@@ -198,9 +115,6 @@ else
     boats_species(2) = 1;
     boats_species(3) = 2;
     boats_species(4) = 2;
-    %boats_species(5) = 2;
-    %boats_species(6) = 2;
-    %boats_species(7) = 2;
 end
 
 % Setup task sites.
@@ -373,7 +287,7 @@ end
 % save workspace
 if save_data
     save(ws_filename);
-    save(vars_filename,'boats','boats_pos','task_sites','boats_task','T', 'dt', 'boats_species');
+    save(vars_filename,'boats_pos','task_sites','boats_task','T', 'dt', 'boats_species');
 end
 
 figure_handle = figure(1);
