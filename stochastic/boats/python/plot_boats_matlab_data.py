@@ -179,16 +179,40 @@ for i in range(nboats):
 
 
 # Compute per timesteps the number of boats in each task.
-deploy_boats = np.zeros((ntasks, valid_timesteps, nspecies))
-ntimesteps = boats_pos.shape[1]
-print 'Number of actual time-steps =', ntimesteps
-for t in range(ntimesteps):
+#deploy_boats = np.zeros((ntasks, valid_timesteps, nspecies))
+#ntimesteps = boats_pos.shape[1]
+#print 'Number of actual time-steps =', ntimesteps
+#for t in range(ntimesteps):
+#    positions = boats_pos[:, t, :]
+#    for b in range(nboats):
+#        position = positions[b, :]
+#        closest_task = np.argmin(np.sum(np.square(task_sites - position), axis=1))
+#        species = boats_species[b]
+#        deploy_boats[closest_task, t, species] += 1
+
+
+distance_threshold = 0.1
+# Get initial task as the closest one.
+closest_task = []
+t = 0
+positions = boats_pos[:, t, :]
+for b in range(nboats):
+    position = positions[b, :]
+    closest_task.append(np.argmin(np.sum(np.square(task_sites - position), axis=1)))
+    species = boats_species[b]
+    deploy_boats[closest_task[b], t, species] += 1
+# Only switch when distance to new task is small enough.
+for t in range(1, ntimesteps):
     positions = boats_pos[:, t, :]
     for b in range(nboats):
         position = positions[b, :]
-        closest_task = np.argmin(np.sum(np.square(task_sites - position), axis=1))
+        distance_to_closest = np.sqrt(np.min((np.sum(np.square(task_sites - position), axis=1)))
+        if distance_to_closest < distance_threshold:
+            closest_task[b] = np.argmin(np.sum(np.square(task_sites - position), axis=1))
         species = boats_species[b]
-        deploy_boats[closest_task, t, species] += 1
+        deploy_boats[closest_task[b], t, species] += 1
+
+
 
 #################
 # Plotting code #
