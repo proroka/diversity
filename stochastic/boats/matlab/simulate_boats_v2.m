@@ -9,7 +9,7 @@
 clear
 file_time = datestr(clock);
 
-run = 1;
+run = 8;
 
 % from the trait evolution data, choose which time slot [1,2,3]
 slot = 1;
@@ -21,8 +21,8 @@ save_data = true;
 ws_filename = strcat('run_',int2str(run),'_all_data.mat'); %strcat(file_time,'_data.mat');
 vars_filename = strcat('run_',int2str(run),'_vars_data.mat'); %strcat(file_time,'_pos.mat');
 
-% Real or simulated.
 make_movie = false;
+plot_on = false;
 
 % Constants.
 setup_time = 60;  % Time during which no task switching is allowed (<= max_time).
@@ -359,10 +359,11 @@ end
 
 % save workspace
 if save_data
-    save('-6', ws_filename);
-    save('-6', vars_filename,'boats_pos','task_sites','boats_task','T', 'dt', 'boats_species');
+    save(ws_filename);
+    save(vars_filename,'boats_pos','task_sites','boats_task','T', 'dt', 'boats_species');
 end
 
-figure_handle = figure(1);
-plot_arena(figure_handle, task_sites, boats_pos, squeeze(boats_task(:,end,:)), make_movie);
-
+if plot_on
+    figure_handle = figure(1);
+    plot_arena(figure_handle, task_sites, boats_pos, squeeze(boats_task(:,end,:)), make_movie);
+end
