@@ -34,11 +34,11 @@ import funcdef_draw_network as nxmod
 # Extra control vars.
 save_movie = False
 movie_filename = 'run.mp4'
-show_movie = True 
+show_movie = False
 show_plots = True
-remove_setup_time = False
-remove_last_part = False
+remove_setup_time = True
 save_data = False
+use_error_bars = False
 
 
 ##-------------------------------
@@ -53,8 +53,9 @@ ntraits = 4
 # Choose 1 out of 3 segments for evolution plot
 segment = 1
 
-# Matlab run file
-mat_run = 3
+# Matlab run files
+# Specify multiple runs if desired.
+mat_run = [1, 2]
 
 #---------------------------------------------------
 
@@ -99,118 +100,105 @@ deploy_robots_final_1 = deploy_robots[:,2*ind-1,:]
 deploy_robots_init_2= deploy_robots[:,2*ind,:]
 deploy_robots_final_2 = deploy_robots[:,3*ind-1,:]
 
-matlab_workspace_file = '../matlab/data/run_' + str(mat_run) + '_all_data.mat'
+# Open first run for getting most variables.
+matlab_workspace_file = '../matlab/data/run_' + str(mat_run[0]) + '_all_data.mat'
 
 
 ####################
 # Rest of the code #
 ####################
 
-if segment == 1:
-    deploy_robots_init = deploy_robots_init_0
-    deploy_robots_final = deploy_robots_final_0
-elif segment == 2:
-    deploy_robots_init = deploy_robots_init_1
-    deploy_robots_final = deploy_robots_final_1    
-elif segment == 3:
-    deploy_robots_init = deploy_robots_init_2
-    deploy_robots_final = deploy_robots_final_2    
-    
-    
-    
-print 'Number of robots =', np.sum(deploy_robots_init)
-print 'Number of robots per species =', np.sum(deploy_robots_init, axis=0)
-#assert np.sum(np.abs(np.sum(deploy_robots_init, axis=0) - np.sum(deploy_robots_final, axis=0))) == 0, 'Number of robots is different between initial and final distribution'
-
-# Get trait distributions.
-deploy_traits_init = np.dot(deploy_robots_init, species_traits)
-deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
-#deploy_traits_init
-
 # Load mat file and get relevant matrices.
 matlab_data = sp.io.loadmat(matlab_workspace_file)
 
 task_sites = matlab_data['task_sites']
 ntasks = task_sites.shape[0]
+nslots = matlab_data['nslots']
+auto_advance = matlab_data['auto_advance']
 
 boats_species = np.squeeze(matlab_data['boats_species']) - 1
 nboats = boats_species.shape[0]
-#nspecies = np.max(boats_species) + 1
-#matlab_data['nspecies']
-#ntraits = np.max(boats_species) + 1
-
-# Quick sanity checks.
-assert deploy_robots_init.shape[0] == ntasks, 'Wrong number of tasks'
-assert deploy_robots_init.shape[1] == nspecies, 'Wrong number of species'
-assert deploy_robots_final.shape[0] == ntasks, 'Wrong number of tasks'
-assert deploy_robots_final.shape[1] == nspecies, 'Wrong number of species'
-assert species_traits.shape[0] == nspecies, 'Wrong number of species'
-assert species_traits.shape[1] == ntraits, 'Wrong number of traits'
-
-t_max = matlab_data['max_time']
-#t_max = 400 #set so that all same
-delta_t = matlab_data['dt']
+delta_t = matlab_data['dt'][0][0]
 setup_time = matlab_data['setup_time']
+t_max = matlab_data['max_time'] - (setup_time if remove_setup_time else 0)
+
+if auto_advance:
+    segment == 1
+    switching_steps = matlab_data['switching_steps'][0] - 1
+    if remove_setup_time:
+        switching_steps -= round(setup_time / delta_t)
+
+deploy_robots_init = [
+    deploy_robots_init_0,
+    deploy_robots_init_1,
+    deploy_robots_init_2,
+]
+deploy_robots_final = [
+    deploy_robots_final_0,
+    deploy_robots_final_1,
+    deploy_robots_final_2,
+]
+
+print 'Number of robots =', np.sum(deploy_robots_init[0])
+print 'Number of robots per species =', np.sum(deploy_robots_init[0], axis=0)
+
+# Get trait distributions.
+deploy_traits_init = []
+deploy_traits_desired = []
+for di, df in zip(deploy_robots_init, deploy_robots_final):
+    deploy_traits_init.append(np.dot(di, species_traits))
+    deploy_traits_desired.append(np.dot(df, species_traits))
 
 # Build K as in the python code.
-K = np.empty((ntasks, ntasks, nspecies))
-for s, k in enumerate(matlab_data['K']):
-    K[:, :, s] = k[0]
+Ks = []
+for i, ks in enumerate(matlab_data['K']):
+    Ks.append(np.empty((ntasks, ntasks, nspecies)))
+    for s, k in enumerate(ks[0]):
+        Ks[-1][:, :, s] = k[0]
 
 arena_size = matlab_data['arena_size'][0][0]
 task_radius = matlab_data['task_radius']
-boats_pos = matlab_data['boats_pos']
-print 'Number of time-steps =', boats_pos.shape[1]
-# Remove setup-time.
-if remove_setup_time:
-    boats_pos = boats_pos[:, int(setup_time / delta_t):, :]
-# Smooth boats positions.
-valid_timesteps = boats_pos.shape[1]
-# Remove end of run (if Ctrl-C was pressed for example).
-if remove_last_part:
-    for t in range(boats_pos.shape[1]):
-        if np.all(boats_pos[:, t, :] == 0.):
-            valid_timesteps = t
-            break
-    boats_pos = boats_pos[:, :valid_timesteps, :]
-for i in range(nboats):
-    boats_pos[i, :, 0] = sp.ndimage.filters.median_filter(boats_pos[i, :, 0], size=10, mode='reflect')
-    boats_pos[i, :, 1] = sp.ndimage.filters.median_filter(boats_pos[i, :, 1], size=10, mode='reflect')
 
+deploy_boats = []
+for r in mat_run:
+    matlab_workspace_file = '../matlab/data/run_' + str(r) + '_all_data.mat'
+    matlab_data = sp.io.loadmat(matlab_workspace_file)
+    boats_pos = matlab_data['boats_pos']
+    print 'Number of time-steps =', boats_pos.shape[1]
 
-# Compute per timesteps the number of boats in each task.
-#deploy_boats = np.zeros((ntasks, valid_timesteps, nspecies))
-#ntimesteps = boats_pos.shape[1]
-#print 'Number of actual time-steps =', ntimesteps
-#for t in range(ntimesteps):
-#    positions = boats_pos[:, t, :]
-#    for b in range(nboats):
-#        position = positions[b, :]
-#        closest_task = np.argmin(np.sum(np.square(task_sites - position), axis=1))
-#        species = boats_species[b]
-#        deploy_boats[closest_task, t, species] += 1
+    # Remove setup-time.
+    if remove_setup_time:
+        boats_pos = boats_pos[:, int(setup_time / delta_t):, :]
+    # Smooth boats positions.
+    valid_timesteps = boats_pos.shape[1]
+    for i in range(nboats):
+        boats_pos[i, :, 0] = sp.ndimage.filters.median_filter(boats_pos[i, :, 0], size=10, mode='reflect')
+        boats_pos[i, :, 1] = sp.ndimage.filters.median_filter(boats_pos[i, :, 1], size=10, mode='reflect')
+    # Compute per timesteps the number of boats in each task.
+    deploy_boats.append(np.zeros((ntasks, valid_timesteps, nspecies)))
+    ntimesteps = boats_pos.shape[1]
+    print 'Number of actual time-steps =', ntimesteps
 
-
-distance_threshold = 0.1
-# Get initial task as the closest one.
-closest_task = []
-t = 0
-positions = boats_pos[:, t, :]
-for b in range(nboats):
-    position = positions[b, :]
-    closest_task.append(np.argmin(np.sum(np.square(task_sites - position), axis=1)))
-    species = boats_species[b]
-    deploy_boats[closest_task[b], t, species] += 1
-# Only switch when distance to new task is small enough.
-for t in range(1, ntimesteps):
+    distance_threshold = 0.1
+    # Get initial task as the closest one.
+    closest_task = []
+    t = 0
     positions = boats_pos[:, t, :]
     for b in range(nboats):
         position = positions[b, :]
-        distance_to_closest = np.sqrt(np.min((np.sum(np.square(task_sites - position), axis=1)))
-        if distance_to_closest < distance_threshold:
-            closest_task[b] = np.argmin(np.sum(np.square(task_sites - position), axis=1))
+        closest_task.append(np.argmin(np.sum(np.square(task_sites - position), axis=1)))
         species = boats_species[b]
-        deploy_boats[closest_task[b], t, species] += 1
+        deploy_boats[-1][closest_task[b], t, species] += 1
+    # Only switch when distance to new task is small enough.
+    for t in range(1, ntimesteps):
+        positions = boats_pos[:, t, :]
+        for b in range(nboats):
+            position = positions[b, :]
+            distance_to_closest = np.sqrt(np.min((np.sum(np.square(task_sites - position), axis=1))))
+            if distance_to_closest < distance_threshold:
+                closest_task[b] = np.argmin(np.sum(np.square(task_sites - position), axis=1))
+            species = boats_species[b]
+            deploy_boats[-1][closest_task[b], t, species] += 1
 
 
 
@@ -264,7 +252,7 @@ if show_plots:
     # Plot macroscopic model on top of boat #
     #########################################
 
-    def plot_traits_ratio_time(ax, deploy_robots, deploy_traits_desired, transform, delta_t, match, color, label):
+    def compute_ratio_error(deploy_robots, deploy_traits_desired, transform, delta_t, match):
         num_tsteps = deploy_robots.shape[1]
         total_num_traits = np.sum(deploy_traits_desired)
         diffmac_rat = np.zeros(num_tsteps)
@@ -277,29 +265,59 @@ if show_plots:
                 diffmac = (np.abs(traits - deploy_traits_desired)) / 2.0
             diffmac_rat[t] = np.sum(diffmac) / (total_num_traits)
         x = np.squeeze(np.arange(0, num_tsteps) * delta_t)
-        l2 = ax.plot(x, diffmac_rat, color=color, linewidth=2, label=label)
-        #plt.xlim([0,400])
+        return x, diffmac_rat
+
+    def plot_traits_ratio_time(ax, x, diffmac_rat, color, label=None):
+        ax.plot(x, diffmac_rat, color=color, linewidth=2, label=label)
         return fig
 
-    # Simulate macro.
     fig = plt.figure()
     ax = fig.add_subplot(111, autoscale_on=True)
-    deploy_robots_euler = run_euler_integration(deploy_robots_init, K, t_max, delta_t)
-    #plot_traits_ratio_time(ax, deploy_robots_euler, deploy_traits_desired, species_traits, delta_t, match, 'blue', 'Macroscopic')
-    #plot_traits_ratio_time(ax, deploy_boats, deploy_traits_desired, species_traits, delta_t, match, 'green', 'Boats')
-    
-    plot_traits_ratio_time(ax, deploy_robots_euler, deploy_traits_init, species_traits, delta_t, match, 'blue', 'Macroscopic')
-    plot_traits_ratio_time(ax, deploy_boats, deploy_traits_init, species_traits, delta_t, match, 'green', 'Boats')
-    
-    
+
+    if auto_advance:
+        for i in range(nslots):
+            start_step = max(0, switching_steps[i])
+            end_step = min(t_max, switching_steps[i + 1])
+            duration = (end_step - start_step) * delta_t
+            deploy_robots_euler = run_euler_integration(deploy_robots_init[i], Ks[i], duration, delta_t)
+            x_mac, rat_mac = compute_ratio_error(deploy_robots_euler, deploy_traits_desired[i], species_traits, delta_t, match)
+            plot_traits_ratio_time(ax, x_mac + start_step * delta_t, rat_mac, 'blue')
+            rat_boat_runs = []
+            for j in range(len(mat_run)):
+                x_boat, rat_boat = compute_ratio_error(deploy_boats[j][:,start_step:end_step,:], deploy_traits_desired[i], species_traits, delta_t, match)
+                rat_boat_runs.append(rat_boat.reshape(1, rat_boat.shape[0]))
+            x_coords = x_boat + start_step * delta_t
+            rat_boat_runs = np.concatenate(rat_boat_runs, axis=0)
+            mean_rat = np.mean(rat_boat_runs, axis=0)
+            plot_traits_ratio_time(ax, x_coords, mean_rat, 'green')
+            # Add error bar.
+            if len(mat_run) > 1:
+                std_rat = np.std(rat_boat_runs, axis=0)
+                if use_error_bars:
+                    num_tsteps = len(x_coords)
+                    err_ax = np.arange(0, num_tsteps, int(num_tsteps/5))
+                    plt.errorbar(x_coords[err_ax],mean_rat[err_ax],std_rat[err_ax],fmt='o',markersize=3,color='green')
+                else:
+                    plt.fill_between(x_coords, mean_rat+std_rat, mean_rat-std_rat, facecolor='green', alpha=0.3)
+            plt.legend(['Macroscopic', 'Boats'])
+    else:
+        deploy_robots_euler = run_euler_integration(deploy_robots_init[segment - 1], Ks[segment - 1], t_max, delta_t)
+        x_mac, rat_mac = compute_ratio_error(deploy_robots_euler, deploy_traits_desired[segment - 1], species_traits, delta_t, match)
+        x_boat, rat_boat = compute_ratio_error(deploy_boats[0], deploy_traits_desired[segment - 1], species_traits, delta_t, match)
+        plot_traits_ratio_time(ax, x_mac, rat_mac, 'blue', 'Macroscopic')
+        plot_traits_ratio_time(ax, x_boat, rat_boat, 'green', 'Boats')
+        plt.legend()
+
+    plt.xlim([0,t_max])
+    plt.ylim([0,1])
     ax.set_xlabel('Time [s]')
     ax.set_ylabel('Ratio of misplaced traits')
-    plt.legend()
+
     plt.show()
-    
+
     if save_data:
         prefix = 'processed_run_' + str(run) + '_'
-        
+
         #pickle.dump(delta_t, open("delta_t", "wb"))
         #pickle.dump(t_max, open("t_max.p", "wb"))
         #pickle.dump(match, open("match.p", "wb"))
@@ -309,4 +327,4 @@ if show_plots:
         pickle.dump(deploy_robots_euler, open(prefix+"deploy_robots_euler.p", "wb"))
         pickle.dump(deploy_traits_desired, open(prefix+"deploy_traits_desired.p", "wb"))
         pickle.dump(species_traits, open(prefix+"species_traits.p", "wb"))
-        
+
