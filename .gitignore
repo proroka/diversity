@@ -6,3 +6,4 @@ testing/*
 stochastic/bak/*
 stochastic/old
 stochastic/const/*
+.DS_Store
