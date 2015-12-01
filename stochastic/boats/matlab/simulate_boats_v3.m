@@ -9,21 +9,25 @@
 clear
 file_time = datestr(clock);
 
-run = 1;
+tic
+
+run = 507;
+
+verbose = false;
 
 % from the trait evolution data, choose which time slot [1,2,3]
 slot = 1;
 % If true, the simulation will cycle through the different slots.
 nslots = 3;
 auto_advance = true;
-boat_multiplier = 10;
+boat_multiplier = 5; % total is multiple of 100
 
 save_data = true;
-ws_filename = strcat('run_',int2str(run),'_all_data.mat'); %strcat(file_time,'_data.mat');
-vars_filename = strcat('run_',int2str(run),'_vars_data.mat'); %strcat(file_time,'_pos.mat');
+ws_filename = strcat('./data/run_',int2str(run),'_all_data.mat'); %strcat(file_time,'_data.mat');
+vars_filename = strcat('./data/run_',int2str(run),'_vars_data.mat'); %strcat(file_time,'_pos.mat');
 
-% Real or simulated.
 make_movie = false;
+show_plot = false;
 
 % Constants.
 setup_time = 60;  % Time during which no task switching is allowed (<= max_time).
@@ -338,8 +342,10 @@ while i < size(T, 2)
                 ntask = 1;
             end
             if ntask ~= task
-                temp = sprintf('Boat %d switched to task %d\n', j, ntask);
-                disp(temp)
+                if verbose
+                    temp = sprintf('Boat %d switched to task %d\n', j, ntask);
+                    disp(temp)
+                end
             end
         else
             ntask = task;
@@ -353,10 +359,13 @@ end
 
 % save workspace
 if save_data
-    save('-6', ws_filename);
-    save('-6', vars_filename,'boats_pos','task_sites','boats_task','T', 'dt', 'boats_species');
+    save(ws_filename);
+    %save(vars_filename,'boats_pos','task_sites','boats_task','T', 'dt', 'boats_species');
 end
 
-figure_handle = figure(1);
-plot_arena(figure_handle, task_sites, boats_pos, squeeze(boats_task(:,end,:)), make_movie);
+if show_plot
+    figure_handle = figure(1);
+    plot_arena(figure_handle, task_sites, boats_pos, squeeze(boats_task(:,end,:)), make_movie);
+end
 
+toc

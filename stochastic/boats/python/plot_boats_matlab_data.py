@@ -33,6 +33,7 @@ import funcdef_draw_network as nxmod
 
 # Extra control vars.
 save_movie = False
+save_fig = True
 movie_filename = 'run.mp4'
 show_movie = False
 show_plots = True
@@ -55,7 +56,7 @@ segment = 1
 
 # Matlab run files
 # Specify multiple runs if desired.
-mat_run = [1, 2]
+mat_run = [501, 502, 503, 504, 506, 507]
 
 #---------------------------------------------------
 
@@ -122,21 +123,24 @@ delta_t = matlab_data['dt'][0][0]
 setup_time = matlab_data['setup_time']
 t_max = matlab_data['max_time'] - (setup_time if remove_setup_time else 0)
 
+# scale number of boats, multiple of 100
+f = nboats / 100.0
+
 if auto_advance:
     segment == 1
-    switching_steps = matlab_data['switching_steps'][0] - 1
+    switching_steps = matlab_data['switching_steps'][0].astype(int) - 1
     if remove_setup_time:
         switching_steps -= round(setup_time / delta_t)
 
 deploy_robots_init = [
-    deploy_robots_init_0,
-    deploy_robots_init_1,
-    deploy_robots_init_2,
+    f * deploy_robots_init_0,
+    f * deploy_robots_init_1,
+    f * deploy_robots_init_2,
 ]
 deploy_robots_final = [
-    deploy_robots_final_0,
-    deploy_robots_final_1,
-    deploy_robots_final_2,
+    f * deploy_robots_final_0,
+    f * deploy_robots_final_1,
+    f * deploy_robots_final_2,
 ]
 
 print 'Number of robots =', np.sum(deploy_robots_init[0])
@@ -212,6 +216,7 @@ if show_plots:
     #######################
 
     fig = plt.figure()
+
     ax = fig.add_subplot(111, autoscale_on=False,  aspect='equal', xlim=(0, arena_size), ylim=(0, arena_size))
     ax.grid()
 
@@ -236,17 +241,18 @@ if show_plots:
         for j in range(nspecies):
             boats_current_line[j].set_data(boats_pos[boats_species == j, i, 0], boats_pos[boats_species == j, i, 1])
 
-    speedup = 32
-    interval = int(1000. * delta_t / speedup)
-    movie = animation.FuncAnimation(fig, plot_next_frame, np.arange(0, valid_timesteps),
-                                    interval=interval, blit=False, repeat=False, init_func=plot_init)
-    if save_movie:
-        movie.save(movie_filename, fps=1000. / interval)
+
     if show_movie:
+        speedup = 32
+        interval = int(1000. * delta_t / speedup)
+        movie = animation.FuncAnimation(fig, plot_next_frame, np.arange(0, valid_timesteps),
+                                    interval=interval, blit=False, repeat=False, init_func=plot_init)
         plt.show()
+    
     else:
         plt.close(fig)
-
+    if save_movie:
+        movie.save(movie_filename, fps=1000. / interval)
 
     #########################################
     # Plot macroscopic model on top of boat #
@@ -271,7 +277,7 @@ if show_plots:
         ax.plot(x, diffmac_rat, color=color, linewidth=2, label=label)
         return fig
 
-    fig = plt.figure()
+    fig = plt.figure(figsize = (6,3))
     ax = fig.add_subplot(111, autoscale_on=True)
 
     if auto_advance:
@@ -328,3 +334,6 @@ if show_plots:
         pickle.dump(deploy_traits_desired, open(prefix+"deploy_traits_desired.p", "wb"))
         pickle.dump(species_traits, open(prefix+"species_traits.p", "wb"))
 
+
+    if save_fig:
+        fig.savefig('results_boats_evolution.eps') 
