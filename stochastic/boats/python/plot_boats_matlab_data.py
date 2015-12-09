@@ -56,7 +56,7 @@ segment = 1
 
 # Matlab run files
 # Specify multiple runs if desired.
-mat_run = [501, 502, 503, 504, 506, 507]
+mat_run = [501, 502, 503, 504, 506, 507, 508, 509, 510]
 
 #---------------------------------------------------
 
