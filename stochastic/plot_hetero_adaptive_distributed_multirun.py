@@ -54,8 +54,7 @@ endt = 20
 #endt = 2
 
 save_plots = True
-plot_graph = False
-
+ 
 delta_t = 0.04 # time step
 match = 1
 min_ratio = 0.1
