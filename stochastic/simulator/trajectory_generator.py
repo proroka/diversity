@@ -57,7 +57,7 @@ arena_size = 3
 dt = 2.
 max_time = 10.
 T = np.arange(0,max_time,dt)
-num_timestep = np.size(T)
+num_timesteps = np.size(T)
 #dt_per_slot = round(time_per_slot / dt)
 #dt_for_setup = round(setup_time / dt)
 
@@ -110,7 +110,7 @@ else:
         o = 0.65
         c = 1.5
         task_sites[1, :] = [c-o, c+o];
-        task_site[2, :] = [c-o, c-o];
+        task_sites[2, :] = [c-o, c-o];
         task_sites[3, :] = [c+o, c+o];
         task_sites[4, :] = [c+o, c-o];
     else:
