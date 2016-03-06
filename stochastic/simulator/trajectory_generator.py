@@ -22,6 +22,11 @@ sys.path.append('..')
 
 import funcdef_draw_network as nxmod
 
+
+def compute_velocity(pos, task_radius, task_center, velocity_on_circle):
+    v = np.array([1, 1])
+    return v
+
 # -----------------------------------------------------------------------------#
 # import data
 
@@ -54,7 +59,7 @@ max_velocity = 0.08
 task_radius = 0.05
 arena_size = 3
 
-dt = 2.
+dt = 0.2
 max_time = 10.
 T = np.arange(0,max_time,dt)
 num_timesteps = np.size(T)
@@ -67,7 +72,7 @@ num_traits = np.size(species_traits,1)
 num_tasks = np.size(deploy_robots_init,0)
 sum_species = np.sum(deploy_robots_init,0)
 robots_pos_init = np.random.rand(num_robots,2)
-robots_task_init = np.zeros((num_robots));
+robots_task_init = np.zeros((num_robots)).astype(int)
 
 
 # assign init tasks to all robots
@@ -78,7 +83,7 @@ for si in range(num_species):
     for ti in range(num_tasks):
         nb = int(round(deploy_robots_init[ti,si]));
         for nbi in range(nb):
-            robots_task_init[temp_i-1] = ti;
+            robots_task_init[temp_i-1] = int(ti);
             temp_i = temp_i + 1;
             # Avoid eventual rounding problems.
             if temp_i > max_temp_i:
@@ -87,7 +92,7 @@ for si in range(num_species):
    
 # initialize robots
 robots_pos = np.zeros((num_robots, num_timesteps, 2))
-robots_task = np.zeros((num_robots, num_timesteps, 1))
+robots_task = np.zeros((num_robots, num_timesteps)).astype(int)
 for i in range(num_robots):
     robots_pos[i, 0, :] = robots_pos_init[i, :]
     robots_task[i, 0] = robots_task_init[i]
@@ -122,6 +127,23 @@ else:
 # -----------------------------------------------------------------------------#
 # main loop
 
+for t in range(num_timesteps):
+    for r in range(num_robots):
+        task = robots_task[r,t]
+        task_center = task_sites[task,:]
+        pos = np.squeeze(robots_pos[r,t,:])
+        
+        dx = compute_velocity(pos, task_radius, task_center, velocity_on_circle)
+       
+        v = sp.linalg.norm(dx)
+        if v > max_velocity: dx = dx / v * max_velocity
+        else:
+            if v < min_velocity: dx = dx / v * min_velocity
+        
+
+        # Update position using Euler integration.
+        new_pos = pos + dx * dt;
+        robots_pos[r, t, :] = new_pos;
 
 
 # -----------------------------------------------------------------------------#
