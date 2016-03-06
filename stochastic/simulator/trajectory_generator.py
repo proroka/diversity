@@ -23,9 +23,31 @@ sys.path.append('..')
 import funcdef_draw_network as nxmod
 
 
-def compute_velocity(pos, task_radius, task_center, velocity_on_circle):
+def compute_velocity(x, radius, center, velocity_on_circle):
     v = np.array([1, 1])
-    return v
+    
+    
+    dx = np.zeros((2, 1))
+    tx = x.copy()
+    tx[0] = tx[0] - center[0]
+    tx[1] = tx[1] - center[1]
+    dx[0] =   tx[0] + tx[1] - tx[0] * (tx[0]**2 + tx[1]**2) / (radius * radius)
+    dx[1] = - tx[0] + tx[1] - tx[1] * (tx[0]**2 + tx[1]**2) / (radius * radius)
+    dx = dx * velocity_on_circle
+
+    #% Add repulsive forces for obstacle avoidance.
+    #% Only when obstacles are closer than avoidance_range apart.
+    #for i = 1:size(obstacles, 1)
+    #    pos = obstacles(i, :).';
+    #    dpos = (x - pos);
+    #    dist = norm(dpos);
+    #    if dist < avoidance_range
+    #        dpos = dpos / dist;  % normalize.
+    #        max_value = normpdf(0, 0, 3 * avoidance_range);
+    #        dx = dx + dpos * avoidance_velocity * normpdf(dist, 0, 3 * avoidance_range) / max_value;
+    
+    
+    return np.transpose(dx)
 
 # -----------------------------------------------------------------------------#
 # import data
@@ -55,12 +77,12 @@ velocity_on_circle = 0.06
 avoidance_velocity = 0.002
 avoidance_range = -10 # no avoidance
 min_velocity = 0.03
-max_velocity = 0.08
+max_velocity = 0.1
 task_radius = 0.05
 arena_size = 3
 
-dt = 0.2
-max_time = 10.
+dt = 1.
+max_time = 100.
 T = np.arange(0,max_time,dt)
 num_timesteps = np.size(T)
 #dt_per_slot = round(time_per_slot / dt)
@@ -109,20 +131,19 @@ task_sites = np.zeros((num_tasks, 2));
 if num_tasks == 1:
     # hard code 1st task site
     task_sites[0, :] = np.array([1.5, 1.5])
+#    if num_tasks == 4:
+#        # % CW from top left: 1-3-4-2
+#        o = 0.65
+#        c = 1.5
+#        task_sites[0, :] = [c-o, c+o];
+#        task_sites[1, :] = [c-o, c-o];
+#        task_sites[2, :] = [c+o, c+o];
+#        task_sites[3, :] = [c+o, c-o];
 else:
-    if num_tasks == 4:
-        # % CW from top left: 1-3-4-2
-        o = 0.65
-        c = 1.5
-        task_sites[1, :] = [c-o, c+o];
-        task_sites[2, :] = [c-o, c-o];
-        task_sites[3, :] = [c+o, c+o];
-        task_sites[4, :] = [c+o, c-o];
-    else:
-        for i in range(num_tasks):
-            a = (i - 1.) / num_tasks * 2. * np.pi
-            task_sites[i, :] = np.array([np.cos(a), np.sin(a)]) * (arena_size / 2.8 - task_radius - 0.1) + arena_size / 2;
-        
+    for i in range(num_tasks):
+        a = (i - 1.) / num_tasks * 2. * np.pi
+        task_sites[i, :] = np.array([np.cos(a), np.sin(a)]) * (arena_size / 2.8 - task_radius - 0.1) + arena_size / 2;
+    
 
 # -----------------------------------------------------------------------------#
 # main loop
@@ -131,10 +152,12 @@ for t in range(num_timesteps):
     for r in range(num_robots):
         task = robots_task[r,t]
         task_center = task_sites[task,:]
+        
         pos = np.squeeze(robots_pos[r,t,:])
         
         dx = compute_velocity(pos, task_radius, task_center, velocity_on_circle)
-       
+        print dx
+        
         v = sp.linalg.norm(dx)
         if v > max_velocity: dx = dx / v * max_velocity
         else:
@@ -142,11 +165,18 @@ for t in range(num_timesteps):
         
 
         # Update position using Euler integration.
-        new_pos = pos + dx * dt;
-        robots_pos[r, t, :] = new_pos;
+        new_pos = pos + dx * dt
+        robots_pos[r, t, :] = new_pos.copy()
 
 
 # -----------------------------------------------------------------------------#
 # save trajectories and species information
+
+plt.figure()
+r = 0
+px = robots_pos[r,:,0]
+py =  robots_pos[r,:,1]
+plt.scatter(px, py)
+
 
 

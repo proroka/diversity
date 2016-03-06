@@ -69,7 +69,7 @@ delta_t = 0.04 # time step
 max_rate = 1.0 # Maximum rate possible for K.
 
 # graph
-num_nodes = 8
+num_nodes = 4
 half_num_nodes = num_nodes / 2    
 
 # cost function
@@ -78,7 +78,7 @@ match = 1 # 1: exact 0: at-least
 match_margin = 0.2 # used when match=0 
 
 # robot species
-total_num_robots = 100.0 
+total_num_robots = 10.0 
 num_species = 3
 num_traits = 4
 desired_rank = num_species
@@ -169,6 +169,7 @@ if plot_graph:
 # -----------------------------------------------------------------------------#
 # optimization
 
+init_transition_values = np.array([])
 if run_optim:
     print 'Optimizing rates...'
     sys.stdout.flush()
@@ -187,7 +188,6 @@ if run_optim:
 num_iter = 3
 num_timesteps = int(t_max_sim / delta_t)
 deploy_robots_micro = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
-init_transition_values = np.array([])
 
 deploy_robots_micro = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
 
