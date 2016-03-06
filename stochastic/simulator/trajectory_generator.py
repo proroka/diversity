@@ -24,9 +24,7 @@ import funcdef_draw_network as nxmod
 
 
 def compute_velocity(x, radius, center, velocity_on_circle):
-    v = np.array([1, 1])
-    
-    
+        
     dx = np.zeros((2, 1))
     tx = x.copy()
     tx[0] = tx[0] - center[0]
@@ -47,7 +45,7 @@ def compute_velocity(x, radius, center, velocity_on_circle):
     #        dx = dx + dpos * avoidance_velocity * normpdf(dist, 0, 3 * avoidance_range) / max_value;
     
     
-    return np.transpose(dx)
+    return np.squeeze(np.transpose(dx))
 
 # -----------------------------------------------------------------------------#
 # import data
