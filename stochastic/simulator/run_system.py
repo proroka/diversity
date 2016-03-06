@@ -234,6 +234,8 @@ if save_data:
     pickle.dump(deploy_traits_desired, open(prefix+"deploy_traits_desired.p", "wb"))
     pickle.dump(deploy_robots_micro, open(prefix+"deploy_robots_micro.p", "wb"))
     pickle.dump(deploy_robots_euler, open(prefix+"deploy_robots_euler.p", "wb"))
+    pickle.dump(max_rate, open(prefix+"max_rate.p", "wb"))
+    pickle.dump(t_max_sim, open(prefix+"t_max_sim.p", "wb"))
 
 
 
