@@ -59,6 +59,7 @@ species_traits = pickle.load(open(load_prefix+"species_traits.p", "rb"))
 
 # initial robot distribution
 deploy_robots_init = pickle.load(open(load_prefix+"deploy_robots_init.p", "rb"))
+deploy_traits_desired = pickle.load(open(load_prefix+"deploy_traits_desired.p", "rb"))
 
 opt_max_rate = pickle.load(open(load_prefix+"max_rate.p", "rb"))
 opt_t_max = pickle.load(open(load_prefix+"t_max_sim.p", "rb"))
@@ -77,8 +78,8 @@ graph = pickle.load(open(load_prefix+"graph.p", "rb"))
 velocity_on_circle = 0.15
 min_velocity = 0.05
 max_velocity = 0.3
-task_radius = 0.1
-arena_size = 3
+task_radius = 0.5
+arena_size = 10.
 max_rate = 1./60.
 dt = 0.2
 t_setup = 50.
@@ -130,8 +131,6 @@ for s in range(num_species):
     i = i+j
 robots_species = robots_species.astype(int)
 
-print robots_task[:,0]
-
 # get transition probabilities (from rate matrix)
 transition_p = np.zeros((num_tasks, num_tasks, num_species))
 for i in range(num_species):
@@ -142,7 +141,7 @@ for i in range(num_species):
 task_sites = np.zeros((num_tasks, 2));
 if num_tasks == 1:
     # hard code 1st task site
-    task_sites[0, :] = np.array([1.5, 1.5])
+    task_sites[0, :] = np.array([0., 0.])
 #    if num_tasks == 4:
 #        # % CW from top left: 1-3-4-2
 #        o = 0.65
@@ -154,7 +153,7 @@ if num_tasks == 1:
 else:
     for i in range(num_tasks):
         a = (i - 1.) / num_tasks * 2. * np.pi
-        task_sites[i, :] = np.array([np.cos(a), np.sin(a)]) * (arena_size / 2.8 - task_radius - 0.1) + arena_size / 2;
+        task_sites[i, :] = np.array([np.cos(a), np.sin(a)]) * (arena_size * num_robots/20.) # - task_radius - 0.1);
     
 
 # -----------------------------------------------------------------------------#
@@ -215,10 +214,12 @@ np.savetxt(filename, a, delimiter=",")
 
 # csv: task-sites
 filename ='./csv/' + load_run + "_task_sites.csv"
-a = np.zeros((num_tasks,4)) # ID, x, y, radius
+a = np.zeros((num_tasks,4+num_traits)) # task-ID, x, y, radius, t1, t2, ...
 a[:,0] = np.arange(num_tasks)
 a[:,1:3] = task_sites.copy()
-a[:,3] = task_radius
+a[:,3] = task_radius 
+for t in range(num_tasks):
+    a[t,4:] = np.round(deploy_traits_desired[t,:])
 np.savetxt(filename, a, delimiter=",")
 
 # csv: trajectories
