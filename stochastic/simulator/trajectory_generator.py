@@ -29,24 +29,10 @@ def compute_velocity(x, radius, center, velocity_on_circle):
         
     dx = np.zeros((2, 1))
     tx = x - center
-    #tx[0] = tx[0] - center[0]
-    #tx[1] = tx[1] - center[1]
     dx[0] =   tx[0] + tx[1] - tx[0] * (tx[0]**2 + tx[1]**2) / (radius * radius)
     dx[1] = - tx[0] + tx[1] - tx[1] * (tx[0]**2 + tx[1]**2) / (radius * radius)
     dx = dx * velocity_on_circle
-
-    #% Add repulsive forces for obstacle avoidance.
-    #% Only when obstacles are closer than avoidance_range apart.
-    #for i = 1:size(obstacles, 1)
-    #    pos = obstacles(i, :).';
-    #    dpos = (x - pos);
-    #    dist = norm(dpos);
-    #    if dist < avoidance_range
-    #        dpos = dpos / dist;  % normalize.
-    #        max_value = normpdf(0, 0, 3 * avoidance_range);
-    #        dx = dx + dpos * avoidance_velocity * normpdf(dist, 0, 3 * avoidance_range) / max_value;
-    
-    
+  
     return np.squeeze(np.transpose(dx))
 
 def colors_from(cmap_name, ncolors):
@@ -81,6 +67,7 @@ graph = pickle.load(open(load_prefix+"graph.p", "rb"))
 
 # -----------------------------------------------------------------------------#
 # setup
+verbose = True
 
 # constants
 velocity_on_circle = 0.15
@@ -89,13 +76,13 @@ max_velocity = 0.3
 task_radius = 0.1
 arena_size = 3
 max_rate = 1./60.
-
 dt = 0.2
+t_setup = 1.
+
+# adjust values from optimization sim.
 max_time = opt_t_max / max_rate
 T = np.arange(0,max_time,dt)
 num_timesteps = np.size(T)
-#dt_per_slot = round(time_per_slot / dt)
-#dt_for_setup = round(setup_time / dt)
 transition_r = transition_r / opt_max_rate * max_rate
 
 num_robots = int(np.ceil(np.sum(deploy_robots_init)))
@@ -107,7 +94,7 @@ robots_pos_init = np.random.rand(num_robots,2)
 robots_task_init = np.zeros((num_robots)).astype(int)
 
 
-# assign init tasks to all robots
+# assign initial tasks to all robots
 temp_i = 1
 max_temp_i = 0
 for si in range(num_species):
@@ -128,6 +115,16 @@ robots_task = np.zeros((num_robots, num_timesteps)).astype(int)
 for i in range(num_robots):
     robots_pos[i, 0, :] = robots_pos_init[i, :]
     robots_task[i, 0] = robots_task_init[i]
+    
+# assign species    
+sum_species_int = (np.round(sum_species)).astype(int)
+robots_species = np.zeros((num_robots,1))
+i = 0
+for s in range(num_species):
+    j = sum_species_int[s]
+    robots_species[i:i+j] = s
+    i = i+j
+robots_species = robots_species.astype(int)
 
 print robots_task[:,0]
 
@@ -170,16 +167,22 @@ for t in range(1,num_timesteps):
         v = np.linalg.norm(dx);
         if v > max_velocity: dx = dx / v * max_velocity
         elif v < min_velocity: dx = dx / v * min_velocity
-        
-        #print t, r, task, task_center
-
 
         # Update position using Euler integration.
         new_pos = pos + dx * dt
-        
-        
         robots_pos[r, t, :] = new_pos.copy()
-        robots_task[r, t] = task
+        
+        # Switch to another task?
+        if t > t_setup:
+            if num_tasks > 1:
+                new_task = np.random.choice(num_tasks, 1, p=transition_p[:,task,np.squeeze(robots_species[r])])
+            else:
+                new_task = 0;
+            if new_task != t and verbose: print 'Robot ', r, 'switched to task', new_task
+        else:
+            new_task = t
+        
+        robots_task[r, t] = new_task
 
 # -----------------------------------------------------------------------------#
 # save trajectories and species information
