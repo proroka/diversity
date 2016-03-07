@@ -39,7 +39,7 @@ from generate_Q import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'T1'
+run = 'T2'
 
 load_data = False
 load_run = 'T1'
@@ -78,7 +78,7 @@ match = 1 # 1: exact 0: at-least
 match_margin = 0.2 # used when match=0 
 
 # robot species
-total_num_robots = 10.0 
+total_num_robots = 100.0 
 num_species = 3
 num_traits = 4
 desired_rank = num_species

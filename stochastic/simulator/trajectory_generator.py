@@ -51,7 +51,7 @@ def colors_from(cmap_name, ncolors):
 # import data
 
 load_data = True
-load_run = 'T1'
+load_run = 'T2'
 load_prefix = "../data/" + load_run + "_"
 
 # species-trait matrix
@@ -207,19 +207,22 @@ for r in range(num_robots):
 # save trajectories and species information
 
 # csv: species-traits
+filename = './csv/' + load_run + "_species_traits.csv"
 a = np.zeros((num_species,num_tasks+1))
 a[:,0] = np.arange(num_species)
 a[:,1:]= species_traits.copy()
-np.savetxt("species_traits.csv", a, delimiter=",")
+np.savetxt(filename, a, delimiter=",")
 
 # csv: task-sites
+filename ='./csv/' + load_run + "_task_sites.csv"
 a = np.zeros((num_tasks,4)) # ID, x, y, radius
 a[:,0] = np.arange(num_tasks)
 a[:,1:3] = task_sites.copy()
 a[:,3] = task_radius
-np.savetxt("task_sites.csv", a, delimiter=",")
+np.savetxt(filename, a, delimiter=",")
 
 # csv: trajectories
+filename = './csv/' + load_run + "_trajectories.csv"
 a = np.zeros((num_timesteps*num_robots,5)) # t, ID, species, x, y
 i = 0
 for t in range(num_timesteps):
@@ -229,7 +232,7 @@ for t in range(num_timesteps):
     a[i:j,1] = range(num_robots)
     a[i:j,2] = np.squeeze(robots_species)
     a[i:j,3:5] = robots_pos[:,t,:] # x, y
+np.savetxt(filename, a, delimiter=",")
 
-np.savetxt("trajectories.csv", a, delimiter=",")
  
     
