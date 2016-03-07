@@ -77,11 +77,11 @@ task_radius = 0.1
 arena_size = 3
 max_rate = 1./60.
 dt = 0.2
-t_setup = 1.
+t_setup = 50.
 
 # adjust values from optimization sim.
-max_time = opt_t_max / max_rate
-T = np.arange(0,max_time,dt)
+t_max = opt_t_max / max_rate + t_setup
+T = np.arange(0,t_max,dt)
 num_timesteps = np.size(T)
 transition_r = transition_r / opt_max_rate * max_rate
 
@@ -180,7 +180,7 @@ for t in range(1,num_timesteps):
                 new_task = 0;
             if new_task != t and verbose: print 'Robot ', r, 'switched to task', new_task
         else:
-            new_task = t
+            new_task = task
         
         robots_task[r, t] = new_task
 
