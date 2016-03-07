@@ -78,7 +78,7 @@ graph = pickle.load(open(load_prefix+"graph.p", "rb"))
 velocity_on_circle = 0.15
 min_velocity = 0.05
 max_velocity = 0.3
-task_radius = np.sqrt(num_robots) / 6.
+task_radius = 1. + np.sqrt(num_robots) / 10.
 arena_size = 10.
 max_rate = 1./60.
 dt = 0.2
@@ -95,7 +95,7 @@ num_species = np.size(species_traits,0)
 num_traits = np.size(species_traits,1)
 num_tasks = np.size(deploy_robots_init,0)
 sum_species = np.sum(deploy_robots_init,0)
-robots_pos_init = np.random.rand(num_robots,2) * np.sqrt(num_robots) / 5. + 0.5
+robots_pos_init = np.random.rand(num_robots,2) * (np.sqrt(num_robots) / 5. + 0.5) * 2 - (np.sqrt(num_robots) / 5. + 0.5)
 robots_task_init = np.zeros((num_robots)).astype(int)
 
 
@@ -153,7 +153,7 @@ if num_tasks == 1:
 else:
     for i in range(num_tasks):
         a = (i - 1.) / num_tasks * 2. * np.pi
-        task_sites[i, :] = np.array([np.cos(a), np.sin(a)]) * (arena_size * np.sqrt(num_robots)/3. + 2.5) 
+        task_sites[i, :] = np.array([np.cos(a), np.sin(a)]) * (np.sqrt(num_robots)/3. + 2.5) 
     
 
 
@@ -167,7 +167,7 @@ for t in range(1,num_timesteps):
         task_center = task_sites[task,:]        
         pos = np.squeeze(robots_pos[r,t-1,:])     
         
-        rad = task_radius - (r % 5) * 0.3
+        rad = task_radius - (r % 5) * 0.2
         dx = compute_velocity(pos, rad, task_center, velocity_on_circle)        
         
         v = np.linalg.norm(dx);
