@@ -16,6 +16,7 @@ import networkx as nx
 import sys
 import time
 import pickle
+import csv
 
 # my modules
 sys.path.append('../plotting')
@@ -24,6 +25,11 @@ sys.path.append('..')
 
 import funcdef_draw_network as nxmod
 
+
+verbose = False
+
+# -----------------------------------------------------------------------------#
+# utility functions
 
 def compute_velocity(x, radius, center, velocity_on_circle):
         
@@ -60,14 +66,12 @@ opt_t_max = pickle.load(open(load_prefix+"t_max_sim.p", "rb"))
 # transition rates
 transition_r = pickle.load(open(load_prefix+"transition_m_init.p", "rb"))  
 
-
 # graph
 graph = pickle.load(open(load_prefix+"graph.p", "rb"))
 
 
 # -----------------------------------------------------------------------------#
 # setup
-verbose = True
 
 # constants
 velocity_on_circle = 0.15
@@ -185,16 +189,13 @@ for t in range(1,num_timesteps):
         robots_task[r, t] = new_task
 
 # -----------------------------------------------------------------------------#
-# save trajectories and species information
+# plots
 
 plt.figure()
 
-#for s in range(num)
 plt.plot(task_sites[:,0],task_sites[:,1],'r+')
 
-
 col = colors_from('jet', num_robots)
-
 for r in range(num_robots):
     px = robots_pos[r,:,0]
     py =  robots_pos[r,:,1]
@@ -202,4 +203,33 @@ for r in range(num_robots):
     plt.axis('equal')
 
 
+# -----------------------------------------------------------------------------#
+# save trajectories and species information
 
+# csv: species-traits
+a = np.zeros((num_species,num_tasks+1))
+a[:,0] = np.arange(num_species)
+a[:,1:]= species_traits.copy()
+np.savetxt("species_traits.csv", a, delimiter=",")
+
+# csv: task-sites
+a = np.zeros((num_tasks,4)) # ID, x, y, radius
+a[:,0] = np.arange(num_tasks)
+a[:,1:3] = task_sites.copy()
+a[:,3] = task_radius
+np.savetxt("task_sites.csv", a, delimiter=",")
+
+# csv: trajectories
+a = np.zeros((num_timesteps*num_robots,5)) # t, ID, species, x, y
+i = 0
+for t in range(num_timesteps):
+    i = t*num_robots
+    j = i+num_robots
+    a[i:j,0] = t*dt
+    a[i:j,1] = range(num_robots)
+    a[i:j,2] = np.squeeze(robots_species)
+    a[i:j,3:5] = robots_pos[:,t,:] # x, y
+
+np.savetxt("trajectories.csv", a, delimiter=",")
+ 
+    
