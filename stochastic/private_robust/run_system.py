@@ -39,11 +39,11 @@ from generate_Q import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'T4_b'
+run = 'RC01'
 
 load_data = False
-load_run = 'T1'
-load_prefix = "../data/Tx/" + load_run + '/' + load_run + "_"
+load_run = 'RC01'
+load_prefix = "../data/RCx/" + load_run + '/' + load_run + "_"
 
 run_optim = 1
 run_micro = 1
@@ -78,10 +78,14 @@ match = 1 # 1: exact 0: at-least
 match_margin = 0.2 # used when match=0 
 
 # robot species
-total_num_robots = 500.0 
+total_num_robots = 100.0 
 num_species = 4
 num_traits = 5
 desired_rank = num_species
+
+# privacy mechanism
+lap = 1.0
+
 
 
 # -----------------------------------------------------------------------------#
@@ -169,6 +173,11 @@ if plot_graph:
 # -----------------------------------------------------------------------------#
 # optimization
 
+# optimize based on noisy initial state
+
+lap_val = np.random.laplace(loc=0.0, scale=lap, size=(num_nodes, num_species))
+deploy_robots_init = deploy_robots_init + lap_val
+
 init_transition_values = np.array([])
 if run_optim:
     print 'Optimizing rates...'
@@ -177,15 +186,14 @@ if run_optim:
                                               species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=4.0)
 
 
-# -----------------------------------------------------------------------------#
-# trajectory generation
 
+# evaluate trajectory based on true initial state with K from noisy optimization above
 
 
 # -----------------------------------------------------------------------------#
 # run microscopic stochastic simulation
 
-num_iter = 3
+num_iter = 2
 num_timesteps = int(t_max_sim / delta_t)
 deploy_robots_micro = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
 
@@ -221,7 +229,7 @@ if save_data:
     
     tend = time.strftime("%Y%m%d-%H%M%S")
    
-    prefix = "../data/Tx/" + run + "_"
+    prefix = "../data/RCx/" + run + "_"
     print str(run)    
     print "Time start: ", tstart
     print "Time end: ", tend

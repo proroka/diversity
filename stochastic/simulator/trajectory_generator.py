@@ -51,8 +51,8 @@ def colors_from(cmap_name, ncolors):
 # import data
 
 load_data = True
-load_run = 'T2'
-load_prefix = "../data/" + load_run + "_"
+load_run = 'T5_e'
+load_prefix = "../data/Tx/" + load_run + "_"
 
 # species-trait matrix
 species_traits = pickle.load(open(load_prefix+"species_traits.p", "rb"))
@@ -78,11 +78,13 @@ graph = pickle.load(open(load_prefix+"graph.p", "rb"))
 velocity_on_circle = 0.15
 min_velocity = 0.05
 max_velocity = 0.3
+dt = 0.4
+
+num_robots = int(np.ceil(np.sum(deploy_robots_init)))
 task_radius = 1. + np.sqrt(num_robots) / 10.
-arena_size = 10.
-max_rate = 1./60.
-dt = 0.2
-t_setup = 50.
+max_rate = 1. / (np.sqrt(num_robots)* 4. + 40) #1./ 60
+t_setup = np.sqrt(num_robots) * 10.
+
 
 # adjust values from optimization sim.
 t_max = opt_t_max / max_rate + t_setup
@@ -90,7 +92,7 @@ T = np.arange(0,t_max,dt)
 num_timesteps = np.size(T)
 transition_r = transition_r / opt_max_rate * max_rate
 
-num_robots = int(np.ceil(np.sum(deploy_robots_init)))
+
 num_species = np.size(species_traits,0)
 num_traits = np.size(species_traits,1)
 num_tasks = np.size(deploy_robots_init,0)
@@ -210,7 +212,7 @@ for r in range(num_robots):
 
 # csv: species-traits
 filename = './csv/' + load_run + "_species_traits.csv"
-a = np.zeros((num_species,num_tasks+1))
+a = np.zeros((num_species,num_traits+1))
 a[:,0] = np.arange(num_species)
 a[:,1:]= species_traits.copy()
 np.savetxt(filename, a, delimiter=",")
