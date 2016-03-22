@@ -172,7 +172,7 @@ def plot_traits_ratio_time_micmac(deploy_robots_micro, deploy_robots_mac, deploy
 
 
 # -----------------------------------------------------------------------------#
-# get ratio of desired vs actual trait distrib for 1 run
+# get ratio of desired vs actual trait distrib 
 
 def get_traits_ratio_time(deploy_robots, deploy_traits_desired, transform, match, min_val):
     
@@ -193,6 +193,30 @@ def get_traits_ratio_time(deploy_robots, deploy_traits_desired, transform, match
             return t
         
     return num_tsteps  
+
+# -----------------------------------------------------------------------------#
+# get ratio of desired vs actual trait distrib, trajecotry over time
+
+def get_traits_ratio_time_traj(deploy_robots, deploy_traits_desired, transform, match):
+    
+    num_tsteps = deploy_robots.shape[1]
+    total_num_traits = np.sum(deploy_traits_desired)
+    ratio = np.zeros(num_tsteps)    
+    
+    for t in range(num_tsteps):
+        if match==0:
+            ff = 1.0
+            traits = np.dot(deploy_robots[:,t,:], transform)
+            diff = np.abs(np.minimum(traits - deploy_traits_desired, 0))
+        else:
+            ff = 2.0
+            traits = np.dot(deploy_robots[:,t,:], transform)
+            diff = np.abs(traits - deploy_traits_desired)  
+    
+        ratio[t] = np.sum(diff) / (ff*total_num_traits)
+        
+    return ratio  
+
 
 # -----------------------------------------------------------------------------#
 # get ratio of desired vs actual trait distrib for 1 run, take into account deviation of robot distribution
@@ -581,17 +605,77 @@ def get_traits_ratio_time_mic(deploy_robots_mic_all, deploy_traits_desired, tran
         for t in range(num_tsteps):
             
             if match==0:
+                ff = 1.0
                 traits = np.dot(deploy_robots_mic[:,t,:], transform)
                 diffmic = np.abs(np.minimum(traits - deploy_traits_desired, 0))
                 
             else:
+                ff = 2.0
                 traits = np.dot(deploy_robots_mic[:,t,:], transform)
                 diffmic = np.abs(traits - deploy_traits_desired)   
-              
-            diffmic_rat[t,it] = np.sum(diffmic) / (2*total_num_traits)      
+            
+  
+            diffmic_rat[t,it] = np.sum(diffmic) / (ff*total_num_traits)      
         
     return diffmic_rat
 
+
+# -----------------------------------------------------------------------------#
+# plot ratio of desired vs actual robot distribution
+
+def plot_traits_ratio_time_mac(deploy_robots_mac, deploy_traits_desired, transform, delta_t, match):
+    
+    colors = ['green', 'blue', 'red', '#00ffa5', '#ffa500'] 
+    logscale = False
+    
+    fig = plt.figure(figsize=(5,5))
+    
+
+    num_tsteps = deploy_robots_mac.shape[1]
+    total_num_traits = np.sum(deploy_traits_desired)
+
+
+    diffmac_rat = np.zeros(num_tsteps)
+    for t in range(num_tsteps):
+        if match==0:
+            traits = np.dot(deploy_robots_mac[:,t,:], transform)
+            diffmac = np.abs(np.minimum(traits - deploy_traits_desired, 0))
+        else:
+            traits = np.dot(deploy_robots_mac[:,t,:], transform)
+            diffmac = np.abs(traits - deploy_traits_desired)  
+       
+        if match:
+            ff = 2.0
+        else:
+            ff = 1.0
+        diffmac_rat[t] = np.sum(diffmac) / (ff*total_num_traits)       
+        
+        
+    x = np.arange(0, num_tsteps) * delta_t
+       
+    # plot macro
+    l3 = plt.plot(x,diffmac_rat, label='Macroscropic',color=colors[2],linewidth=2)
+
+   
+    ax = plt.gca()
+     
+    if logscale:
+        ax.set_yscale('log')
+    else:
+        ax.set_ylim([0.0, 1.0])
+    
+    ax.set_ylim([0.01, 1.0])    
+    plt.axes().set_aspect(num_tsteps*delta_t,'box') 
+
+    # plot legend and labels
+    plt.legend(loc='upper right', shadow=False, fontsize='large')     
+    plt.xlabel('Time [s]')    
+    plt.ylabel('Ratio of misplaced traits')
+       
+    #plt.show()  
+    return fig    
+    
+    
 # -----------------------------------------------------------------------------#
 # get ratio (without plotting)
   

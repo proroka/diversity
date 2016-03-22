@@ -39,15 +39,14 @@ from generate_Q import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'RC01'
+run = 'RC02'
 
-load_data = False
+load_data = True
 load_run = 'RC01'
 load_prefix = "../data/RCx/" + load_run + '/' + load_run + "_"
 
 run_optim = 1
-run_micro = 1
-run_macro = 1
+run_micro = False
 
 save_data = True
 
@@ -55,7 +54,7 @@ save_data = True
 fix_init = True
 fix_final = True
 
-plot_graph = True
+plot_graph = False
 plot_run = 1
 
 tstart = time.strftime("%Y%m%d-%H%M%S")
@@ -84,8 +83,11 @@ num_traits = 5
 desired_rank = num_species
 
 # privacy mechanism
-lap = 1.0
+lap = 2.0
+num_sample_iter = 30
 
+# success metrics
+min_ratio = 0.1
 
 
 # -----------------------------------------------------------------------------#
@@ -170,57 +172,58 @@ if plot_graph:
     plt.show()
     
 
+
 # -----------------------------------------------------------------------------#
 # optimization
 
-# optimize based on noisy initial state
-
-lap_val = np.random.laplace(loc=0.0, scale=lap, size=(num_nodes, num_species))
-deploy_robots_init = deploy_robots_init + lap_val
-
-init_transition_values = np.array([])
-if run_optim:
-    print 'Optimizing rates...'
-    sys.stdout.flush()
-    transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init, deploy_traits_desired,
-                                              species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=4.0)
-
-
-
-# evaluate trajectory based on true initial state with K from noisy optimization above
-
-
-# -----------------------------------------------------------------------------#
-# run microscopic stochastic simulation
-
-num_iter = 2
 num_timesteps = int(t_max_sim / delta_t)
-deploy_robots_micro = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
+t_min = np.zeros(num_sample_iter)
+success = np.zeros(num_sample_iter)
+ratio_traj = np.zeros((num_timesteps, num_sample_iter))
+deploy_robots_euler_it = np.zeros((num_nodes, num_timesteps, num_species, num_sample_iter))
 
-deploy_robots_micro = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
 
-if run_micro:
-    for it in range(num_iter):
-        print "Iteration: ", it
-        robots_new, deploy_robots_micro[:,:,:,it] = microscopic_sim(num_timesteps, delta_t, robots, deploy_robots_init, transition_m_init)
-
-# -----------------------------------------------------------------------------#
-# run euler integration
-
-deploy_robotseuler = np.zeros((num_nodes, num_timesteps, num_species))
-if run_macro:
-    deploy_robots_euler = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
+for i in range(num_sample_iter):
+# optimize based on noisy initial state
+    
+    lap_val = np.random.laplace(loc=0.0, scale=lap, size=(num_nodes, num_species))
+    deploy_robots_init_noisy = deploy_robots_init + lap_val
+    
+    # TODO: normalize robot distribution after noise?
+    
+    init_transition_values = np.array([])
+    if run_optim:
+        print 'Optimizing rates...'
+        sys.stdout.flush()
+        transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init_noisy, deploy_traits_desired,
+                                                  species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=4.0)
+    
+    
+    # run euler integration, evaluate trajectory based on true initial state with K from noisy optimization above
+    deploy_robots_euler_it[:,:,:,i] = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
+    
+    # returns time of success; if no success, return num_time_steps
+    t_min[i] = get_traits_ratio_time(deploy_robots_euler_it[:,:,:,i], deploy_traits_desired, species_traits, match, min_ratio)
+    success[i] = (t_min[i]<num_timesteps)    
+    ratio_traj[:,i] = get_traits_ratio_time_traj(deploy_robots_euler_it[:,:,:,i], deploy_traits_desired, species_traits, match)
 
 
 # -----------------------------------------------------------------------------#
 # plot simulations
 
-# plot traits ratio
+
+fig_hist = plt.hist(t_min, bins=30, range=[0, num_timesteps], normed=False, weights=None)
+
 if plot_run:
-    fig = plot_traits_ratio_time_micmac(deploy_robots_micro, deploy_robots_euler, deploy_traits_desired, 
-                                    species_traits, delta_t, match)
-
-
+    i = 0
+    fig = plot_traits_ratio_time_mac(deploy_robots_euler_it[:,:,:,i], deploy_traits_desired, species_traits, delta_t, match)
+    plt.plot([0, t_max_sim],[min_ratio, min_ratio])
+     
+    #i = 1
+    #fig = plot_traits_ratio_time_mac(deploy_robots_euler_it[:,:,:,i], deploy_traits_desired, species_traits, delta_t, match)
+    #plt.plot([0, t_max_sim],[min_ratio, min_ratio])
+       
+       
 
 # -----------------------------------------------------------------------------#
 # save variables
@@ -240,11 +243,29 @@ if save_data:
     pickle.dump(deploy_robots_init, open(prefix+"deploy_robots_init.p", "wb"))
     pickle.dump(deploy_traits_init, open(prefix+"deploy_traits_init.p", "wb"))
     pickle.dump(deploy_traits_desired, open(prefix+"deploy_traits_desired.p", "wb"))
-    pickle.dump(deploy_robots_micro, open(prefix+"deploy_robots_micro.p", "wb"))
-    pickle.dump(deploy_robots_euler, open(prefix+"deploy_robots_euler.p", "wb"))
+    
+    #pickle.dump(deploy_robots_micro, open(prefix+"deploy_robots_micro.p", "wb"))
+    #pickle.dump(deploy_robots_euler, open(prefix+"deploy_robots_euler.p", "wb"))
     pickle.dump(max_rate, open(prefix+"max_rate.p", "wb"))
     pickle.dump(t_max_sim, open(prefix+"t_max_sim.p", "wb"))
 
+    pickle.dump(deploy_traits_desired, open(prefix+"deploy_robots_euler_it.p", "wb"))
+    pickle.dump(deploy_traits_desired, open(prefix+"t_min.p", "wb"))
+    pickle.dump(deploy_traits_desired, open(prefix+"success.p", "wb"))
+    pickle.dump(deploy_traits_desired, open(prefix+"ratio_traj.p", "wb"))
+    
+# -----------------------------------------------------------------------------#
+# run microscopic stochastic simulation
 
+#num_iter = 
+#num_timesteps = int(t_max_sim / delta_t)
+#deploy_robots_micro = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
+#
+#deploy_robots_micro = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
+#
+#if run_micro:
+#    for it in range(num_iter):
+#        print "Iteration: ", it
+#        robots_new, deploy_robots_micro[:,:,:,it] = microscopic_sim(num_timesteps, delta_t, robots, deploy_robots_init, transition_m_init)
 
 
