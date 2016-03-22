@@ -123,7 +123,7 @@ def Expm(V, exp_wt, U):
 #
 # If steady_state_dt > 0 and beta > 0, the optimization will check the final state at t and t + dt.
 def Cost_Fast(elements, desired_state, adjacency_matrix, max_time, initial_state, transform,
-              cost_mode=QUADRATIC_EXACT, alpha=0.0, margin=0.0, steady_state_dt=0.0, beta=5.0):
+              cost_mode=QUADRATIC_EXACT, margin=0.0, steady_state_dt=0.0, alpha=0.0, beta=5.0):
     # Prepare variable depending on whether t part of the parameters.
     num_nodes = adjacency_matrix.shape[0]
     num_species = initial_state.shape[1]
@@ -319,7 +319,7 @@ def ElementsBounds(nelements, max_rate, max_time, f_new, x_new, f_old, x_old):
 
 def Optimize_Hetero_Fast(init_values, adjacency_matrix, initial_state, desired_steadystate,
                          transform, max_time, max_rate, verbose, l_norm, match,
-                         optimizing_t, force_steady_state):
+                         optimizing_t, force_steady_state, alpha, beta):
     global current_iteration
     current_iteration = 0
 
@@ -334,7 +334,8 @@ def Optimize_Hetero_Fast(init_values, adjacency_matrix, initial_state, desired_s
 
     # settings
     verify_gradient = False
-    alpha = 1.0 #0.1  # + alpha * t^2.
+    #alpha = 1.0 #0.1  # + alpha * t^2.
+
     mu = 0.0  # margin
 
     # initial array of random elements (only where the adjacency matrix has a 1).
@@ -377,7 +378,7 @@ def Optimize_Hetero_Fast(init_values, adjacency_matrix, initial_state, desired_s
     if optimizing_t:
         init_elements = np.concatenate([init_elements, np.array([max_time])], axis=0)
         bounds.append((0., max_time * 2))  # Allow optimized time be up to twice as large as max_time.
-        CostFunction = lambda x: Cost_Fast(x, desired_steadystate, adjacency_matrix, None, initial_state, transform, cost_mode=cost_mode, alpha=alpha, margin=mu, steady_state_dt=force_steady_state)
+        CostFunction = lambda x: Cost_Fast(x, desired_steadystate, adjacency_matrix, None, initial_state, transform, cost_mode=cost_mode, margin=mu, steady_state_dt=force_steady_state, alpha=alpha, beta=beta)
         BoundFunction = lambda f_new, x_new, f_old, x_old: ElementsBounds(num_nonzero_elements*num_species, max_rate, 2.0 * max_time, f_new, x_new, f_old, x_old)
     else:
         CostFunction = lambda x: Cost_Fast(x, desired_steadystate, adjacency_matrix, max_time, initial_state, transform, cost_mode=cost_mode, margin=mu)

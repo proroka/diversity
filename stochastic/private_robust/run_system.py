@@ -83,7 +83,7 @@ num_traits = 5
 desired_rank = num_species
 
 # privacy mechanism
-lap = 2.0
+lap = 1.5
 num_sample_iter = 30
 
 # success metrics
@@ -176,6 +176,9 @@ if plot_graph:
 # -----------------------------------------------------------------------------#
 # optimization
 
+alpha = 1.0
+beta = 5.0
+
 num_timesteps = int(t_max_sim / delta_t)
 t_min = np.zeros(num_sample_iter)
 success = np.zeros(num_sample_iter)
@@ -196,7 +199,7 @@ for i in range(num_sample_iter):
         print 'Optimizing rates...'
         sys.stdout.flush()
         transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init_noisy, deploy_traits_desired,
-                                                  species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=4.0)
+                                                  species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=4.0, alpha, beta)
     
     
     # run euler integration, evaluate trajectory based on true initial state with K from noisy optimization above
@@ -211,6 +214,7 @@ for i in range(num_sample_iter):
 # -----------------------------------------------------------------------------#
 # plot simulations
 
+print "Success rate: ", sum(success)/len(success)
 
 fig_hist = plt.hist(t_min, bins=30, range=[0, num_timesteps], normed=False, weights=None)
 
