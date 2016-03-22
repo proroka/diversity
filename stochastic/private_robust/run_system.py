@@ -199,7 +199,7 @@ for i in range(num_sample_iter):
         print 'Optimizing rates...'
         sys.stdout.flush()
         transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init_noisy, deploy_traits_desired,
-                                                  species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=4.0, alpha, beta)
+                                                  species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=4.0, alpha=alpha, beta=beta)
     
     
     # run euler integration, evaluate trajectory based on true initial state with K from noisy optimization above
