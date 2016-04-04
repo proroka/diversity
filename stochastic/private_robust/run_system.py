@@ -31,11 +31,7 @@ from generate_Q import *
 # 2. setup: initialize robot deployment on nodes
 # 3. setup: initialize transition matrix
 # 4. optimize transition rates
-# 5. call trajectory generator
-# 5. output/plot robot trajectories / save trajectory file for visualizer
-
-
-
+#
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
@@ -83,11 +79,13 @@ num_traits = 5
 desired_rank = num_species
 
 # privacy mechanism
-lap = 1.5
-num_sample_iter = 30
+# lap = 1.5
+# careful: these parameters should never be == 0
+range_lambda = [2.5, 4.0]
+range_alpha = [1.0]
+range_beta = [5.0]
 
-# success metrics
-min_ratio = 0.1
+num_sample_iter = 10
 
 
 # -----------------------------------------------------------------------------#
@@ -177,63 +175,56 @@ if plot_graph:
 # optimization
 
 # careful: these parameters should never be == 0
-alpha = 1.0
-beta = 5.0
 
 num_timesteps = int(t_max_sim / delta_t)
-t_min = np.zeros(num_sample_iter)
-success = np.zeros(num_sample_iter)
-ratio_traj = np.zeros((num_timesteps, num_sample_iter))
-deploy_robots_euler_it = np.zeros((num_nodes, num_timesteps, num_species, num_sample_iter))
 
+traj_ratio = {}
+#traj_robots = {}
 
-for i in range(num_sample_iter):
-# optimize based on noisy initial state
-    
-    lap_val = np.random.laplace(loc=0.0, scale=lap, size=(num_nodes, num_species))
-    deploy_robots_init_noisy = deploy_robots_init + lap_val
-    
-    
-    # normalize robot distribution so that correct robots per species available
-    ts = np.sum(deploy_robots_init_noisy, axis=0)
-    for s in range(num_species):    
-        deploy_robots_init_noisy[:,s] = deploy_robots_init_noisy[:,s] / float(ts[s]) * float(sum_species[s])
-    
-
-    init_transition_values = np.array([])
-    if run_optim:
-        print 'Optimizing rates...'
-        sys.stdout.flush()
-        transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init_noisy, deploy_traits_desired,
-                                                  species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=4.0, alpha=alpha, beta=beta)
-    
-    
-    # run euler integration, evaluate trajectory based on true initial state with K from noisy optimization above
-    deploy_robots_euler_it[:,:,:,i] = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
-    
-    # returns time of success; if no success, return num_time_steps
-    t_min[i] = get_traits_ratio_time(deploy_robots_euler_it[:,:,:,i], deploy_traits_desired, species_traits, match, min_ratio)
-    success[i] = (t_min[i]<num_timesteps)    
-    ratio_traj[:,i] = get_traits_ratio_time_traj(deploy_robots_euler_it[:,:,:,i], deploy_traits_desired, species_traits, match)
-
+for el in range(len(range_lambda)):
+    lap = range_lambda[el]
+    for a in range(len(range_alpha)):
+        alpha = range_alpha[a]
+        for b in range(len(range_beta)):        
+            beta = range_beta[b]
+            
+            ratio = np.zeros((num_timesteps, num_sample_iter))
+            deploy_robots_euler_it = np.zeros((num_nodes, num_timesteps, num_species, num_sample_iter))
+            for i in range(num_sample_iter):
+            # optimize based on noisy initial state
+                
+                lap_val = np.random.laplace(loc=0.0, scale=lap, size=(num_nodes, num_species))
+                deploy_robots_init_noisy = deploy_robots_init + lap_val
+                
+                # normalize robot distribution so that correct robots per species available
+                ts = np.sum(deploy_robots_init_noisy, axis=0)
+                for s in range(num_species):    
+                    deploy_robots_init_noisy[:,s] = deploy_robots_init_noisy[:,s] / float(ts[s]) * float(sum_species[s])
+            
+                init_transition_values = np.array([])
+                if run_optim:
+                    print 'Optimizing rates...'
+                    sys.stdout.flush()
+                    transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init_noisy, deploy_traits_desired,
+                                                              species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=4.0, alpha=alpha, beta=beta)
+                
+                # run euler integration, evaluate trajectory based on true initial state with K from noisy optimization above
+                deploy_robots_euler_it[:,:,:,i] = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
+                
+                # store error ratio
+                ratio[:,i] = get_traits_ratio_time_traj(deploy_robots_euler_it[:,:,:,i], deploy_traits_desired, species_traits, match)
+            
+            traj_ratio[(lap, alpha, beta)] = ratio.copy()
+            #traj_robots[(lap, alpha, beta)] = deploy_robots_euler_it.copy()
 
 # -----------------------------------------------------------------------------#
 # plot simulations
 
-print "Success rate: ", sum(success)/len(success)
-
-fig_hist = plt.hist(t_min, bins=50, range=[0, num_timesteps], normed=False, weights=None)
-
 if plot_run:
     i = 0
     fig = plot_traits_ratio_time_mac(deploy_robots_euler_it[:,:,:,i], deploy_traits_desired, species_traits, delta_t, match)
-    plt.plot([0, t_max_sim],[min_ratio, min_ratio])
      
-    #i = 1
-    #fig = plot_traits_ratio_time_mac(deploy_robots_euler_it[:,:,:,i], deploy_traits_desired, species_traits, delta_t, match)
-    #plt.plot([0, t_max_sim],[min_ratio, min_ratio])
-       
-       
+     
 
 # -----------------------------------------------------------------------------#
 # save variables
@@ -249,33 +240,22 @@ if save_data:
     
     pickle.dump(species_traits, open(prefix+"species_traits.p", "wb"))
     pickle.dump(graph, open(prefix+"graph.p", "wb"))
-    pickle.dump(transition_m_init, open(prefix+"transition_m_init.p", "wb"))
     pickle.dump(deploy_robots_init, open(prefix+"deploy_robots_init.p", "wb"))
     pickle.dump(deploy_traits_init, open(prefix+"deploy_traits_init.p", "wb"))
     pickle.dump(deploy_traits_desired, open(prefix+"deploy_traits_desired.p", "wb"))
-    
-    #pickle.dump(deploy_robots_micro, open(prefix+"deploy_robots_micro.p", "wb"))
-    #pickle.dump(deploy_robots_euler, open(prefix+"deploy_robots_euler.p", "wb"))
+        
     pickle.dump(max_rate, open(prefix+"max_rate.p", "wb"))
     pickle.dump(t_max_sim, open(prefix+"t_max_sim.p", "wb"))
+    pickle.dump(num_timesteps, open(prefix+"num_timesteps.p", "wb"))
 
-    pickle.dump(deploy_traits_desired, open(prefix+"deploy_robots_euler_it.p", "wb"))
-    pickle.dump(deploy_traits_desired, open(prefix+"t_min.p", "wb"))
-    pickle.dump(deploy_traits_desired, open(prefix+"success.p", "wb"))
-    pickle.dump(deploy_traits_desired, open(prefix+"ratio_traj.p", "wb"))
+    pickle.dump(num_sample_iter, open(prefix+"num_sample_iter.p", "wb"))
     
-# -----------------------------------------------------------------------------#
-# run microscopic stochastic simulation
+    pickle.dump(range_alpha, open(prefix+"range_alpha.p", "wb"))
+    pickle.dump(range_beta, open(prefix+"range_beta.p", "wb"))
+    pickle.dump(range_lambda, open(prefix+"range_lambda.p", "wb"))
+    
+    pickle.dump(traj_ratio, open(prefix+"traj_ratio.p", "wb"))
 
-#num_iter = 
-#num_timesteps = int(t_max_sim / delta_t)
-#deploy_robots_micro = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
-#
-#deploy_robots_micro = np.zeros((num_nodes, num_timesteps, num_species, num_iter))
-#
-#if run_micro:
-#    for it in range(num_iter):
-#        print "Iteration: ", it
-#        robots_new, deploy_robots_micro[:,:,:,it] = microscopic_sim(num_timesteps, delta_t, robots, deploy_robots_init, transition_m_init)
-
+   
+    
 
