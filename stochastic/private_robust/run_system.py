@@ -176,6 +176,7 @@ if plot_graph:
 # -----------------------------------------------------------------------------#
 # optimization
 
+# careful: these parameters should never be == 0
 alpha = 1.0
 beta = 5.0
 
@@ -192,8 +193,13 @@ for i in range(num_sample_iter):
     lap_val = np.random.laplace(loc=0.0, scale=lap, size=(num_nodes, num_species))
     deploy_robots_init_noisy = deploy_robots_init + lap_val
     
-    # TODO: normalize robot distribution after noise?
     
+    # normalize robot distribution so that correct robots per species available
+    ts = np.sum(deploy_robots_init_noisy, axis=0)
+    for s in range(num_species):    
+        deploy_robots_init_noisy[:,s] = deploy_robots_init_noisy[:,s] / float(ts[s]) * float(sum_species[s])
+    
+
     init_transition_values = np.array([])
     if run_optim:
         print 'Optimizing rates...'
@@ -216,7 +222,7 @@ for i in range(num_sample_iter):
 
 print "Success rate: ", sum(success)/len(success)
 
-fig_hist = plt.hist(t_min, bins=30, range=[0, num_timesteps], normed=False, weights=None)
+fig_hist = plt.hist(t_min, bins=50, range=[0, num_timesteps], normed=False, weights=None)
 
 if plot_run:
     i = 0
