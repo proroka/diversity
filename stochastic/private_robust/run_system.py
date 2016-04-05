@@ -82,10 +82,10 @@ desired_rank = num_species
 # lap = 1.5
 # careful: these parameters should never be == 0
 range_lambda = [2.5, 4.0]
-range_alpha = [1.0]
-range_beta = [5.0]
+range_alpha = [1.0, 1.5, 2.0]
+range_beta = [4.0, 5.0, 6.0]
 
-num_sample_iter = 10
+num_sample_iter = 2
 
 
 # -----------------------------------------------------------------------------#
