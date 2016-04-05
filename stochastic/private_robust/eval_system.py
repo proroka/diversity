@@ -43,7 +43,7 @@ plot_run = False
 t_hist_plots = False
 verbose = False
 
-run = 'RC02'
+run = 'RC06'
 prefix = "../data/RCx/" + run + "_"
 
 range_alpha = pickle.load(open(prefix+"range_alpha.p", "rb"))
@@ -89,8 +89,9 @@ for el in range(len(range_lambda)):
 
             # store values
             success_values[lap][a,b] = sum(success)/len(success)
-            t_avg_values[lap][a,b] = np.mean(t_min)            
-            t_std_values[lap][a,b] = np.std(t_min)
+            t_sorted = t_min[t_min<num_timesteps-1]
+            t_avg_values[lap][a,b] = np.mean(t_sorted)            
+            t_std_values[lap][a,b] = np.std(t_sorted)
             
             if(t_hist_plots):
                 fig = plt.figure()
@@ -116,7 +117,7 @@ for el in range(len(range_lambda)):
     plt.imshow(t_avg_values[lap], interpolation='nearest', origin='lower', cmap=cmap)
     ax = plt.axes()
     plt.colorbar()
-    plt.title('Min T Mean')
+    plt.title('Mean Convergence Time')
     plt.xlabel('beta')
     plt.xticks(range(len(range_beta)))
     ax.set_xticklabels(range_beta)
@@ -128,7 +129,7 @@ for el in range(len(range_lambda)):
     plt.imshow(t_std_values[lap], interpolation='nearest', origin='lower', cmap=cmap)
     ax = plt.axes()    
     plt.colorbar()
-    plt.title('Min T Std.')
+    plt.title('Std. Convergence Time')
     plt.xlabel('beta')
     plt.xticks(range(len(range_beta)))
     ax.set_xticklabels(range_beta)

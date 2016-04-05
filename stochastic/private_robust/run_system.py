@@ -35,7 +35,7 @@ from generate_Q import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'RC02'
+run = 'RC06'
 
 load_data = True
 load_run = 'RC01'
@@ -81,11 +81,14 @@ desired_rank = num_species
 # privacy mechanism
 # lap = 1.5
 # careful: these parameters should never be == 0
-range_lambda = [2.5, 4.0]
-range_alpha = [1.0, 1.5, 2.0]
-range_beta = [4.0, 5.0, 6.0]
+range_lambda = [2.5]
+range_alpha = np.linspace(0.1, 2.8, 10) # old: 1.0
+range_alpha[0] = 0.01
 
-num_sample_iter = 2
+range_beta = np.linspace(0.0, 4.5, 10) # old: 5.0
+range_beta[0] = 0.01
+
+num_sample_iter = 30
 
 
 # -----------------------------------------------------------------------------#
@@ -185,8 +188,11 @@ for el in range(len(range_lambda)):
     lap = range_lambda[el]
     for a in range(len(range_alpha)):
         alpha = range_alpha[a]
-        for b in range(len(range_beta)):        
+        for b in range(len(range_beta)): 
             beta = range_beta[b]
+            
+            temp_r = el*len(range_lambda) + a*len(range_alpha) + b
+            print '****** Run ', temp_r, ' / ', len(range_lambda) * len(range_alpha) * len(range_beta)
             
             ratio = np.zeros((num_timesteps, num_sample_iter))
             deploy_robots_euler_it = np.zeros((num_nodes, num_timesteps, num_species, num_sample_iter))
