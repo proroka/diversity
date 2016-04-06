@@ -50,7 +50,7 @@ fix_init = True
 fix_final = True
 
 plot_graph = False
-plot_run = 1
+plot_run = False
 
 tstart = time.strftime("%Y%m%d-%H%M%S")
 print str(run)
@@ -87,7 +87,7 @@ range_alpha[0] = 0.01
 range_beta = np.linspace(0.0, 4.5, 10) # old: 5.0
 range_beta[0] = 0.01
 
-num_sample_iter = 5
+num_sample_iter = 1000
 
 
 # -----------------------------------------------------------------------------#
