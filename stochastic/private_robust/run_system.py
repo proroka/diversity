@@ -36,7 +36,7 @@ from funcdef_util_privacy import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'RC08'
+run = 'RC09'
 
 selected_runs = True # run for selected parameter range
 

@@ -31,10 +31,11 @@ from funcdef_util_privacy import *
 
 plot_run = False
 plot_hist = False
-plot_grid = False
+plot_grid = True
 verbose = False
+selected_runs = True
 
-run = 'RC08'
+run = 'RC09'
 prefix = "../data/RCx/" + run + "_"
 
 range_alpha = pickle.load(open(prefix+"range_alpha.p", "rb"))
@@ -91,11 +92,12 @@ for el in range(len(range_lambda)):
     
     # plot values for each Laplace noise value
 
-    if plot_grid:
+    if plot_grid and not selected_runs:
         cmap = plt.get_cmap('Reds')  
         
         fig = plt.figure(figsize=(4,4))
-        plt.imshow(success_values[lap], interpolation='nearest', origin='lower', cmap=cmap)
+        clim = (np.min(success_values[lap]), np.max(success_values[lap]))
+        plt.imshow(success_values[lap], interpolation='nearest', origin='lower', cmap=cmap, clim=clim)
         ax = plt.axes()
         plt.colorbar()
         plt.title('Success Rates')
@@ -110,7 +112,8 @@ for el in range(len(range_lambda)):
         fig.savefig(s)
     
         fig = plt.figure(figsize=(4,4))
-        plt.imshow(t_avg_values[lap], interpolation='nearest', origin='lower', cmap=cmap)
+        clim = (np.min(t_avg_values[lap]), np.max(t_avg_values[lap]))
+        plt.imshow(t_avg_values[lap], interpolation='nearest', origin='lower', cmap=cmap, clim=clim)
         ax = plt.axes()
         plt.colorbar()
         plt.title('Mean Convergence Time')
@@ -125,7 +128,8 @@ for el in range(len(range_lambda)):
         fig.savefig(s)
     
         fig = plt.figure(figsize=(4,4))
-        plt.imshow(t_std_values[lap], interpolation='nearest', origin='lower', cmap=cmap)
+        clim = (np.min(t_std_values[lap]), np.max(t_std_values[lap]))
+        plt.imshow(t_std_values[lap], interpolation='nearest', origin='lower', cmap=cmap, clim=clim)
         ax = plt.axes()    
         plt.colorbar()
         plt.title('Std. Convergence Time')
@@ -138,7 +142,24 @@ for el in range(len(range_lambda)):
         plt.show() 
         s = 'lap_' + str(lap) + '_tconv_std.eps'
         fig.savefig(s)
-
+        
+    if selected_runs:
+        sv = np.flipud(success_values[lap]).diagonal(0)[::-1]        
+        tmv = np.flipud(t_avg_values[lap]).diagonal(0)[::-1]
+        tsv = np.flipud(t_std_values[lap]).diagonal(0)[::-1]
+        fig = plt.figure(figsize=(4,4))
+        plt.plot(sv)   
+        plt.title('Success')
+        plt.xlabel('a incr, b decr')
+        fig = plt.figure(figsize=(4,4))
+        plt.plot(tmv)  
+        plt.xlabel('a incr, b decr')
+        plt.title('Mean Time')
+        fig = plt.figure(figsize=(4,4))
+        plt.plot(tsv)  
+        plt.xlabel('a incr, b decr')
+        plt.title('Stddev. Time')
+        
 # -----------------------------------------------------------------------------#
 # plot trajectories
 
