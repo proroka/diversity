@@ -24,6 +24,7 @@ from funcdef_micro_heterogeneous import *
 from funcdef_util_heterogeneous import *
 import funcdef_draw_network as nxmod
 from generate_Q import *
+from funcdef_util_privacy import *
 
 # -----------------------------------------------------------------------------#
 
@@ -35,15 +36,13 @@ from generate_Q import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'RC06'
+run = 'RC08'
+
+selected_runs = True # run for selected parameter range
 
 load_data = True
 load_run = 'RC01'
 load_prefix = "../data/RCx/" + load_run + '/' + load_run + "_"
-
-run_optim = 1
-run_micro = False
-
 save_data = True
 
 # random initial and final trait distributions
@@ -59,7 +58,7 @@ print "Time start: ", tstart
 
 # simulation parameters
 t_max = 8.0 # influences desired state and optmization of transition matrix
-t_max_sim = 7.0 # influences simulations and plotting
+t_max_sim = 12.0 # influences simulations and plotting
 delta_t = 0.04 # time step
 max_rate = 1.0 # Maximum rate possible for K.
 
@@ -81,14 +80,14 @@ desired_rank = num_species
 # privacy mechanism
 # lap = 1.5
 # careful: these parameters should never be == 0
-range_lambda = [2.5]
+range_lambda = [2.5, 5.0]
 range_alpha = np.linspace(0.1, 2.8, 10) # old: 1.0
 range_alpha[0] = 0.01
 
 range_beta = np.linspace(0.0, 4.5, 10) # old: 5.0
 range_beta[0] = 0.01
 
-num_sample_iter = 30
+num_sample_iter = 5
 
 
 # -----------------------------------------------------------------------------#
@@ -182,7 +181,6 @@ if plot_graph:
 num_timesteps = int(t_max_sim / delta_t)
 
 traj_ratio = {}
-#traj_robots = {}
 
 for el in range(len(range_lambda)):
     lap = range_lambda[el]
@@ -190,7 +188,7 @@ for el in range(len(range_lambda)):
         alpha = range_alpha[a]
         for b in range(len(range_beta)): 
             beta = range_beta[b]
-            
+
             temp_r = el*len(range_lambda) + a*len(range_alpha) + b
             print '****** Run ', temp_r, ' / ', len(range_lambda) * len(range_alpha) * len(range_beta)
             
@@ -208,20 +206,20 @@ for el in range(len(range_lambda)):
                     deploy_robots_init_noisy[:,s] = deploy_robots_init_noisy[:,s] / float(ts[s]) * float(sum_species[s])
             
                 init_transition_values = np.array([])
-                if run_optim:
+                if ((a == relation_ab(b, range_alpha)) and selected_runs) or (not selected_runs):
                     print 'Optimizing rates...'
                     sys.stdout.flush()
                     transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init_noisy, deploy_traits_desired,
                                                               species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=4.0, alpha=alpha, beta=beta)
                 
-                # run euler integration, evaluate trajectory based on true initial state with K from noisy optimization above
-                deploy_robots_euler_it[:,:,:,i] = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
+                    # run euler integration, evaluate trajectory based on true initial state with K from noisy optimization above
+                    deploy_robots_euler_it[:,:,:,i] = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
                 
-                # store error ratio
-                ratio[:,i] = get_traits_ratio_time_traj(deploy_robots_euler_it[:,:,:,i], deploy_traits_desired, species_traits, match)
-            
+                    # store error ratio
+                    ratio[:,i] = get_traits_ratio_time_traj(deploy_robots_euler_it[:,:,:,i], deploy_traits_desired, species_traits, match)
+                else:
+                    ratio[:,i] = np.zeros(num_timesteps)
             traj_ratio[(lap, alpha, beta)] = ratio.copy()
-            #traj_robots[(lap, alpha, beta)] = deploy_robots_euler_it.copy()
 
 # -----------------------------------------------------------------------------#
 # plot simulations
