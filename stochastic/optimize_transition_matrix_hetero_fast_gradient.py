@@ -396,7 +396,7 @@ def Optimize_Hetero_Fast(init_values, adjacency_matrix, initial_state, desired_s
             ret = scipy.optimize.basinhopping(CostFunction,
                                               init_elements,
                                               minimizer_kwargs=minimizer_kwargs,
-                                              niter=100, niter_success=3,
+                                              niter=100, niter_success=10,
                                               accept_test=BoundFunction,
                                               callback=None if not verbose else Print)
             # success = True

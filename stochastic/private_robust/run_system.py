@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Mar  3 10:34:19 2016
-@author: amandaprorok
-
+Created on Mon Apr 11 15:47:07 2016
+@author: amanda
 """
 
 import numpy as np
@@ -36,64 +35,61 @@ from funcdef_util_privacy import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'RC09'
+run = 'RC03'
 
 selected_runs = True # run for selected parameter range
 
 load_data = True
-load_run = 'RC01'
+load_run = 'RC00'
 load_prefix = "../data/RCx/" + load_run + '/' + load_run + "_"
 save_data = True
 
 # random initial and final trait distributions
-fix_init = True
-fix_final = True
+fix_init = False
+fix_final = False
 
 plot_graph = False
-plot_run = False
+plot_run = True
 
 tstart = time.strftime("%Y%m%d-%H%M%S")
 print str(run)
 print "Time start: ", tstart
 
 # simulation parameters
-t_max = 8.0 # influences desired state and optmization of transition matrix
+t_max = 12.0 # influences desired state and optmization of transition matrix
 t_max_sim = 12.0 # influences simulations and plotting
 delta_t = 0.04 # time step
 max_rate = 1.0 # Maximum rate possible for K.
 
 # graph
 num_nodes = 6
-half_num_nodes = num_nodes / 2    
+half_num_nodes = num_nodes / 2
 
 # cost function
 l_norm = 2 # 2: quadratic 1: absolute
 match = 1 # 1: exact 0: at-least
-match_margin = 0.2 # used when match=0 
+match_margin = 0.2 # used when match=0
 
 # robot species
-total_num_robots = 100.0 
+total_num_robots = 100.0
 num_species = 4
 num_traits = 5
 desired_rank = num_species
 
 # privacy mechanism
-# lap = 1.5
-# careful: these parameters should never be == 0
-range_lambda = [2.5, 5.0]
-range_alpha = np.linspace(0.1, 2.8, 10) # old: 1.0
-range_alpha[0] = 0.01
 
-range_beta = np.linspace(0.0, 4.5, 10) # old: 5.0
-range_beta[0] = 0.01
+range_alpha = np.linspace(0, 1, 5); range_alpha[0] = 0.01
+range_beta = np.linspace(5, 0, 5); range_beta[-1] = 0.01
+range_lambda = np.logspace(-3, 1, 5)
+optimize_t = True
 
-num_sample_iter = 1000
+num_sample_iter = 10
 
 
 # -----------------------------------------------------------------------------#
 # initialize distributions
 
-    
+
 # generate random robot species with fixed diversity
 if not load_data:
     rk = 0
@@ -102,41 +98,33 @@ if not load_data:
         species_traits, rk, s = generate_Q(num_species, num_traits)
 else:
     species_traits = pickle.load(open(load_prefix+"species_traits.p", "rb"))
-    print species_traits    
+    print species_traits
 
-# generate a random end state
 random_transition = random_transition_matrix(num_nodes, max_rate/2)  # Divide max_rate by 2 for the random matrix to give some slack.
-deploy_robots_init = np.random.randint(0, 100, size=(num_nodes, num_species))
-# normalize
-deploy_robots_init = deploy_robots_init * total_num_robots / np.sum(np.sum(deploy_robots_init, axis=0))
-sum_species = np.sum(deploy_robots_init,axis=0)
 
 
-if fix_init:
-    deploy_robots_init[half_num_nodes:,:] = 0
+print 'Getting high enough starting error...'
+sys.stdout.flush()
+
+ratio_init = 0.0
+while ratio_init < 0.3 and not load_data:
+    # sample initial
+    print ratio_init
+    deploy_robots_init = np.random.randint(0, 100, size=(num_nodes, num_species))
     # normalize
     deploy_robots_init = deploy_robots_init * total_num_robots / np.sum(np.sum(deploy_robots_init, axis=0))
     sum_species = np.sum(deploy_robots_init,axis=0)
+    deploy_traits_init = np.dot(deploy_robots_init, species_traits)    
+    # sample final desired trait distribution based on random transition matrix
+    deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition, t_max*4., delta_t)
+    deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
+    ratio_init_mat = np.abs(np.dot(deploy_robots_init, species_traits) - deploy_traits_desired)
+    ratio_init = np.sum(ratio_init_mat) / np.sum(np.sum(deploy_traits_init)) / 2.0
+
 if load_data:
     deploy_robots_init = pickle.load(open(load_prefix+"deploy_robots_init.p", "rb"))
     sum_species = np.sum(deploy_robots_init,axis=0)
 
-print "total robots, init: \t", np.sum(np.sum(deploy_robots_init))
-
-        
-# sample final desired trait distribution based on random transition matrix
-deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition, t_max*4., delta_t)
-if fix_final: 
-    deploy_robots_final[:half_num_nodes,:] = 0
-    ts = np.sum(deploy_robots_final, axis=0)
-    for i in range(num_species):    
-        deploy_robots_final[:,i] = deploy_robots_final[:,i] / float(ts[i]) * float(sum_species[i])
-        
-# trait distribution
-if not load_data:
-    deploy_traits_init = np.dot(deploy_robots_init, species_traits)
-    deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
-else:
     deploy_traits_init = pickle.load(open(load_prefix+"deploy_traits_init.p", "rb"))
     deploy_traits_desired = pickle.load(open(load_prefix+"deploy_traits_desired.p", "rb"))
 # if 'at-least' cost function, reduce number of traits desired
@@ -170,96 +158,122 @@ if plot_graph:
     plt.axis('equal')
     fig2  = nxmod.draw_circular(deploy_traits_desired, graph, linewidths=3)
     plt.show()
-    
+
 
 
 # -----------------------------------------------------------------------------#
 # optimization
 
-# careful: these parameters should never be == 0
 
 num_timesteps = int(t_max_sim / delta_t)
 
 traj_ratio = {}
 
-for el in range(len(range_lambda)):
-    lap = range_lambda[el]
-    for a in range(len(range_alpha)):
-        alpha = range_alpha[a]
-        for b in range(len(range_beta)): 
-            beta = range_beta[b]
 
-            temp_r = el*len(range_lambda) + a*len(range_alpha) + b
-            print '****** Run ', temp_r, ' / ', len(range_lambda) * len(range_alpha) * len(range_beta)
-            
-            ratio = np.zeros((num_timesteps, num_sample_iter))
-            deploy_robots_euler_it = np.zeros((num_nodes, num_timesteps, num_species, num_sample_iter))
-            for i in range(num_sample_iter):
-            # optimize based on noisy initial state
-                
+for el in range(len(range_lambda)):
+    for a in range(len(range_alpha)):
+        b = a        
+        lap = range_lambda[el]
+        alpha = range_alpha[a]
+        beta = range_beta[b] 
+    
+        temp_r = el*len(range_alpha) + a
+        print '****** Run ', temp_r, ' / ', len(range_lambda)*len(range_lambda)
+    
+        ratio = np.zeros((num_timesteps, num_sample_iter))
+        deploy_robots_euler_it = np.zeros((num_nodes, num_timesteps, num_species, num_sample_iter))
+        for i in range(num_sample_iter):
+        # optimize based on noisy initial state
+    
+            if lap > 0.001:
                 lap_val = np.random.laplace(loc=0.0, scale=lap, size=(num_nodes, num_species))
                 deploy_robots_init_noisy = deploy_robots_init + lap_val
                 
                 # normalize robot distribution so that correct robots per species available
                 ts = np.sum(deploy_robots_init_noisy, axis=0)
-                for s in range(num_species):    
+                for s in range(num_species):
                     deploy_robots_init_noisy[:,s] = deploy_robots_init_noisy[:,s] / float(ts[s]) * float(sum_species[s])
-            
-                init_transition_values = np.array([])
-                if ((a == relation_ab(b, range_alpha)) and selected_runs) or (not selected_runs):
-                    print 'Optimizing rates...'
-                    sys.stdout.flush()
-                    transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init_noisy, deploy_traits_desired,
-                                                              species_traits, t_max, max_rate,l_norm, match, optimizing_t=True, force_steady_state=4.0, alpha=alpha, beta=beta)
-                
-                    # run euler integration, evaluate trajectory based on true initial state with K from noisy optimization above
-                    deploy_robots_euler_it[:,:,:,i] = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
-                
-                    # store error ratio
-                    ratio[:,i] = get_traits_ratio_time_traj(deploy_robots_euler_it[:,:,:,i], deploy_traits_desired, species_traits, match)
-                else:
-                    ratio[:,i] = np.zeros(num_timesteps)
-            traj_ratio[(lap, alpha, beta)] = ratio.copy()
+            else:
+                deploy_robots_init_noisy = deploy_robots_init.copy()
+    
+            init_transition_values = np.array([])
+    
+            print 'Optimizing rates...'
+            sys.stdout.flush()
+            transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init_noisy, deploy_traits_desired,
+                                                      species_traits, t_max, max_rate,l_norm, match, optimizing_t=optimize_t, force_steady_state=4.0, alpha=alpha, beta=beta)
+    
+            # run euler integration, evaluate trajectory based on true initial state with K from noisy optimization above
+            deploy_robots_euler_it[:,:,:,i] = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
+    
+            # store error ratio
+            ratio[:,i] = get_traits_ratio_time_traj(deploy_robots_euler_it[:,:,:,i], deploy_traits_desired, species_traits, match)
+    
+        traj_ratio[(el, a, b)] = ratio.copy()
 
 # -----------------------------------------------------------------------------#
 # plot simulations
 
+def GetColors(n):
+    cm = plt.get_cmap('gist_rainbow')
+    return [cm(float(i) / float(n)) for i in range(n)]
+
 if plot_run:
-    i = 0
-    fig = plot_traits_ratio_time_mac(deploy_robots_euler_it[:,:,:,i], deploy_traits_desired, species_traits, delta_t, match)
-     
-     
+    colors = GetColors(len(traj_ratio))
+
+    for el in range(len(range_lambda)):
+        lines = []
+        legends = []
+        for a in range(len(range_alpha)):
+            b = a
+            col = colors[a]
+            lap = range_lambda[el]
+            alpha = range_alpha[a]
+            beta = range_beta[b]
+            tr = traj_ratio[(el, a, b)]
+            t = np.arange(tr.shape[0]) * delta_t
+            m = np.mean(tr, axis=1)
+            s = np.std(tr, axis=1)
+            legends.append(('alpha = %.2f, beta = %.2f' % (alpha, beta)))
+            lines.append(plt.plot(t, m, c=col, lw=2)[0])
+            plt.plot(t, tr, c=col)
+            plt.fill_between(t, m - s, m + s, facecolor=col, alpha=0.3)
+        plt.title('lap = %.2f' % lap)
+        plt.ylim([0, 0.5])
+        plt.legend(lines, legends)
+        plt.show()
+
 
 # -----------------------------------------------------------------------------#
 # save variables
 
 if save_data:
-    
+
     tend = time.strftime("%Y%m%d-%H%M%S")
-   
+
     prefix = "../data/RCx/" + run + "_"
-    print str(run)    
+    print str(run)
     print "Time start: ", tstart
     print "Time end: ", tend
-    
+
     pickle.dump(species_traits, open(prefix+"species_traits.p", "wb"))
     pickle.dump(graph, open(prefix+"graph.p", "wb"))
     pickle.dump(deploy_robots_init, open(prefix+"deploy_robots_init.p", "wb"))
     pickle.dump(deploy_traits_init, open(prefix+"deploy_traits_init.p", "wb"))
     pickle.dump(deploy_traits_desired, open(prefix+"deploy_traits_desired.p", "wb"))
-        
+
     pickle.dump(max_rate, open(prefix+"max_rate.p", "wb"))
     pickle.dump(t_max_sim, open(prefix+"t_max_sim.p", "wb"))
     pickle.dump(num_timesteps, open(prefix+"num_timesteps.p", "wb"))
 
     pickle.dump(num_sample_iter, open(prefix+"num_sample_iter.p", "wb"))
-    
+
     pickle.dump(range_alpha, open(prefix+"range_alpha.p", "wb"))
     pickle.dump(range_beta, open(prefix+"range_beta.p", "wb"))
     pickle.dump(range_lambda, open(prefix+"range_lambda.p", "wb"))
-    
+
     pickle.dump(traj_ratio, open(prefix+"traj_ratio.p", "wb"))
 
-   
-    
+
+
 

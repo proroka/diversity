@@ -36,17 +36,17 @@ from funcdef_util_privacy import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'RC00'
+run = 'RC03'
 
 selected_runs = True # run for selected parameter range
 
-load_data = False
-load_run = 'RC01'
+load_data = True
+load_run = 'RC00'
 load_prefix = "../data/RCx/" + load_run + '/' + load_run + "_"
-save_data = False
+save_data = True
 
 # random initial and final trait distributions
-fix_init = False
+fix_init = Falsenop
 fix_final = False
 
 plot_graph = False
@@ -80,10 +80,10 @@ desired_rank = num_species
 # privacy mechanism
 # lap = 1.5
 # careful: these parameters should never be == 0
-range_lambda = [0.000001, 0.000001, 0.000001, 0.000001]
-range_alpha = [0.0, 1.0, 0.0, 0.01]
-range_beta = [0.0, 0.0, 5.0, 5.0]
-optimize_t = [False, True, False, True]
+range_lambda = [0.000001, 0.000001, 0.000001,0.000001,0.000001]
+range_alpha = [0.0, 1.0, 0.0, 0.01, 0.1]
+range_beta = [0.0, 0.0, 5.0, 5.0, 2.5]
+optimize_t = [False, True, False, True, True]
 num_sample_iter = 10
 
 
@@ -101,39 +101,31 @@ else:
     species_traits = pickle.load(open(load_prefix+"species_traits.p", "rb"))
     print species_traits
 
-# generate a random end state
 random_transition = random_transition_matrix(num_nodes, max_rate/2)  # Divide max_rate by 2 for the random matrix to give some slack.
-deploy_robots_init = np.random.randint(0, 100, size=(num_nodes, num_species))
-# normalize
-deploy_robots_init = deploy_robots_init * total_num_robots / np.sum(np.sum(deploy_robots_init, axis=0))
-sum_species = np.sum(deploy_robots_init,axis=0)
 
 
-if fix_init:
-    deploy_robots_init[half_num_nodes:,:] = 0
+print 'Getting high enough starting error...'
+sys.stdout.flush()
+
+ratio_init = 0.0
+while ratio_init < 0.3 and not load_data:
+    # sample initial
+    print ratio_init
+    deploy_robots_init = np.random.randint(0, 100, size=(num_nodes, num_species))
     # normalize
     deploy_robots_init = deploy_robots_init * total_num_robots / np.sum(np.sum(deploy_robots_init, axis=0))
     sum_species = np.sum(deploy_robots_init,axis=0)
+    deploy_traits_init = np.dot(deploy_robots_init, species_traits)    
+    # sample final desired trait distribution based on random transition matrix
+    deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition, t_max*4., delta_t)
+    deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
+    ratio_init_mat = np.abs(np.dot(deploy_robots_init, species_traits) - deploy_traits_desired)
+    ratio_init = np.sum(ratio_init_mat) / np.sum(np.sum(deploy_traits_init)) / 2.0
+
 if load_data:
     deploy_robots_init = pickle.load(open(load_prefix+"deploy_robots_init.p", "rb"))
     sum_species = np.sum(deploy_robots_init,axis=0)
 
-print "total robots, init: \t", np.sum(np.sum(deploy_robots_init))
-
-
-# sample final desired trait distribution based on random transition matrix
-deploy_robots_final = sample_final_robot_distribution(deploy_robots_init, random_transition, t_max*4., delta_t)
-if fix_final:
-    deploy_robots_final[:half_num_nodes,:] = 0
-    ts = np.sum(deploy_robots_final, axis=0)
-    for i in range(num_species):
-        deploy_robots_final[:,i] = deploy_robots_final[:,i] / float(ts[i]) * float(sum_species[i])
-
-# trait distribution
-if not load_data:
-    deploy_traits_init = np.dot(deploy_robots_init, species_traits)
-    deploy_traits_desired = np.dot(deploy_robots_final, species_traits)
-else:
     deploy_traits_init = pickle.load(open(load_prefix+"deploy_traits_init.p", "rb"))
     deploy_traits_desired = pickle.load(open(load_prefix+"deploy_traits_desired.p", "rb"))
 # if 'at-least' cost function, reduce number of traits desired
@@ -173,7 +165,6 @@ if plot_graph:
 # -----------------------------------------------------------------------------#
 # optimization
 
-# careful: these parameters should never be == 0
 
 num_timesteps = int(t_max_sim / delta_t)
 
@@ -192,13 +183,16 @@ for el, a, b, o in zip(range(len(range_lambda)), range(len(range_alpha)), range(
     for i in range(num_sample_iter):
     # optimize based on noisy initial state
 
-        lap_val = np.random.laplace(loc=0.0, scale=lap, size=(num_nodes, num_species))
-        deploy_robots_init_noisy = deploy_robots_init + lap_val
-
-        # normalize robot distribution so that correct robots per species available
-        ts = np.sum(deploy_robots_init_noisy, axis=0)
-        for s in range(num_species):
-            deploy_robots_init_noisy[:,s] = deploy_robots_init_noisy[:,s] / float(ts[s]) * float(sum_species[s])
+        if lap > 0.001:
+            lap_val = np.random.laplace(loc=0.0, scale=lap, size=(num_nodes, num_species))
+            deploy_robots_init_noisy = deploy_robots_init + lap_val
+            
+            # normalize robot distribution so that correct robots per species available
+            ts = np.sum(deploy_robots_init_noisy, axis=0)
+            for s in range(num_species):
+                deploy_robots_init_noisy[:,s] = deploy_robots_init_noisy[:,s] / float(ts[s]) * float(sum_species[s])
+        else:
+            deploy_robots_init_noisy = deploy_robots_init.copy()
 
         init_transition_values = np.array([])
 

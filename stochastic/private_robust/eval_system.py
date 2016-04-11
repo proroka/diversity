@@ -35,7 +35,7 @@ plot_grid = True
 verbose = False
 selected_runs = True
 
-run = 'RC09'
+run = 'RC16'
 prefix = "../data/RCx/" + run + "_"
 
 range_alpha = pickle.load(open(prefix+"range_alpha.p", "rb"))
@@ -60,12 +60,14 @@ success = np.zeros((num_sample_iter))
 success_values = {}
 t_avg_values = {}
 t_std_values = {}
+t_med_values = {}
 
 for el in range(len(range_lambda)):
     lap = range_lambda[el]
     success_values[lap] = np.zeros((len(range_alpha), len(range_beta)))
     t_avg_values[lap] = np.zeros((len(range_alpha), len(range_beta)))
     t_std_values[lap] = np.zeros((len(range_alpha), len(range_beta)))
+    t_med_values[lap] = np.zeros((len(range_alpha), len(range_beta)))
     
     for a in range(len(range_alpha)):
         alpha = range_alpha[a]
@@ -84,6 +86,7 @@ for el in range(len(range_lambda)):
             success_values[lap][a,b] = sum(success)/len(success)
             t_sorted = t_min[t_min<num_timesteps-1]
             t_avg_values[lap][a,b] = np.mean(t_sorted)            
+            t_med_values[lap][a,b] = np.median(t_sorted)            
             t_std_values[lap][a,b] = np.std(t_sorted)
             
             if(plot_hist):
@@ -145,20 +148,28 @@ for el in range(len(range_lambda)):
         
     if selected_runs:
         sv = np.flipud(success_values[lap]).diagonal(0)[::-1]        
-        tmv = np.flipud(t_avg_values[lap]).diagonal(0)[::-1]
-        tsv = np.flipud(t_std_values[lap]).diagonal(0)[::-1]
-        fig = plt.figure(figsize=(4,4))
+        tmv = np.flipud(t_med_values[lap]).diagonal(0)[::-1]
+        #tsv = np.flipud(t_std_values[lap]).diagonal(0)[::-1]
+            
+        fig = plt.figure(figsize=(8,4))
+        
+        ax = fig.add_subplot(121)
         plt.plot(sv)   
         plt.title('Success')
         plt.xlabel('a incr, b decr')
-        fig = plt.figure(figsize=(4,4))
+        
+        ax = fig.add_subplot(122)
         plt.plot(tmv)  
         plt.xlabel('a incr, b decr')
-        plt.title('Mean Time')
-        fig = plt.figure(figsize=(4,4))
-        plt.plot(tsv)  
-        plt.xlabel('a incr, b decr')
-        plt.title('Stddev. Time')
+        plt.title('Median Time')
+        
+        s = 'lap_' + str(lap) + '_success_time.eps'
+        fig.savefig(s)
+        
+        #fig = plt.figure(figsize=(4,4))
+        #plt.plot(tsv)  
+        #plt.xlabel('a incr, b decr')
+        #plt.title('Stddev. Time')
         
 # -----------------------------------------------------------------------------#
 # plot trajectories
@@ -172,33 +183,43 @@ for el in range(len(range_lambda)):
     lap = range_lambda[el]
     print 'laplace = ', lap
     # vary b in full range
-    fig = plt.figure(figsize=(28,4))    
+    fig = plt.figure(figsize=(9,4))    
     for b in range(len(range_beta)):
         beta  = range_beta[b]
-        # condition:
-        a = relation_ab(b, range_alpha)        
-        alpha = range_alpha[a]
         
-        # get trajectories
-        tr = traj_ratio[(lap,alpha,beta)]    
-        tr_mean = np.mean(tr, axis=1)
-        tr_std = np.std(tr, axis=1)
-        
-        # plot ratios
-        ax = fig.add_subplot(1,len(range_beta),b+1)
-        s = 'a=' + str(alpha) + ' b=' + str(beta)
-        plt.title(s)
-        ax.set_xticks([0, num_timesteps-1])
-        tr_ax = np.arange(0,num_timesteps)
-        ind = np.arange(0,num_timesteps,20)       
-        plt.plot(tr_mean)
-        plt.errorbar(tr_ax[ind], tr_mean[ind], tr_std[ind])
-        #for i in range(num_sample_iter):
-        #    plt.plot(tr[:,i])
+        for a in range(len(range_alpha)):
+            # condition:
+            if (selected_runs and a == relation_ab(b, range_alpha)) or not selected_runs:
+                alpha = range_alpha[a]
+                
+                # get trajectories
+                tr = traj_ratio[(lap,alpha,beta)]    
+                tr_mean = np.mean(tr, axis=1)
+                tr_std = np.std(tr, axis=1)
+                
+                # plot ratios
+                ax = fig.add_subplot(1,len(range_beta),b+1)
+                s = 'a=' + str(alpha) + ' b=' + str(beta)
+                plt.title(s)
+                ax.set_xticks([0, num_timesteps-1])
+                tr_ax = np.arange(0,num_timesteps)
+                ind = np.arange(0,num_timesteps,20)       
+                plt.plot(tr_mean)
+                plt.errorbar(tr_ax[ind], tr_mean[ind], tr_std[ind])
+                plt.ylim([0,1])
+                #for i in range(num_sample_iter):
+                
+                temp = 80
+                if temp<num_sample_iter:
+                    for i in range(temp):
+                        plt.plot(tr[:,i])
           
     fig.tight_layout()
+    #ax = fig.gca()
+    
+    plt.grid(axis='x')
     plt.show()
-    s = 'trajectories_' + str(lap) + '.eps'
+    s = 'lap_' + str(lap)  + 'trajectories.eps'
     fig.savefig(s)
     
 # -----------------------------------------------------------------------------#
