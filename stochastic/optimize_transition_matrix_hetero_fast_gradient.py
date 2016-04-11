@@ -381,7 +381,7 @@ def Optimize_Hetero_Fast(init_values, adjacency_matrix, initial_state, desired_s
         CostFunction = lambda x: Cost_Fast(x, desired_steadystate, adjacency_matrix, None, initial_state, transform, cost_mode=cost_mode, margin=mu, steady_state_dt=force_steady_state, alpha=alpha, beta=beta)
         BoundFunction = lambda f_new, x_new, f_old, x_old: ElementsBounds(num_nonzero_elements*num_species, max_rate, 2.0 * max_time, f_new, x_new, f_old, x_old)
     else:
-        CostFunction = lambda x: Cost_Fast(x, desired_steadystate, adjacency_matrix, max_time, initial_state, transform, cost_mode=cost_mode, margin=mu)
+        CostFunction = lambda x: Cost_Fast(x, desired_steadystate, adjacency_matrix, max_time, initial_state, transform, cost_mode=cost_mode, margin=mu, steady_state_dt=force_steady_state, alpha=0.0, beta=beta)
         BoundFunction = lambda f_new, x_new, f_old, x_old: ElementsBounds(num_nonzero_elements*num_species, max_rate, None, f_new, x_new, f_old, x_old)
 
 
