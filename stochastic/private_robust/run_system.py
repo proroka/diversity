@@ -35,7 +35,7 @@ from funcdef_util_privacy import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'RC03'
+run = 'RC06'
 
 selected_runs = True # run for selected parameter range
 
@@ -58,7 +58,7 @@ print "Time start: ", tstart
 # simulation parameters
 t_max = 12.0 # influences desired state and optmization of transition matrix
 t_max_sim = 12.0 # influences simulations and plotting
-delta_t = 0.04 # time step
+delta_t = 0.02 # time step
 max_rate = 1.0 # Maximum rate possible for K.
 
 # graph
@@ -80,10 +80,12 @@ desired_rank = num_species
 
 range_alpha = np.linspace(0, 1, 5); range_alpha[0] = 0.01
 range_beta = np.linspace(5, 0, 5); range_beta[-1] = 0.01
-range_lambda = np.logspace(-3, 1, 5)
+range_lambda = np.array([0.001, 0.5, 1.0, 2.0, 4.0])
 optimize_t = True
 
-num_sample_iter = 10
+num_sample_iter = 5
+
+
 
 
 # -----------------------------------------------------------------------------#
@@ -219,9 +221,10 @@ def GetColors(n):
     return [cm(float(i) / float(n)) for i in range(n)]
 
 if plot_run:
-    colors = GetColors(len(traj_ratio))
+    colors = GetColors(len(range_alpha))
 
     for el in range(len(range_lambda)):
+        fig = plt.figure(figsize=(5,4))        
         lines = []
         legends = []
         for a in range(len(range_alpha)):
@@ -242,6 +245,8 @@ if plot_run:
         plt.ylim([0, 0.5])
         plt.legend(lines, legends)
         plt.show()
+        fig.savefig('lap = %.2f.eps' % lap)
+        
 
 
 # -----------------------------------------------------------------------------#
