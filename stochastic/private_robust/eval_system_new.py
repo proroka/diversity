@@ -29,10 +29,10 @@ from matplotlib.font_manager import FontProperties
 # -----------------------------------------------------------------------------#
 # load data
 
-verbose = True
+verbose = False
 
 
-run = 'RC03'
+run = 'RC10'
 prefix = "../data/RCx/" + run + "/" + run + "_"
 
 range_alpha = pickle.load(open(prefix+"range_alpha.p", "rb"))
@@ -76,6 +76,9 @@ legends = []
 lines1 = []
 lines2 = []
 
+lab = []
+labb = []
+
 for el in range(len(range_lambda)):
     lap = range_lambda[el]
 
@@ -116,20 +119,29 @@ for el in range(len(range_lambda)):
     plt.errorbar(x, t_avg_values[el],t_std_values[el],lw=2,c=col)
     plt.figure(2)
     lines2.append(plt.plot(x, success_values[el], c=col, lw=2)[0])
-    
+
     legends.append(('lap = %.2f' % lap))
     
-        
+for a in range(len(range_alpha)):  
+    alpha = range_alpha[a]
+    beta = range_beta[a]    
+    lab.append('%.2f / %.2f' % (alpha, beta))
+    #labb.append('%.2f' % beta)      
+      
 plt.figure(1)        
 ax = plt.gca()
 ax.set_ylim([0, num_timesteps])   
+ax.set_xticks(range(len(range_alpha)))
+ax.set_xticklabels(lab)
 plt.legend(lines1, legends, prop=fontP, loc=2, borderaxespad=0., bbox_to_anchor=(1.05, 1)) 
 plt.title('Time')
 fig1.savefig('time_lap = %.2f.eps' % lap)
 
 plt.figure(2)
 ax = plt.gca()
-ax.set_ylim([0, 1.1])   
+ax.set_ylim([0, 1.1])  
+ax.set_xticks(range(len(range_alpha)))
+ax.set_xticklabels(lab) 
 plt.legend(lines2, legends, prop=fontP, loc=2, borderaxespad=0., bbox_to_anchor=(1.05, 1)) 
 plt.title('Success')
 fig2.savefig('success_lap = %.2f.eps' % lap)

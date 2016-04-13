@@ -36,7 +36,7 @@ from funcdef_util_privacy import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'RC03'
+run = 'RC001'
 
 selected_runs = True # run for selected parameter range
 
@@ -46,7 +46,7 @@ load_prefix = "../data/RCx/" + load_run + '/' + load_run + "_"
 save_data = True
 
 # random initial and final trait distributions
-fix_init = Falsenop
+fix_init = False
 fix_final = False
 
 plot_graph = False
@@ -80,10 +80,18 @@ desired_rank = num_species
 # privacy mechanism
 # lap = 1.5
 # careful: these parameters should never be == 0
-range_lambda = [0.000001, 0.000001, 0.000001,0.000001,0.000001]
-range_alpha = [0.0, 1.0, 0.0, 0.01, 0.1]
-range_beta = [0.0, 0.0, 5.0, 5.0, 2.5]
-optimize_t = [False, True, False, True, True]
+#range_lambda = [0.000001, 0.000001, 0.000001,0.000001,0.000001]
+#range_alpha = [0.0, 1.0, 0.0, 0.01, 0.1]
+#range_beta = [0.0, 0.0, 5.0, 5.0, 2.5]
+#optimize_t = [False, True, False, True, True]
+
+
+range_alpha = np.linspace(0, 1, 5); range_alpha[0] = 0.01
+range_beta = np.linspace(5, 0, 5); range_beta[-1] = 0.01
+range_lambda = np.array([0.001, 0.5, 1.0, 2.0, 4.0])
+optimize_t = [True, True, True, True, True]
+num_sample_iter = 5
+
 num_sample_iter = 10
 
 

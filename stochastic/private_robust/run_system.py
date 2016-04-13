@@ -35,7 +35,7 @@ from funcdef_util_privacy import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'RC06'
+run = 'RC10'
 
 selected_runs = True # run for selected parameter range
 
@@ -79,19 +79,19 @@ desired_rank = num_species
 
 # privacy mechanism
 
-range_alpha = np.linspace(0, 1, 5); range_alpha[0] = 0.01
-range_beta = np.linspace(5, 0, 5); range_beta[-1] = 0.01
+range_alpha = np.linspace(0, 2, 5); range_alpha[0] = 0.01
+range_beta = np.linspace(8, 0, 5); range_beta[-1] = 0.01
 range_lambda = np.array([0.001, 0.5, 1.0, 2.0, 4.0])
 optimize_t = True
-num_sample_iter = 5
+num_sample_iter = 100
 
-testing = True
+testing = False
 if testing:
-   range_alpha = np.array([1.0]) #np.linspace(0, 1, 5); range_alpha[0] = 0.01
-   range_beta = np.array([0.01]) #np.linspace(5, 0, 5); range_beta[-1] = 0.01
-   range_lambda = np.array([10.0]) #np.array([0.001, 0.5, 1.0, 2.0, 4.0])
+   range_alpha = np.array([0.75]) #np.linspace(0, 1, 5); range_alpha[0] = 0.01
+   range_beta = np.array([1.25]) #np.linspace(5, 0, 5); range_beta[-1] = 0.01
+   range_lambda = np.array([2.0]) #np.array([0.001, 0.5, 1.0, 2.0, 4.0])
    optimize_t = True
-   num_sample_iter = 3 
+   num_sample_iter = 50 
 
 
 
@@ -215,8 +215,8 @@ for el in range(len(range_lambda)):
             else:
                 deploy_robots_init_noisy = deploy_robots_init.copy()
     
-            temp3 = np.sum(deploy_robots_init_noisy,axis=0) 
-            print 'Norm. Species Sum = ', temp3, 'Total', sum(temp3) 
+            #temp3 = np.sum(deploy_robots_init_noisy,axis=0) 
+            #print 'Norm. Species Sum = ', temp3, 'Total', sum(temp3) 
             
             init_transition_values = np.array([])
     
@@ -227,7 +227,9 @@ for el in range(len(range_lambda)):
                                                       species_traits, t_max, max_rate,l_norm, match, optimizing_t=optimize_t, force_steady_state=4.0, alpha=alpha, beta=beta)
                                                       
             otoc = time.time()
-            print '*** Time for opt.: ', otoc - otic
+            print '****'
+            print '**** Time for opt.: ', otoc - otic
+            print '****'
             opt_time.append(otoc - otic)            
                              
             # run euler integration, evaluate trajectory based on true initial state with K from noisy optimization above
