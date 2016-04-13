@@ -52,8 +52,9 @@ plot_graph = False
 plot_run = True
 
 tstart = time.strftime("%Y%m%d-%H%M%S")
+tic = time.time()
 print str(run)
-print "Time start: ", tstart
+print "Time start: ", tic #tstart
 
 # simulation parameters
 t_max = 12.0 # influences desired state and optmization of transition matrix
@@ -82,9 +83,15 @@ range_alpha = np.linspace(0, 1, 5); range_alpha[0] = 0.01
 range_beta = np.linspace(5, 0, 5); range_beta[-1] = 0.01
 range_lambda = np.array([0.001, 0.5, 1.0, 2.0, 4.0])
 optimize_t = True
-
 num_sample_iter = 5
 
+testing = True
+if testing:
+   range_alpha = np.array([1.0]) #np.linspace(0, 1, 5); range_alpha[0] = 0.01
+   range_beta = np.array([0.01]) #np.linspace(5, 0, 5); range_beta[-1] = 0.01
+   range_lambda = np.array([10.0]) #np.array([0.001, 0.5, 1.0, 2.0, 4.0])
+   optimize_t = True
+   num_sample_iter = 3 
 
 
 
@@ -171,6 +178,7 @@ num_timesteps = int(t_max_sim / delta_t)
 
 traj_ratio = {}
 
+opt_time = []
 
 for el in range(len(range_lambda)):
     for a in range(len(range_alpha)):
@@ -180,38 +188,57 @@ for el in range(len(range_lambda)):
         beta = range_beta[b] 
     
         temp_r = el*len(range_alpha) + a
-        print '****** Run ', temp_r, ' / ', len(range_lambda)*len(range_lambda)
+        print '****** Run ', temp_r, ' / ', len(range_lambda)*len(range_alpha)
     
         ratio = np.zeros((num_timesteps, num_sample_iter))
         deploy_robots_euler_it = np.zeros((num_nodes, num_timesteps, num_species, num_sample_iter))
         for i in range(num_sample_iter):
         # optimize based on noisy initial state
     
+            
+            
             if lap > 0.001:
                 lap_val = np.random.laplace(loc=0.0, scale=lap, size=(num_nodes, num_species))
                 deploy_robots_init_noisy = deploy_robots_init + lap_val
-                
+                temp0 = np.sum(deploy_robots_init,axis=0) 
+                temp1 = np.sum(deploy_robots_init_noisy,axis=0) 
+                #print 'Orig. Species Sum = ', temp0, 'Total', sum(temp0)             
+                #print 'Noisy Species Sum = ', temp1, 'Total', sum(temp1)  
                 # normalize robot distribution so that correct robots per species available
                 ts = np.sum(deploy_robots_init_noisy, axis=0)
                 for s in range(num_species):
                     deploy_robots_init_noisy[:,s] = deploy_robots_init_noisy[:,s] / float(ts[s]) * float(sum_species[s])
+                    
+                #temp2 = np.sum(deploy_robots_init_noisy,axis=0) 
+                #print 'Norm. Species Sum = ', temp2, 'Total', sum(temp2)  
+                
             else:
                 deploy_robots_init_noisy = deploy_robots_init.copy()
     
+            temp3 = np.sum(deploy_robots_init_noisy,axis=0) 
+            print 'Norm. Species Sum = ', temp3, 'Total', sum(temp3) 
+            
             init_transition_values = np.array([])
     
+            otic = time.time()
             print 'Optimizing rates...'
             sys.stdout.flush()
             transition_m_init = optimal_transition_matrix(init_transition_values, adjacency_m, deploy_robots_init_noisy, deploy_traits_desired,
                                                       species_traits, t_max, max_rate,l_norm, match, optimizing_t=optimize_t, force_steady_state=4.0, alpha=alpha, beta=beta)
-    
+                                                      
+            otoc = time.time()
+            print '*** Time for opt.: ', otoc - otic
+            opt_time.append(otoc - otic)            
+                             
             # run euler integration, evaluate trajectory based on true initial state with K from noisy optimization above
             deploy_robots_euler_it[:,:,:,i] = run_euler_integration(deploy_robots_init, transition_m_init, t_max_sim, delta_t)
-    
+                        
+            
             # store error ratio
             ratio[:,i] = get_traits_ratio_time_traj(deploy_robots_euler_it[:,:,:,i], deploy_traits_desired, species_traits, match)
-    
-        traj_ratio[(el, a, b)] = ratio.copy()
+            
+            
+        traj_ratio[(el, a, b)] = ratio #.copy()
 
 # -----------------------------------------------------------------------------#
 # plot simulations
@@ -255,11 +282,14 @@ if plot_run:
 if save_data:
 
     tend = time.strftime("%Y%m%d-%H%M%S")
-
+    toc = time.time()
+    total_time = toc - tic
+    
     prefix = "../data/RCx/" + run + "_"
     print str(run)
-    print "Time start: ", tstart
-    print "Time end: ", tend
+    print "Time start: ", tic #tstart
+    print "Time end: ", toc # tend
+    print "Total sim. time: ", total_time
 
     pickle.dump(species_traits, open(prefix+"species_traits.p", "wb"))
     pickle.dump(graph, open(prefix+"graph.p", "wb"))
@@ -278,7 +308,7 @@ if save_data:
     pickle.dump(range_lambda, open(prefix+"range_lambda.p", "wb"))
 
     pickle.dump(traj_ratio, open(prefix+"traj_ratio.p", "wb"))
-
-
+    pickle.dump(opt_time, open(prefix+"opt_time.p", "wb"))
+    pickle.dump(total_time, open(prefix+"total_time.p", "wb"))
 
 
