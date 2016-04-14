@@ -32,7 +32,7 @@ from matplotlib.font_manager import FontProperties
 verbose = False
 
 
-run = 'RC10'
+run = 'RC11'
 prefix = "../data/RCx/" + run + "/" + run + "_"
 
 range_alpha = pickle.load(open(prefix+"range_alpha.p", "rb"))
@@ -69,8 +69,8 @@ fontP = FontProperties()
 fontP.set_size('small')
 
    
-fig1 = plt.figure(1,figsize=(5,4))
-fig2 = plt.figure(2,figsize=(5,4))
+fig1 = plt.figure(1,figsize=(8,4))
+fig2 = plt.figure(2,figsize=(8,4))
 legends = []
 
 lines1 = []

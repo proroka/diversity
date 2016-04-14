@@ -35,7 +35,7 @@ from funcdef_util_privacy import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'RC10'
+run = 'RC11'
 
 selected_runs = True # run for selected parameter range
 
@@ -78,12 +78,12 @@ num_traits = 5
 desired_rank = num_species
 
 # privacy mechanism
-
-range_alpha = np.linspace(0, 2, 5); range_alpha[0] = 0.01
-range_beta = np.linspace(8, 0, 5); range_beta[-1] = 0.01
+num_par = 10
+range_alpha = np.linspace(0, 1, num_par); range_alpha[0] = 0.01
+range_beta = np.linspace(5, 0, num_par); range_beta[-1] = 0.01
 range_lambda = np.array([0.001, 0.5, 1.0, 2.0, 4.0])
 optimize_t = True
-num_sample_iter = 100
+num_sample_iter = 200
 
 testing = False
 if testing:
