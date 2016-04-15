@@ -35,12 +35,12 @@ from funcdef_util_privacy import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'RC11'
+run = 'RC12'
 
 selected_runs = True # run for selected parameter range
 
 load_data = True
-load_run = 'RC00'
+load_run = 'RC000'
 load_prefix = "../data/RCx/" + load_run + '/' + load_run + "_"
 save_data = True
 
@@ -78,12 +78,12 @@ num_traits = 5
 desired_rank = num_species
 
 # privacy mechanism
-num_par = 10
+num_par = 5
 range_alpha = np.linspace(0, 1, num_par); range_alpha[0] = 0.01
 range_beta = np.linspace(5, 0, num_par); range_beta[-1] = 0.01
-range_lambda = np.array([0.001, 0.5, 1.0, 2.0, 4.0])
+range_lambda = np.array([1.0])    #([0.001, 0.5, 1.0, 2.0, 4.0])
 optimize_t = True
-num_sample_iter = 200
+num_sample_iter = 2
 
 testing = False
 if testing:
@@ -91,7 +91,7 @@ if testing:
    range_beta = np.array([1.25]) #np.linspace(5, 0, 5); range_beta[-1] = 0.01
    range_lambda = np.array([2.0]) #np.array([0.001, 0.5, 1.0, 2.0, 4.0])
    optimize_t = True
-   num_sample_iter = 50 
+   num_sample_iter = 1
 
 
 

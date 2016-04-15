@@ -69,8 +69,8 @@ fontP = FontProperties()
 fontP.set_size('small')
 
    
-fig1 = plt.figure(1,figsize=(8,4))
-fig2 = plt.figure(2,figsize=(8,4))
+fig1 = plt.figure(1,figsize=(5,4))
+fig2 = plt.figure(2,figsize=(5,4))
 legends = []
 
 lines1 = []
@@ -121,31 +121,35 @@ for el in range(len(range_lambda)):
     lines2.append(plt.plot(x, success_values[el], c=col, lw=2)[0])
 
     legends.append(('lap = %.2f' % lap))
-    
+
+
+x_axl = np.arange(0,len(range_alpha),2)    
 for a in range(len(range_alpha)):  
-    alpha = range_alpha[a]
-    beta = range_beta[a]    
-    lab.append('%.2f / %.2f' % (alpha, beta))
-    #labb.append('%.2f' % beta)      
+    if a in x_axl:
+        alpha = range_alpha[a]
+        beta = range_beta[a]
+        lab.append('%.2f / %.2f' % (alpha, beta))
+
       
 plt.figure(1)        
 ax = plt.gca()
 ax.set_ylim([0, num_timesteps])   
-ax.set_xticks(range(len(range_alpha)))
+ax.set_xticks(x_axl)
 ax.set_xticklabels(lab)
 plt.legend(lines1, legends, prop=fontP, loc=2, borderaxespad=0., bbox_to_anchor=(1.05, 1)) 
 plt.title('Time')
-fig1.savefig('time_lap = %.2f.eps' % lap)
+s = 'run_' + run + 'time.eps'
+fig1.savefig(s)
 
 plt.figure(2)
 ax = plt.gca()
 ax.set_ylim([0, 1.1])  
-ax.set_xticks(range(len(range_alpha)))
+ax.set_xticks(x_axl)
 ax.set_xticklabels(lab) 
 plt.legend(lines2, legends, prop=fontP, loc=2, borderaxespad=0., bbox_to_anchor=(1.05, 1)) 
 plt.title('Success')
-fig2.savefig('success_lap = %.2f.eps' % lap)
-
+s = 'run_' + run + 'success.eps'
+fig2.savefig(s)
 # -----------------------------------------------------------------------------#
 # plot trajectories
 

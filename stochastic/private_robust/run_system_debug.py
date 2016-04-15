@@ -36,11 +36,11 @@ from funcdef_util_privacy import *
 # -----------------------------------------------------------------------------#
 # initialize world and robot community
 
-run = 'RC001'
+run = 'RC000'
 
 selected_runs = True # run for selected parameter range
 
-load_data = True
+load_data = False
 load_run = 'RC00'
 load_prefix = "../data/RCx/" + load_run + '/' + load_run + "_"
 save_data = True
@@ -80,19 +80,21 @@ desired_rank = num_species
 # privacy mechanism
 # lap = 1.5
 # careful: these parameters should never be == 0
-#range_lambda = [0.000001, 0.000001, 0.000001,0.000001,0.000001]
-#range_alpha = [0.0, 1.0, 0.0, 0.01, 0.1]
-#range_beta = [0.0, 0.0, 5.0, 5.0, 2.5]
-#optimize_t = [False, True, False, True, True]
-
-
-range_alpha = np.linspace(0, 1, 5); range_alpha[0] = 0.01
-range_beta = np.linspace(5, 0, 5); range_beta[-1] = 0.01
-range_lambda = np.array([0.001, 0.5, 1.0, 2.0, 4.0])
-optimize_t = [True, True, True, True, True]
-num_sample_iter = 5
-
+range_lambda = [0.000001, 0.000001, 0.000001,0.000001,0.000001]
+range_alpha = [0.0, 1.0, 0.0, 0.01, 0.1]
+range_beta = [0.0, 0.0, 5.0, 5.0, 2.5]
+optimize_t = [False, True, False, True, True]
 num_sample_iter = 10
+
+
+testing = False
+if testing:
+    range_alpha = np.linspace(0, 1, 5); range_alpha[0] = 0.01
+    range_beta = np.linspace(5, 0, 5); range_beta[-1] = 0.01
+    range_lambda = np.array([0.001, 0.5, 1.0, 2.0, 4.0])
+    optimize_t = [True, True, True, True, True]
+    num_sample_iter = 5
+
 
 
 # -----------------------------------------------------------------------------#
@@ -116,7 +118,7 @@ print 'Getting high enough starting error...'
 sys.stdout.flush()
 
 ratio_init = 0.0
-while ratio_init < 0.3 and not load_data:
+while ratio_init < 0.25 and not load_data:
     # sample initial
     print ratio_init
     deploy_robots_init = np.random.randint(0, 100, size=(num_nodes, num_species))
