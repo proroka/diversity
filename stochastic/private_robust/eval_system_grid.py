@@ -36,8 +36,10 @@ verbose = False
 plot_traj = False
 pareto_scatter = True
 
-run = 'RC14'
+run = 'RC16'
 prefix = "../data/RCx/" + run + "_"
+
+# sim. time for R16: 21348s
 
 range_alpha = pickle.load(open(prefix+"range_alpha.p", "rb"))
 range_beta = pickle.load(open(prefix+"range_beta.p", "rb"))
@@ -66,6 +68,8 @@ success_values = {}
 t_avg_values = {}
 t_std_values = {}
 t_med_values = {}
+
+colors = GetColors(len(range_alpha))
 
 for el in range(len(range_lambda)):
     lap = range_lambda[el]
@@ -123,13 +127,15 @@ for el in range(len(range_lambda)):
         plt.title('Success Rates')
         plt.xlabel('beta')
         plt.xticks(range(len(range_beta)))
-        ax.set_xticklabels(range_beta)
+        #ax.set_xticklabels(range_beta)
+        ax.set_xticklabels([])
         plt.ylabel('alpha')
         plt.yticks(range(len(range_alpha)))
-        ax.set_yticklabels(range_alpha)
+        #ax.set_yticklabels(range_alpha)
+        ax.set_yticklabels([])
         plt.show()
         s = 'run_' + run + '_lap_' + str(lap) + '_success.eps'
-        fig.savefig(s)
+        fig1.savefig(s)
     
         fig2 = plt.figure(figsize=(4,4))
         vals_nonnan = t_avg_values[lap][~np.isnan(t_avg_values[lap])]
@@ -140,10 +146,12 @@ for el in range(len(range_lambda)):
         plt.title('Mean Convergence Time')
         plt.xlabel('beta')
         plt.xticks(range(len(range_beta)))
-        ax.set_xticklabels(range_beta)
+        #ax.set_xticklabels(range_beta)
+        ax.set_xticklabels([])
         plt.ylabel('alpha')
         plt.yticks(range(len(range_alpha)))
-        ax.set_yticklabels(range_alpha)
+        #ax.set_yticklabels(range_alpha)
+        ax.set_yticklabels([])
         plt.show()
         s = 'run_' + run + '_lap_' + str(lap) + '_tconv_mean.eps'
         fig2.savefig(s)
@@ -152,11 +160,12 @@ for el in range(len(range_lambda)):
         
     if pareto_scatter:
         
-        
         fig3 = plt.figure(figsize=(4,4))
         plt.scatter(pareto_time, pareto_succ, s=15, c=pareto_cols_a)
         plt.xlim([0, num_timesteps])
         plt.ylim([0, 1.])
+        plt.xlabel('convergence time')
+        plt.ylabel('success')
         s = 'run_' + run + '_lap_' + str(lap) + '_pareto_a.eps'
         fig3.savefig(s)
         
@@ -164,5 +173,7 @@ for el in range(len(range_lambda)):
         plt.scatter(pareto_time, pareto_succ, s=15, c=pareto_cols_b)
         plt.xlim([0, num_timesteps])
         plt.ylim([0, 1.])
+        plt.xlabel('convergence time')
+        plt.ylabel('success')
         s = 'run_' + run + '_lap_' + str(lap) + '_pareto_b.eps'
         fig3.savefig(s)
